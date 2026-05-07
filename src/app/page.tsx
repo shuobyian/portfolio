@@ -62,24 +62,57 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Highlight Story */}
+      {/* Highlight Stories */}
       <Section>
-        <Link
-          href="/stories/design-system"
-          className="block rounded-lg border border-border bg-muted/30 p-6 transition-colors hover:border-accent/50 hover:bg-muted/50"
-        >
-          <p className="text-sm font-medium text-accent">Highlight Story</p>
-          <h2 className="mt-2 text-2xl font-bold">디자인 시스템의 4단 진화</h2>
-          <p className="mt-2 max-w-2xl text-muted-foreground leading-relaxed">
-            신설 조직에 디자인 시스템을 0→1로 만든 뒤, 운영 환경에서 어떻게
-            진화시켜왔는지에 대한 약 1년의 의사결정 흐름. 4개 프로젝트가 한
-            덩어리로 이어지는 시니어 시각 의사결정 스토리.
-          </p>
-          <span className="mt-4 inline-flex items-center gap-1 text-sm text-accent">
-            스토리 보기
-            <ArrowRight size={14} />
-          </span>
-        </Link>
+        <div className="flex items-end justify-between">
+          <div>
+            <p className="text-sm font-medium text-accent">Highlight Stories</p>
+            <h2 className="mt-2 text-2xl font-bold">의사결정 흐름 모음</h2>
+          </div>
+        </div>
+        <p className="mt-2 max-w-2xl text-muted-foreground">
+          여러 프로젝트나 한 코드베이스 안에서의 의사결정·진화 흐름을 정리한
+          스토리입니다.
+        </p>
+        <div className="mt-8 grid gap-6 md:grid-cols-3">
+          {[
+            {
+              slug: "design-system",
+              title: "디자인 시스템의 4단 진화",
+              summary:
+                "신설 조직의 시스템을 0→1로 만든 뒤, 4개 프로젝트에 걸쳐 어떻게 진화시켰는지에 대한 약 1년의 흐름.",
+            },
+            {
+              slug: "pharm-bridge-evolution",
+              title: "팜브릿지: Vanilla → React Island",
+              summary:
+                "한 프로젝트가 ‘그 시점의 최선’으로 만들어진 뒤, 운영하며 마주친 한계를 같은 제약 안에서 진화시킨 8개월.",
+            },
+            {
+              slug: "community-platform-evolution",
+              title: "커뮤니티 + 파트너스 4년의 점진 개선",
+              summary:
+                "전국 500개 단지·MAU 10만 규모의 커뮤니티와 파트너스 두 프로덕트를 4년간 운영하며 누적한 점진적 개선의 기록.",
+            },
+          ].map((story) => (
+            <Link
+              key={story.slug}
+              href={`/stories/${story.slug}`}
+              className="group flex flex-col rounded-lg border border-border bg-muted/30 p-5 transition-colors hover:border-accent/50 hover:bg-muted/50"
+            >
+              <h3 className="text-lg font-bold transition-colors group-hover:text-accent">
+                {story.title}
+              </h3>
+              <p className="mt-2 flex-1 text-sm leading-relaxed text-muted-foreground">
+                {story.summary}
+              </p>
+              <span className="mt-4 inline-flex items-center gap-1 text-sm text-accent">
+                스토리 보기
+                <ArrowRight size={14} />
+              </span>
+            </Link>
+          ))}
+        </div>
       </Section>
 
       {/* Featured Projects */}

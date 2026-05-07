@@ -51,11 +51,11 @@ export default function DesignSystemStory() {
   return (
     <Section>
       <Link
-        href="/projects"
+        href="/"
         className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
       >
         <ArrowLeft size={14} />
-        프로젝트 목록
+        홈으로
       </Link>
 
       <div className="mt-6">
