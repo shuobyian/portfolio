@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import type { Project } from "@/lib/projects";
+import { ProjectThumbnail } from "./project-thumbnail";
 
 export function ProjectCard({ project }: { project: Project }) {
   return (
@@ -22,9 +23,7 @@ export function ProjectCard({ project }: { project: Project }) {
               className="object-cover transition-transform duration-300 group-hover:scale-105"
             />
           ) : (
-            <div className="flex h-full items-center justify-center text-muted-foreground text-sm">
-              No Image
-            </div>
+            <ProjectThumbnail project={project} />
           )}
         </div>
         <div className="p-4">
