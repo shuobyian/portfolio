@@ -12,7 +12,7 @@ const skills = [
   { category: "State / Data", items: ["React Query", "Redux", "Recoil", "Zod"] },
   { category: "UI / Design System", items: ["Tailwind CSS", "Ant Design", "MUI", "Bootstrap", "Storybook"] },
   { category: "Test", items: ["Jest", "MSW"] },
-  { category: "Infra / DevOps", items: ["AWS", "Jenkins", "Git Actions", "Docker", "Ansible"] },
+  { category: "Infra / DevOps", items: ["AWS", "Jenkins", "GitHub Actions", "Docker", "Ansible"] },
   { category: "Backend", items: ["Node.js", "NestJS", "PostgreSQL", "MySQL"] },
 ];
 
@@ -36,10 +36,11 @@ export default function Home() {
               <span className="text-accent">장수빈</span>입니다
             </h1>
             <p className="mt-4 max-w-xl text-lg text-muted-foreground leading-relaxed">
-              복잡한 도메인(예약·결제·이용권·POS·KIOSK)을 가진 서비스를 4년 이상
-              설계·운영한 프론트엔드 개발자입니다. 아키텍처 개선, 디자인 시스템
-              구축, 테스트 및 CI/CD 자동화를 통해 유지보수성과 개발 생산성 향상을
-              주도해왔습니다.
+              복잡한 상태와 비동기 흐름을 풀어내는 데 즐거움을 느끼는 5년차
+              프론트엔드 개발자입니다. 예약·결제·POS·KIOSK 같은 도메인에서 전국
+              500개 단지·MAU 10만 규모의 서비스를 만들어왔고, 신설 조직의
+              프론트엔드 표준을 입사 3개월 만에 0→1로 정착시킨 경험이 있습니다.
+              기획·디자인부터 인프라까지, 제품을 만드는 전 과정에 관심이 많습니다.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link
