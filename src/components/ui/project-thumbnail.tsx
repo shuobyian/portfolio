@@ -33,8 +33,8 @@ const ICON_MAP: Record<string, LucideIcon> = {
 };
 
 const COMPANY_GRADIENT: Record<string, string> = {
-  알스솔루션: "from-sky-500 via-blue-600 to-indigo-700",
-  에이치티비욘드: "from-violet-500 via-purple-600 to-fuchsia-700",
+  알스솔루션: "from-emerald-500 via-green-600 to-teal-700",
+  에이치티비욘드: "from-sky-500 via-blue-600 to-indigo-700",
 };
 
 const DEFAULT_GRADIENT = "from-slate-500 via-slate-600 to-slate-700";
