@@ -62,6 +62,26 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Highlight Story */}
+      <Section>
+        <Link
+          href="/stories/design-system"
+          className="block rounded-lg border border-border bg-muted/30 p-6 transition-colors hover:border-accent/50 hover:bg-muted/50"
+        >
+          <p className="text-sm font-medium text-accent">Highlight Story</p>
+          <h2 className="mt-2 text-2xl font-bold">디자인 시스템의 4단 진화</h2>
+          <p className="mt-2 max-w-2xl text-muted-foreground leading-relaxed">
+            신설 조직에 디자인 시스템을 0→1로 만든 뒤, 운영 환경에서 어떻게
+            진화시켜왔는지에 대한 약 1년의 의사결정 흐름. 4개 프로젝트가 한
+            덩어리로 이어지는 시니어 시각 의사결정 스토리.
+          </p>
+          <span className="mt-4 inline-flex items-center gap-1 text-sm text-accent">
+            스토리 보기
+            <ArrowRight size={14} />
+          </span>
+        </Link>
+      </Section>
+
       {/* Featured Projects */}
       <Section>
         <div className="flex items-center justify-between">

@@ -3,6 +3,7 @@ import { ArrowLeft, ExternalLink, Github } from "lucide-react";
 import Link from "next/link";
 import { Section } from "@/components/ui/section";
 import { getAllProjects, getProjectBySlug } from "@/lib/projects";
+import { PosKioskDeepDive } from "@/components/projects/pos-kiosk-deep-dive";
 import type { Metadata } from "next";
 
 export function generateStaticParams() {
@@ -101,6 +102,8 @@ export default async function ProjectDetail({
           ))}
         </ul>
       </div>
+
+      {project.slug === "pos-kiosk" && <PosKioskDeepDive />}
     </Section>
   );
 }
