@@ -53,6 +53,8 @@ React·TypeScript 기반 아키텍처 개선, 디자인 시스템 구축, 테스
 /about           경력 · 학력
 /projects        전체 프로젝트 목록
 /projects/[slug] 프로젝트 상세
+/blog            MDX 기반 블로그
+/blog/[slug]     블로그 상세 (Shiki 코드 하이라이트)
 /contact         연락처
 ```
 

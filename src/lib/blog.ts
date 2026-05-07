@@ -9,6 +9,7 @@ export interface BlogPost {
   description: string;
   date: string;
   tags: string[];
+  category: string;
   readingTime: string;
   content: string;
 }
@@ -31,6 +32,7 @@ export function getAllPosts(): BlogPost[] {
       description: data.description ?? "",
       date: data.date ?? "",
       tags: data.tags ?? [],
+      category: data.category ?? "기타",
       readingTime: readingTime(content).text,
       content,
     };

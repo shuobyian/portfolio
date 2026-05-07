@@ -1,0 +1,54 @@
+---
+title: "Virtual DOM이란?"
+description: "이전 tech talk에서 발췌된 Virtual DOM에 대해 정리. 정의, 사용 이유, 직접 구현 자료까지."
+date: "2024-02-22"
+tags: ["React", "Virtual DOM", "DOM"]
+category: "React"
+---
+
+이전에 진행했던 tech talk([ReactDOM.render vs createRoot in React 18](/blog/react-18-create-root))에서 발췌되었던 Virtual DOM에 대해 알아보려 합니다.
+
+## 1. Virtual DOM(Document Object Model)이란?
+
+> Virtual DOM (VDOM)은 UI의 이상적인 또는 "가상"적인 표현을 메모리에 저장하고 ReactDOM과 같은 라이브러리에 의해 "실제" DOM과 동기화하는 프로그래밍 개념
+>
+> — React 공식 문서
+
+- 실제 DOM과 같은 내용을 담고 있는 복사본이다.
+- 실제 DOM의 복사본이기 때문에, 실제 DOM의 모든 element과 속성을 공유한다.
+- 복사본은 실제 DOM이 아닌 JS 객체 형태로 메모리 안에 저장되어 있다.
+
+## 2. 사용하는 이유
+
+만약 폰트의 컬러만 바꾸고 싶어도, 다음과 같이 DOM 조작을 필요로 하게 된다.
+
+```js
+document.querySelector('#title').style.color = "red";
+```
+
+브라우저는 HTML을 탐색해 해당 Element를 찾고, 해당 Element와 자식 Element들을 DOM에서 제거한다.
+
+이후 새롭게 수정된 Element로 이를 교체.
+
+CSS는 이 과정 이후 다시 계산하여 결과적으로는 레이아웃 정보를 알맞게 수정한다.
+
+새롭게 계산된 내용이 브라우저에 그려지는 방식으로 플로우가 진행되게 된다.
+
+가상돔은 메모리에 저장되어 있는 자바스크립트 객체에 불과하기 때문에(실제 브라우저를 접근하지 않는다.) 가상돔에 접근하고 수정하는 것은 매우 가볍고 빠른 작업이 되는 것이다.
+
+## 3. Virtual DOM을 직접 만들어보자
+
+- [Virtual DOM - Diffing 알고리즘을 구현하고 이해하기(1)](https://devocean.sk.com/blog/techBoardDetail.do?ID=165601)
+- [Virtual DOM(버추얼 돔, 가상 돔)을 직접 만들어보자](https://makestory.medium.com/virtual-dom-%EB%B2%84%EC%B6%94%EC%96%BC-%EB%8F%94-%EA%B0%80%EC%83%81-%EB%8F%94-%EC%9D%84-%EC%A7%81%EC%A0%91-%EB%A7%8C%EB%93%A4%EC%96%B4%EB%B3%B4%EC%9E%90-1c44606ea9b1)
+
+## 추가로 볼 수 있는 자료
+
+**[React Deep Dive — Fiber](https://blog.mathpresso.com/react-deep-dive-fiber-88860f6edbd0)**
+
+React 렌더링 개선을 위한 내부 알고리즘에 대한 내용이다.
+
+## 참조
+
+- [Virtual DOM (React) 핵심정리](https://callmedevmomo.medium.com/virtual-dom-react-%ED%95%B5%EC%8B%AC%EC%A0%95%EB%A6%AC-bfbfcecc4fbb)
+- [[번역] 리액트에 대해서 그 누구도 제대로 설명하기 어려운 것 - 왜 Virtual DOM 인가?](https://archive.velopert.com/3236.html)
+- [Virtual DOM과 Internals – React](https://ko.legacy.reactjs.org/docs/faq-internals.html)

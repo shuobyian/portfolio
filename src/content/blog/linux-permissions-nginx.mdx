@@ -1,0 +1,131 @@
+---
+title: "리눅스 권한 설정 (chmod, chown, chgrp) — nginx edge 배포 트러블슈팅"
+description: "엣지 배포 프로젝트의 WebServer를 pm2 serve에서 nginx로 변경하면서 가장 오래 걸렸던 권한 설정 정리. 파일 권한 표기, chmod/chown/chgrp, 그리고 실제 nginx 실행 시 만난 500 에러와 해결 과정."
+date: "2024-03-21"
+tags: ["Linux", "nginx", "chmod", "DevOps"]
+category: "DevOps & 배포"
+---
+
+> [PL-750: 엣지에 배포되는 프로젝트를 ansible로 관리 및 배포하고, WebServer를 pm2 serve에서 nginx로 변경](/projects/cicd-infra)
+
+이슈를 진행하면서 nginx 실행에 여러 어려움을 겪었는데 그 중 가장 오랜 시간이 걸렸던 것이 바로 권한 설정이다. 권한 설정에 대한 내용을 복습하면 도움이 될 것 같아 준비했다.
+
+먼저 리눅스 권한 설정에 대해 알아보자!
+
+## 1. 파일 권한 확인
+
+```bash
+ls -al
+```
+
+권한 확인을 해보면 위와 같은 모습을 볼 수 있다.
+
+## 2. 파일 권한 설정
+
+`blue-byb-pos`를 살펴보면
+
+| 부분           | 의미             | 비고                                     |
+| -------------- | ---------------- | ---------------------------------------- |
+| `d`            | 파일 표시        | `-`: 파일, `d`: 폴더/디렉토리, `l`: 링크 |
+| `rwx`          | 소유자 권한      | r: 읽기, w: 쓰기, x: 실행                |
+| `r-x`          | 그룹 권한        | r: 읽기, w: 쓰기, x: 실행                |
+| `r-x`          | 다른 사용자 권한 | r: 읽기, w: 쓰기, x: 실행                |
+| `1`            | 링크 수          |                                          |
+| `htbeyond`     | 소유자           |                                          |
+| `htbeyond`     | 소유자 그룹      |                                          |
+| `4096`         | 파일 크기        |                                          |
+| `Mar 10 12:57` | 수정한 날짜      |                                          |
+| `blue-byb-pos` | 폴더 이름        |                                          |
+
+권한 설정 표기는 아래와 같다.
+
+|                         | r   | w   | x   | 합  |
+| ----------------------- | --- | --- | --- | --- |
+| **사용자 (User)**       | 4   | 2   | 1   | 7   |
+| **그룹 (Group)**        | 4   | 2   | 1   | 7   |
+| **다른 사용자 (Other)** | 4   | 2   | 1   | 7   |
+
+## 3. 권한 변경 (chmod)
+
+```bash
+chmod [권한] [변경할 파일 또는 디렉토리]
+```
+
+```bash
+chmod g+rw blue-byb-pos    # 해당 그룹에 속하는 유저에게 읽기/쓰기 권한 부여
+chmod u+r blue-byb-pos     # 해당 파일을 소유한 사람에게 읽기 권한 부여
+chmod ugo+rwx blue-byb-pos # 소유자, 그룹, 모든 유저에게 읽기/쓰기/실행 권한 부여 (= chmod a+rwx blue-byb-pos)
+
+chmod g-rw blue-byb-pos    # 해당 그룹에 속하는 유저에게 읽기/쓰기 권한 삭제
+chmod u-r blue-byb-pos     # 해당 파일을 소유한 사람에게 읽기 권한 삭제
+chmod ugo-rwx blue-byb-pos # 소유자, 그룹, 모든 유저에게 읽기/쓰기/실행 권한 삭제 (= chmod a-rwx blue-byb-pos)
+```
+
+숫자로도 수정 가능하다.
+
+```bash
+chmod 777 blue-byb-pos     # 소유자, 그룹, 모든 유저에게 읽기/쓰기/실행 권한 부여
+```
+
+## 4. 소유권 변경 (chown)
+
+```bash
+chown [소유주] [변경할 파일]
+chown [소유주]:[그룹] [변경할 디렉토리]
+```
+
+```bash
+chown nginx blue-byb-pos
+chown nginx:nginx blue-byb-pos
+chown -R nginx:nginx blue-byb-pos
+```
+
+`-R` 옵션을 주면 디렉토리 안의 파일들의 소유권도 모두 변경된다.
+
+## 5. 그룹 변경 (chgrp)
+
+```bash
+chgrp [그룹] [변경할 파일]
+```
+
+```bash
+chgrp nginx blue-byb-pos
+chgrp -R nginx blue-byb-pos
+```
+
+이것도 마찬가지로 `-R` 옵션을 주면 디렉토리 안의 파일들의 소유 그룹이 모두 변경된다.
+
+## 문제 상황
+
+nginx로 정적 파일인 `blue-byb-pos`, `blue-byb-kiosk`, `blue-web-wallpad`의 build 파일을 접근해 웹앱 배포를 하려고 하다가 문제가 발생했다.
+
+> 8088 port 번호로 build 파일의 index.html을 실행
+
+`nginx.conf`로 nginx를 실행하게 되면 nginx는 기본적으로 `/etc/nginx/nginx.conf`의 위치에서 실행되고 nginx의 프로세스를 갖는 소유주는 `nginx`이다.
+
+그런데 `/etc/nginx`의 위치에서 `/home/htbeyond` 내부에 있는 `blue-byb-pos` 등을 접근하려고 하니 **internal server error 500**이 발생했다.
+
+internal server error 500이 발생하는 원인은 여러 가지가 있었지만 가장 유력했던 건 권한 체크였다.
+
+`nginx`의 문법 중에 `user nginx`가 있는데 이는 nginx의 process의 소유주를 뜻한다. 그러나 `user htbeyond`로 실행하게 되면 정상적으로 웹앱이 실행됨을 확인할 수 있었다.
+
+그러나 `user htbeyond`로 선언하여 구현하지 않은 이유는 devops에서 htbeyond에 거의 모든 권한을 부여하고 있기에 위험하다는 의견이 있었기 때문이다.
+
+그래서 다른 방법을 찾아봤던 것이 권한 설정이다.
+
+nginx는 그저 build 파일에 접근해 실행하는 것이다. 그렇기 때문에 실행하고자 하는 `blue-byb-pos`와 시작점부터 다른 nginx는 `blue-byb-pos` 폴더에 접근 및 실행이 가능토록 권한을 줘야 하는 것이다!
+
+그리하여!
+
+```bash
+chmod -R 755 /home/htbeyond/blue-byb-pos
+chmod 711 /home/htbeyond
+```
+
+를 실행하여 외부 접근 즉, 다른 사용자(Other)에 대해 권한을 부여해주었다.
+
+`chmod -R 755 /home/htbeyond`를 하지 않은 이유는 htbeyond의 하위 폴더에는 blue 웹앱만 존재하는 것이 아니라 red, devops 팀 관련 폴더도 있기 때문에 blue와 연관된 폴더만 권한 체크를 주기 위해서 위와 같이 2번 권한을 설정하게 되었다.
+
+그랬더니 nginx는 `blue-byb-pos`(소유주 `htbeyond`)를 실행할 권한을 갖게 되어 포스 웹앱을 실행할 수 있게 되었다!!!!
+
+테스트를 위해 `chmod 700 /home/htbeyond`로 권한을 제거하였더니 다시 500 에러가 발생하는 것을 확인할 수 있었다!

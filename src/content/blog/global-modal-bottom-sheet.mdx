@@ -1,0 +1,201 @@
+---
+title: "Modal과 Bottom Sheet의 전역 관리 — 안드로이드 백버튼·코드 정리·자유로운 호출"
+description: "uikit 라이브러리에서 Modal과 Bottom Sheet를 useContext 기반으로 전역 관리하도록 설계한 과정. 구현·사용·고려해야 할 점·적용 결과까지."
+date: "2023-10-30"
+tags: ["React", "useContext", "Modal", "Bottom Sheet", "Android WebView"]
+category: "React"
+---
+
+## 전역 관리의 이점
+
+1. 안드로이드 백버튼 제어가 가능하다.
+2. 사용할 때마다 생기는 open state 및 컴포넌트를 선언하지 않아도 된다.
+3. 현재 페이지와 상관없이 열고 끄기가 자유롭다.
+
+## 구현 방법
+
+### useContext
+
+```tsx
+/* eslint-disable @typescript-eslint/no-empty-function */
+import React, { PropsWithChildren, createContext, useState } from "react";
+import Modal from "..";
+import { IModalProps } from "../interface/ModalProps";
+
+type ModalProps = PropsWithChildren<Omit<IModalProps, "open">>;
+type TModal = {
+  isOpen: boolean;
+  open: (props: ModalProps) => void;
+  close: () => void;
+};
+
+const defaultValue = {
+  isOpen: false,
+  open: () => {},
+  close: () => {},
+};
+
+const ModalContext = createContext<TModal>(defaultValue);
+
+const ModalProvider = ({ children }: { children: React.ReactNode }) => {
+  const [isOpen, setIsOpen] = useState<boolean>(false);
+  const [modal, setModal] = useState<ModalProps>({ okText: "" });
+
+  const open = (props: ModalProps) => {
+    setIsOpen(true);
+    setModal(props);
+  };
+
+  const close = () => {
+    setIsOpen(false);
+  };
+
+  return (
+    <ModalContext.Provider value={{ isOpen, open, close }}>
+      <Modal
+        {...modal}
+        open={isOpen}
+        onOk={() => {
+          close();
+          modal.onOk?.();
+        }}
+        onClose={() => {
+          close();
+          modal.onClose?.();
+        }}
+      />
+      {children}
+    </ModalContext.Provider>
+  );
+};
+
+export { ModalProps, ModalContext, ModalProvider };
+```
+
+```tsx
+import { useContext } from "react";
+import { ModalContext, ModalProps } from "./modal";
+import { DURATION } from "../constant/duration";
+
+export default function useModal() {
+  const { isOpen, open, close } = useContext(ModalContext);
+
+  const openModal = (props: ModalProps) => {
+    open(props);
+  };
+
+  const closeModal = (callback?: () => void) => {
+    close();
+    if (callback) {
+      setTimeout(() => {
+        callback();
+      }, DURATION);
+    }
+  };
+
+  return { isOpen, openModal, closeModal };
+}
+```
+
+### redux / recoil
+
+상태 관리 라이브러리로도 동일하게 구현 가능. 이 글에서는 useContext 기준으로 정리한다.
+
+## 사용 방법
+
+전역으로 관리되기 때문에 **최상단에 선언**해준다.
+
+`createBybRouter`에서 선언했다. 선언 순서에 다음 제약이 있었다.
+
+- `BottomSheet` 내에서 route 기능이 쓰이기 때문에 `RouterProvider`보다는 하위에
+- 안드로이드 백버튼 선언(`window.nativeBack`)이 `V2App` 하위에 있기 때문에 `V2App`보다는 상위에
+- `ModalProvider`가 `BottomSheetProvider`보다 상위에
+
+이후에는 `useModal`, `useBottomSheet`의 `isOpen`, `open`, `close` 함수를 이용한다.
+
+```tsx
+import { useModal } from "@htbeyond/uikit";
+import { openLoginModal } from "@module/shared/util/modal/openLoginModal";
+
+export function useHomeState() {
+  const { openModal } = useModal();
+  // ...
+
+  /* 입주민 신청 */
+  const onApplyResident = () => {
+    if (!AuthManager.isLogin()) {
+      openLoginModal(openModal);
+      return;
+    }
+    // ...
+  };
+  // ...
+}
+```
+
+```tsx
+import { ModalProps, Typo } from "@htbeyond/uikit";
+import { NativeInterfaceUtil } from "@module/shared/util/NativeInterfaceUtil";
+
+export function openLoginModal(openModal: (props: ModalProps) => void) {
+  openModal({
+    children: (
+      <Typo.Body size="14" align="center">
+        로그인이 필요한 기능입니다.{"\n"}로그인 하시겠어요?
+      </Typo.Body>
+    ),
+    okText: "로그인 하기",
+    cancelText: "취소",
+    onOk: () => NativeInterfaceUtil.signOut(false),
+  });
+}
+```
+
+### 안드로이드 백버튼 제어
+
+```tsx
+import { useBottomSheet, useModal } from "@htbeyond/uikit";
+
+export function useNativeBack(callback?: () => void): () => {
+  type: NativeBackResult;
+} {
+  const navigate = useNavigate();
+  const { isOpen: isBottomSheetOpen, closeBottomSheet } = useBottomSheet();
+  const { isOpen: isModalOpen, closeModal } = useModal();
+
+  // 안드로이드 백버튼 이벤트 처리용
+  return () => {
+    // ...
+    if (isBottomSheetOpen) {
+      closeBottomSheet();
+    } else if (isModalOpen) {
+      closeModal();
+      callback?.();
+    } else navigate(-1);
+
+    return { type: "NOT_EXIT" };
+  };
+}
+```
+
+## 고려해야 할 점 (어려웠던 점)
+
+1. **ReactPortal을 통해 body 바로 아래에 선언해주기 때문에**
+   - 기존에 페이지를 벗어나면 모달이나 바텀시트가 (꺼지진 않았으나) 언마운트되기 때문에 사라지게 되었으나
+   - 전역 관리를 하게 되면 페이지를 벗어나도 모달이나 바텀시트가 살아있기 때문에 제대로 꺼 주어야 한다.
+   - (ReactRouterPrompt 구현했을 때 겪은 문제)
+
+2. **`ModalProvider`가 `BottomSheetProvider`보다 상위에 존재해야 하는 이유**는 소통공간의 피드와 댓글 기능을 살펴보면 쉽게 알 수 있다.
+   - 바텀시트가 꺼진 후 모달이 켜져야 하기 때문에 반대로 되게 되면 모달이 안 켜진다.
+   - 바텀시트가 없으면 그 하위의 것도 없기 때문!
+   - (위 기능이 구현된 파일: `FeedMoreActionController.tsx`, `CommentMoreActionController.tsx`)
+
+3. **모달과 바텀시트가 꺼질 때 애니메이션이 적용되기 때문에 그 다음 스텝이 필요할 때 딜레이가 필요하다.**
+   - (이건 대부분..?)
+
+## 적용 결과
+
+1. 전역 관리로 코드가 더 깔끔해졌다.
+2. 상태 관리가 용이해졌다. 신경을 덜 써도 된다.
+3. 원하는 곳에서 호출이 가능하다.
+4. 할 수 없었던 기능을 구현할 수 있었다. (백버튼…)

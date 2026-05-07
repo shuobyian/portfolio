@@ -1,0 +1,102 @@
+---
+title: "AWS Amplify v4 → v6 마이그레이션 (Storage API)"
+description: "partners-2에서 aws-amplify를 v4에서 v6로 올리며 바뀐 Storage API 정리. config 타입, put/get/remove 호출 방식의 Before/After."
+date: "2024-07-18"
+tags: ["AWS Amplify", "AWS S3", "마이그레이션"]
+category: "DevOps & 배포"
+---
+
+partners-2에서 aws-amplify version을 변경하게 된 이유와 v4 → v6 사이의 주요 API 변경점을 정리한다.
+
+| 버전 | 비고 |
+| --- | --- |
+| aws-amplify v4 | `4.3.14` |
+| aws-amplify v6 | `6.3.8` |
+
+## 1. Amplify.config type
+
+| v4 | v6 |
+| --- | --- |
+| `config: any` | `config: ResourcesConfig \| LegacyConfig \| AmplifyOutputs` |
+
+## 2. Storage S3 Upload
+
+### v4 — `Storage.put`
+
+```ts
+Storage.put(s3Key, file, {
+  level,
+  contentType: "image/*",
+});
+```
+
+### v6 — `uploadData`
+
+```ts
+const data = await uploadData({
+  path,
+  data: file,
+  options: {
+    contentType: "image/*",
+  },
+});
+
+const { path } = await data.result;
+```
+
+## 3. Storage S3 Get
+
+### v4 — `Storage.get`
+
+```ts
+async function getStorage(s3FileLocation: S3FileLocation) {
+  return (await Storage.get(s3FileLocation.key, {
+    level: s3FileLocation.level,
+    identityId: s3FileLocation.identityId,
+    download: true,
+  })) as unknown as { Body: Blob };
+}
+```
+
+### v6 — `downloadData`
+
+```ts
+async function getStorage(s3FileLocation: S3FileLocation) {
+  const { body } = await downloadData({
+    path: [s3FileLocation.level, s3FileLocation.key].join("/"),
+  }).result;
+
+  return body.blob();
+}
+```
+
+## 4. Storage S3 Remove
+
+### v4 — `Storage.remove`
+
+```ts
+async function removeS3Image(key: string) {
+  return Storage.remove(key);
+}
+```
+
+### v6 — `remove`
+
+```ts
+async function removeS3Image(key: string) {
+  return remove({ path: ["public", key].join("/") });
+}
+```
+
+## 5. S3 Key 표현 방식
+
+| v4 | v6 |
+| --- | --- |
+| `S3FileLocation` 객체 (`key`, `level`, `identityId`) | `path` (단순 string) |
+
+v6에서는 `level`과 `key`를 슬래시로 합쳐 단일 `path` 문자열로 다루는 형태로 단순화됐다.
+
+## 참조
+
+- [Overview - React - AWS Amplify Gen 1 Documentation](https://docs.amplify.aws/gen1/react/start/getting-started/introduction/)
+- [Migrate from v5 to v6 - React - AWS Amplify Gen 1 Documentation](https://docs.amplify.aws/gen1/react/build-a-backend/troubleshooting/migrate-from-javascript-v5-to-v6/)

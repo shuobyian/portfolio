@@ -11,6 +11,7 @@ export interface Project {
   highlights: string[];
   featured?: boolean;
   company?: string;
+  relatedPostSlugs?: string[];
 }
 
 const projects: Project[] = [
@@ -48,7 +49,7 @@ const projects: Project[] = [
       "자체 Monorepo 디자인 시스템을 첫 적용한 프로젝트. 토큰·컴포넌트 구조를 운영 환경에서 처음 검증하여 사내 표준 정착의 기반 마련",
       "기능 단위 컴포넌트 분리로 메뉴 추가 시 기존 화면 영향 없이 확장 가능한 구조 설계",
       "파일 업로드 모듈 구현: AWS S3 업로드/다운로드 처리. 게시글 작성 흐름과 첨부 파일 생성·삭제 라이프사이클을 연동하여 게시글 단위로 파일 일관 관리",
-      "이후 2026.02-03에 BI 사전 검증 목적으로 Antd 디자인 시스템으로 마이그레이션 (백오피스 리팩토링 참조)",
+      "이후 2026.02-03에 BI 사전 검증 목적으로 Antd 디자인 시스템으로 마이그레이션 ([백오피스 리팩토링](/projects/backoffice-refactor) 참조)",
     ],
   },
   {
@@ -65,7 +66,7 @@ const projects: Project[] = [
       "의사결정: SSR 라우팅 제약·운영 인력의 장기 유지보수 가능 기술 폭·초기 번들 사이즈 요구·백엔드 Spring 전환과 동기화된 일정 안에 안정화 가능 여부를 종합 검토하여 Vanilla JS 선택",
       "HTML/CSS/JavaScript만으로 라우팅 진입점, 상태 컨테이너, 이벤트 위임 처리 모듈을 자체 구현하여 프레임워크 의존도 없이 유지보수 가능한 구조 설계",
       "SSR 환경에 최적화된 자체 디자인 시스템을 별도 설계 — 사내 Monorepo·Antd 라인과 토큰·컴포넌트 모두 분리 운영",
-      "이후 2026.02-03에 React Island 패턴으로 부분 전환 (팜브릿지 서비스 리팩토링 참조)",
+      "이후 2026.02-03에 React Island 패턴으로 부분 전환 ([팜브릿지 서비스 리팩토링](/projects/pharm-bridge-refactor) 참조)",
     ],
     featured: true,
   },
@@ -195,6 +196,7 @@ const projects: Project[] = [
       "트러블슈팅: 한 매장에 메인(직원)+서브(고객) 두 대의 독립 크롬 윈도우가 동시에 떠 결제 상태·주문 내역·세션을 실시간 공유해야 하는 요구. 팀 내 윈도우 간 통신 선례가 없는 상황에서 WebSocket 서버 신설 없이 동일 origin 내에서 해결 가능한 Web API Broadcast Channel을 1차 채널로 채택하고, 메시지 유실에 대비해 localStorage event를 백업 채널로 두는 이중 구조 설계. 수신 측에서 메시지를 받아 React Query invalidate를 호출하는 방식으로 두 화면 동기화 통합",
     ],
     featured: true,
+    relatedPostSlugs: ["post-message-browser-communication"],
   },
   {
     slug: "byby-2",
@@ -220,22 +222,35 @@ const projects: Project[] = [
       "전역 Modal / Bottom Sheet 구현으로 모바일 네비게이션 및 백버튼 대응",
       "Storybook 기반 디자인 시스템 구축 및 공통 컴포넌트 개발",
     ],
+    relatedPostSlugs: ["global-modal-bottom-sheet", "coupon-code-bottom-sheet"],
   },
   {
     slug: "cicd-infra",
     title: "프론트엔드 인프라 및 배포 환경 개선",
     description:
-      "Jenkins 기반 CI/CD 파이프라인 구축, Git Tag 버전 관리 전략 수립, AWS S3 배포 및 Ansible 자동 배포 프로세스 개선",
-    tags: ["Jenkins", "Git", "AWS S3", "Ansible", "YAML"],
+      "엣지(현장) 서버에 배포되는 프론트 프로덕트의 WebServer를 pm2 serve에서 nginx로 전환하고, Ansible Semaphore + Jenkins + AWS S3를 잇는 단일 배포 파이프라인 구축. Git Tag 기반 version 관리로 단지별 배포 버전 추적 가능",
+    tags: [
+      "Jenkins",
+      "Ansible Semaphore",
+      "AWS S3",
+      "nginx",
+      "Git Tag",
+      "YAML",
+      "Linux",
+    ],
     period: "2024.02 - 2024.04",
     role: "프론트엔드 인프라",
     company: "에이치티비욘드",
     highlights: [
-      "Jenkins 기반 CI/CD 파이프라인 구축 및 운영",
-      "Git Tag 기반 버전 관리 전략 수립 (dev / alpha / prod)",
-      "AWS S3 기반 빌드 산출물 배포 및 환경별 관리",
-      "Ansible Semaphore를 활용한 현장(단지)별 자동 배포 프로세스 개선",
+      "엣지 배포 환경 전환: blue-byb-pos·blue-byb-kiosk·blue-web-wallpad 3개 프론트 프로덕트의 WebServer를 pm2 serve → nginx 정적 콘텐츠 서비스로 이관. pm2 설정 변경 없이 build 파일 교체만으로 배포가 완결되도록 구조 단순화",
+      "Ansible Semaphore + Jenkins + AWS S3를 잇는 단일 배포 파이프라인 구축 (GITHUB_BUNDLE_CHECK → JENKINS_BUILD → DEPLOY_TO_EDGE 3단계 yaml 정의)",
+      "POS·KIOSK 빌드 통합: REACT_APP_PRODUCT 환경변수 sed 치환으로 한 번의 build step에서 두 프로덕트 산출물을 동시 생성하도록 변경 (이전 2회 빌드 → 1회)",
+      "AWS S3 빌드 산출물을 Git Tag 기반 version 단위로 관리 (이전 build_id 기반 → version_tag 기반). devops-bundle에서 단지별 배포 버전을 명시적으로 추적 가능하도록 개선",
+      "트러블슈팅: Jenkins build parameter에 version_tag·s3_bucket_name 분리 도입 — origin/develop 같이 슬래시 포함 tag가 s3 폴더명과 미스매치되어 파일을 못 찾는 이슈 해결",
+      "nginx 정적 콘텐츠 실행을 위한 build 폴더 권한 자동화 (chmod 755 + /home/htbeyond에 711 — 다른 팀 폴더에 영향을 주지 않으면서 nginx만 통과 가능하도록 최소 권한)",
+      "Git Tag 기반 버전 관리 전략 수립 (dev / alpha / prod) — 환경별 배포 흐름 일관화",
     ],
+    relatedPostSlugs: ["edge-deployment-pipeline", "linux-permissions-nginx"],
   },
   {
     slug: "pwa-notification",

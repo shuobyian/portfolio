@@ -1,0 +1,71 @@
+---
+title: "ReactDOM.render vs createRoot in React 18"
+description: "React 18로 업그레이드하면서 마주친 ReactDOM.render → createRoot 변경. 왜 새로운 Root API가 도입되었는지 정리."
+date: "2023-12-28"
+tags: ["React", "React 18", "createRoot"]
+category: "React"
+---
+
+React 18로 버전을 올리고 yarn install을 하니 에러가 났다.
+
+> Warning: ReactDOM.render is no longer supported in React 18. Use createRoot instead. Until you switch to the new API, your app will behave as if it's running React 17.
+
+새로 나온 리액트 18에서는 ReactDOM.render가 아니라, createRoot를 사용해야 한다고 한다.
+
+원래 코드는
+
+```tsx
+/* eslint-disable import/extensions */
+import React from "react";
+import ReactDOM from "react-dom";
+import App from "./App";
+
+ReactDOM.render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>,
+  document.getElementById("root"),
+);
+```
+
+이렇게 되어 있었다.
+
+버전 18 부터는
+
+```tsx
+/* eslint-disable import/extensions */
+import React from "react";
+import { createRoot } from "react-dom/client";
+import App from "./App";
+
+const root = createRoot(document.getElementById("root") as HTMLElement);
+root.render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>,
+);
+```
+
+이렇게 바꿔주어야 했다.
+
+## React Team은 왜 새로운 Root API를 적용하게 되었을까?
+
+18 버전 이전의 React에서는 루트가 되는 컨테이너에 변화가 없더라도 render 하기 위해서, 루트를 반드시 체크하고, 루트를 통과 했어야만 했다. 이 과정은 React가 [Virtual DOM](https://callmedevmomo.medium.com/virtual-dom-react-%ED%95%B5%EC%8B%AC%EC%A0%95%EB%A6%AC-bfbfcecc4fbb)을 사용하기 때문에 반드시 거쳐야 하는 작업이다. React 팀에서는 루트가 되는 컨테이너를 랜더링 과정을 거칠 때마다, 매번 해당 루트를 통과할 필요가 없다고 생각했고, 이런 무의미한 반복되는 과정을 개선하기 위해서 새로운 Root API를 18 버전에 적용하게 되었다.
+
+18 버전 이후부터는 새로운 Root API인 createRoot를 통해서, 브라우저 이벤트뿐만 아니라 어떤 이벤트에서 발생하는 state 업데이트를 어디서 발생했는지를 신경 쓰지 않고 자동으로 업데이트들을 배칭시킨다. setTimeout, promise, native event handler 등에서 발생하는 모든 state 업데이트는, React에서 발생하는 이벤트 내부의 업데이트와 동일한 방식으로 state 업데이트들을 [Batching](https://velog.io/@rookieand/React-18%EC%97%90%EC%84%9C-%EC%B6%94%EA%B0%80%EB%90%9C-Auto-Batching-%EC%9D%80-%EB%AC%B4%EC%97%87%EC%9D%B8%EA%B0%80) 하여 여러 번 수행 했어야 했던 랜더링 과정을 단 한 번만 처리할 수 있게 해줬고, 이는 리랜더링 횟수를 최소화하여, 애플리케이션의 성능 향상을 기대할 수 있게 되었다.
+
+## ReactDOM.render vs createRoot 비교
+
+### ReactDOM.render
+
+이 방식에서는 옛날 리액트 방식인 callStack Architecture을 이용한 동기식 처리를 통해 렌더링한다. 따라서 작업 처리 중 userInteraction을 처리하지 못해 사용성이 떨어지게 될 수 있다. 렌더링도 LIFO 방식인 것이다.
+
+### createRoot
+
+우리에게 익숙한 fiber Architecture을 이용한 비동기식 처리([concurrent mode](https://velog.io/@heelieben/React-18-Concurrent-Rendering))가 가능하다.
+
+---
+
+root는 React가 랜더링을 위해 가상 돔 트리를 추적하는 데 사용하는 최상단에 위치한 데이터 구조 포인터를 의미한다.
+
+public 폴더 하에 index.html을 살펴보면 `<div id="root"></div>` 라는 요소를 살펴볼 수 있는데, 해당 요소가 루트 요소다.

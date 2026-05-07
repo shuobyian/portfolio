@@ -1,0 +1,212 @@
+---
+title: "엣지에 배포되는 프로젝트 관리: pm2 → nginx 전환 + Ansible/Jenkins/S3 단일 파이프라인"
+description: "pm2로 운영하던 엣지 프로젝트를 nginx 정적 콘텐츠 서비스로 이관하고, Ansible Semaphore + Jenkins + AWS S3를 잇는 단일 배포 파이프라인을 구축한 과정. yaml/Configure 변경 디테일과 트러블슈팅까지."
+date: "2024-03-28"
+tags: ["nginx", "Ansible", "Jenkins", "AWS S3", "DevOps", "CI/CD"]
+category: "DevOps & 배포"
+---
+
+> [PL-750: 엣지에 배포되는 프로젝트를 ansible로 관리 및 배포하고, WebServer를 pm2 serve에서 nginx로 변경](/projects/cicd-infra)
+
+이전 글([리눅스 권한 설정 (chmod, chown, chgrp) — nginx edge 배포 트러블슈팅](/blog/linux-permissions-nginx))에서 권한 설정 부분을 다뤘다면, 이번 글은 그 작업이 속한 **전체 파이프라인** 이야기다.
+
+## 엣지에 배포되는 프로덕트 목록
+
+1. `blue-byb-pos` → localhost:8088
+2. `blue-byb-kiosk` → localhost:8087
+3. `blue-edge-logger` → localhost:8080
+4. `blue-web-wallpad` → localhost:8089
+
+### AS-IS vs TO-BE
+
+| 구분 | AS-IS | TO-BE |
+| --- | --- | --- |
+| **pm2로 실행** | blue-byb-pos / blue-byb-kiosk / blue-edge-logger / blue-web-wallpad (4개 모두) | blue-edge-logger (1개만) |
+| **nginx 정적 콘텐츠 서비스** | — | blue-byb-pos / blue-byb-kiosk / blue-web-wallpad (3개) |
+
+---
+
+## nginx에 새로운 빌드 배포를 추가하는 방법
+
+### 1. `red-nginx-proxy` 레포지토리 clone
+
+```bash
+git clone https://github.com/htbeyond/red-nginx-proxy.git
+```
+
+### 2. 프론트팀 설정 파일을 `config/blue/*.conf`에 추가
+
+```nginx
+server {
+    listen 8088; # 실행하고자 하는 port 번호를 설정한다.
+
+    location / {
+        root /home/htbeyond/blue-byb-pos/build-pos; # 실행하고자 하는 build 폴더의 위치
+        index index.html;                           # 실행하고자 하는 파일의 root 파일
+        try_files $uri /index.html;                 # 하위 url들을 접근하기 위한 코드
+    }
+}
+```
+
+### 3. `config/nginx.conf` 파일에 실행되도록 추가되어 있다
+
+### 4. edge 서버 접속 후 `git pull`
+
+### 5. `./update-nginx-config.sh` 실행
+
+이 스크립트는 다음 작업을 수행한다.
+
+- repo version 체크
+- nginx config 백업 폴더 생성
+- nginx reload (꺼지지 않고 다시 시작되는 명령어)
+
+### 6. 잘 켜졌는지 확인
+
+```bash
+curl localhost:[port number]
+```
+
+위 과정을 수행하면 nginx에 웹앱을 실행할 수 있다.
+
+---
+
+## Devops Ansible-Semaphore와 연동
+
+`devops-ansible` 레포지토리에서 설정한다. Ansible Semaphore에서 실행하는 `BLUE-BYB-POS_DEVELOPMENT.yaml`에서 일련의 과정을 거친다.
+
+### GITHUB_BUNDLE_CHECK.yaml (변경된 부분만 설명)
+
+`devops-bundle` 파일에서 각각 설정한 버전을 가져온다. 이 로직을 통해 `version`이라는 변수에 `devops-bundle`에서 설정한 버전이 들어오게 된다.
+
+### JENKINS_BUILD.yaml (변경된 부분만 설명)
+
+1. **기존**: jenkins build → `build_id`를 통해 빌드되고, S3에 빌드 파일이 업로드된다.
+   - semaphore → jenkins build → `build_id`를 통한 S3 파일 업로드 → 빌드할 때마다 폴더가 생긴다.
+2. **변경**: jenkins build → `version_tag`로 빌드되고, S3에 빌드 파일이 업로드된다.
+   - semaphore → jenkins build → `version_tag`를 통한 S3 파일 업로드 → 버전 별로 관리가 가능하다.
+3. 가져온 version을 통해 jenkins parameter를 생성하고 jenkins build를 실행한다.
+4. AWS S3에서 빌드 결과물을 가져와 EDGE 서버의 build 폴더를 교체한다.
+
+### DEPLOY_TO_EDGE.yaml (변경된 부분만 설명)
+
+1. 이어서 EDGE 서버의 build 폴더 교체 일련의 과정이 진행된다.
+2. 실행할 build 폴더에 nginx가 실행할 수 있도록 권한을 부여한다.
+   - 권한을 부여해야 하는 이유는 [리눅스 권한 설정 글](/blog/linux-permissions-nginx)에 잘 나타나 있다.
+
+---
+
+## Jenkins Configure 설정
+
+`JENKINS_BUILD.yaml` 파일에서 변경된 사항을 반영하기 위해서는 jenkins configure 설정을 수정해주어야 한다.
+
+### build parameter 추가하기
+
+1. **`version_tag`**
+   - git tag를 기본으로 설정하지만 설정 값이 없을 경우 `origin/develop`로 빌드한다.
+   - alpha 환경은 `origin/alpha`, 상용은 `origin/main`
+2. **`s3_bucket_name`**
+   - `version_tag`로 s3 bucket name을 대신하려 했지만 문제가 생겨 추가한 값이다. (밑에 이유가 나온다.)
+
+### git target branch를 변경한다
+
+원래는 `*/develop` 이었다.
+
+### Build step이 변경되었다 (`blue-byb-pos`에만 해당)
+
+1. pm2를 위한 `ecosystem.config.js` 세팅을 제거했다.
+2. `.env` 파일을 프로젝트에 포함시켜 `.env` 파일 생성하는 부분을 제거했다.
+3. `REACT_APP_PRODUCT`를 변경하여 pos와 kiosk의 build를 같이 진행한다.
+4. `package.json`이 변경되었다.
+
+**이전:**
+
+```bash
+echo ""
+echo ">> Excecute Shell Start !"
+echo ""
+echo ">> Make Environment File ..."
+echo ""
+echo -e "
+# .env.develop
+REACT_APP_PRODUCT=POS
+REACT_APP_PROFILE=DEV
+REACT_APP_RED_KIOSK_IP=https://172.22.200.200:40005
+REACT_APP_LOG_SERVER=http://172.22.200.200:8080
+" > ./.env.develop
+echo ""
+echo ">> Install NPM Dependencies ..."
+echo ""
+npm i
+echo ""
+echo ">> Build Project ..."
+echo ""
+CI=false npm run build-dev-pos
+echo ""
+echo ">> Excecute Shell Done !"
+echo ""
+mv pos-ecosystem.config.js ecosystem.config.js
+echo ">> Move pos-ecosystem.config.js to ecosystem.config.js Done!"
+echo ""
+```
+
+**변경:**
+
+```bash
+echo ""
+echo ">> Excecute Shell Start !"
+echo ""
+echo ">> Install NPM Dependencies ..."
+echo ""
+npm i
+echo ""
+echo ">> Build Project ..."
+echo ""
+CI=false npm run build-dev-pos    # → build-alpha-pos, build-pos
+echo ""
+echo ">> Build Pos Done"
+echo ""
+sed 's/REACT_APP_PRODUCT=POS/REACT_APP_PRODUCT=KIOSK/g' .env.develop > .env.develop  # → .env.alpha, .env
+echo ""
+CI=false npm run build-dev-kiosk  # → build-alpha-kiosk, build-kiosk
+echo ""
+echo ">> Build Kiosk Done"
+echo ""
+sed 's/REACT_APP_PRODUCT=KIOSK/REACT_APP_PRODUCT=POS/g' .env.develop > .env.develop  # → .env.alpha, .env
+echo ""
+echo ">> Excecute Shell Done !"
+echo ""
+```
+
+### s3 bucket destination을 변경했다
+
+원래는 `${JOB_NAME}-{BUILD_NUMBER}` 였다.
+
+`s3_bucket_name`을 따로 지정한 이유가 바로 여기에서 발생한다.
+
+`devops-ansible`에서 `version=latest`로 지정할 경우 `version_tag` parameter에 `origin/develop`이 들어가게 된다.
+
+이때 `version_tag`를 s3 bucket 폴더가 `blue-byb-pos-origin/develop`로 생성된다.
+
+그러나 파일을 가져올 때 ansible 설정에서는 `blue-byb-pos-latest(version)`로 접근을 하게 되므로 찾을 수 없는 문제가 발생한다.
+
+따라서 jenkins parameter를 `version_tag`와 `s3_bucket_name`으로 따로 지정하게 되었다.
+
+---
+
+## 프로젝트의 결과 및 효과
+
+1. **pm2로 돌아가던 엣지 프로젝트들을 nginx로 변경하였다.**
+   - pm2 설정 없이 빌드 파일만 변경되면 변경 사항을 적용할 수 있게 되었다.
+2. **pos, kiosk를 2번 따로 배포하지 않고 하나로 배포할 수 있다.**
+3. **각 프로덕트의 version 관리가 용이해졌다.**
+   - S3 build 결과물이 version 단위로 저장된다.
+   - `devops-bundle`에서 version 관리할 수 있어 단지 별로 어떤 버전이 배포되어 있는지 확인할 수 있다.
+
+---
+
+## 추가 개선 사항
+
+S3-bucket에 업로드된 빌드 파일 중에 같은 버전이 있는 게
+
+- **있다면** → build 돌아가지 않고 S3 bucket에서 바로 가져온다.
+- **없으면** → build가 돌아간다. (지금과 동일한 플로우)

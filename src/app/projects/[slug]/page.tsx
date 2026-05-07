@@ -1,10 +1,31 @@
 import { notFound } from "next/navigation";
-import { ArrowLeft, ExternalLink, Github } from "lucide-react";
+import { ArrowLeft, BookOpen, ExternalLink, Github } from "lucide-react";
 import Link from "next/link";
 import { Section } from "@/components/ui/section";
 import { getAllProjects, getProjectBySlug } from "@/lib/projects";
+import { getPostBySlug } from "@/lib/blog";
 import { PosKioskDeepDive } from "@/components/projects/pos-kiosk-deep-dive";
 import type { Metadata } from "next";
+
+function renderHighlight(text: string) {
+  const parts = text.split(/(\[[^\]]+\]\([^)]+\))/g);
+  return parts.map((part, i) => {
+    const match = part.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
+    if (match) {
+      const [, label, href] = match;
+      return (
+        <Link
+          key={i}
+          href={href}
+          className="text-accent underline-offset-2 hover:underline"
+        >
+          {label}
+        </Link>
+      );
+    }
+    return <span key={i}>{part}</span>;
+  });
+}
 
 export function generateStaticParams() {
   return getAllProjects().map((p) => ({ slug: p.slug }));
@@ -97,11 +118,44 @@ export default async function ProjectDetail({
           {project.highlights.map((item, i) => (
             <li key={i} className="flex items-start gap-3 text-muted-foreground">
               <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-accent" />
-              {item}
+              <span>{renderHighlight(item)}</span>
             </li>
           ))}
         </ul>
       </div>
+
+      {project.relatedPostSlugs && project.relatedPostSlugs.length > 0 && (
+        <div className="mt-12">
+          <h2 className="text-xl font-semibold">관련 블로그 글</h2>
+          <ul className="mt-4 space-y-3">
+            {project.relatedPostSlugs.map((slug) => {
+              const post = getPostBySlug(slug);
+              if (!post) return null;
+              return (
+                <li key={slug}>
+                  <Link
+                    href={`/blog/${slug}`}
+                    className="group flex items-start gap-3 rounded-lg border border-border p-4 transition-colors hover:border-accent/50"
+                  >
+                    <BookOpen
+                      size={16}
+                      className="mt-1 flex-shrink-0 text-accent"
+                    />
+                    <div className="min-w-0">
+                      <p className="font-medium transition-colors group-hover:text-accent">
+                        {post.title}
+                      </p>
+                      <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
+                        {post.description}
+                      </p>
+                    </div>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
 
       {project.slug === "pos-kiosk" && <PosKioskDeepDive />}
     </Section>

@@ -1,0 +1,137 @@
+---
+title: "브라우저 탭 간 실시간 통신 방법 4가지 비교 (Post Message)"
+description: "바이비 포스 기능에서 서로 다른 브라우저 탭 사이 실시간 통신이 필요했던 사례. localStorage, BroadcastChannel, Service Worker, Window postMessage 4가지 옵션을 비교하고 BroadcastChannel을 채택한 이유."
+date: "2023-03-13"
+tags: ["JavaScript", "BroadcastChannel", "Web API", "POS"]
+category: "브라우저 & Web API"
+---
+
+## 1. 이 주제의 발단
+
+바이비 포스 기능 중 하나의 요구 사항을 해결하기 위해
+
+> 서로 다른 브라우저 탭 사이에서 데이터를 실시간으로 통신해야 한다.
+
+는 요구가 있었다.
+
+## 2. 브라우저 간의 통신 방법
+
+### 1) localStorage
+
+> 정확히는 탭 별로 이벤트가 발생하는 게 아니고 storage의 event를 가져다 쓰는 꼼수!
+>
+> 로컬 스토리지는 동기적으로 작동하기 때문에 값을 설정하거나 가져올 때에는 렌더링이 블락된다.
+>
+> → 기능에는 문제가 없지만 적합하지 않다고 판단
+
+참고: [Window: storage event - Web APIs | MDN](https://developer.mozilla.org/en-US/docs/Web/API/Window/storage_event)
+
+```ts
+// 데이터를 보내는 곳
+const [selectedProductList, setSelectedProductList] = useState([]);
+localStorage.setItem("selectedProductList", selectedProductList);
+```
+
+```ts
+// 데이터를 받는 곳
+// window로써 통신하게 된다.
+window.addEventListener("storage", (event) => {
+  if (event.key === "selectedProductList") {
+    try {
+      const next = JSON.parse(
+        localStorage.getItem("selectedProductList") ?? "[]",
+      );
+      setSelectedProductList(next);
+    } catch {
+      setSelectedProductList([]);
+    }
+  }
+});
+```
+
+### 2) Broadcast Channel API → 적용한 기능
+
+탭, 윈도우, 프레임, iframe 그리고 Web worker 간에 통신을 할 수 있게 해주는 API. 브라우저 컨텍스트 간의 통신이 가능해진다.
+
+참고: [Broadcast Channel API - Web APIs | MDN](https://developer.mozilla.org/en-US/docs/Web/API/Broadcast_Channel_API)
+
+```ts
+// 데이터를 보내는 곳
+const channel = new BroadcastChannel("selectedProductList");
+channel.postMessage(data);
+```
+
+```ts
+// 데이터를 받는 곳
+// channel로써 통신하게 된다.
+const channel = new BroadcastChannel("selectedProductList");
+channel.addEventListener("message", (event) => {
+  try {
+    const next = JSON.parse(
+      localStorage.getItem("selectedProductList") ?? "[]",
+    );
+    setSelectedProductList(next);
+  } catch {
+    setSelectedProductList([]);
+  }
+});
+```
+
+### 3) Service Worker Post Message
+
+기능이 다양하지만 러닝 커브가 조오금 크며, 복잡한 기능이 필요하지 않다. → 적합하지 않음!
+
+참고: [ServiceWorkerRegistration - Web APIs | MDN](https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorkerRegistration)
+
+```ts
+// 데이터를 보내는 곳
+navigator.serviceWorker.controller.postMessage({
+  broadcast: data,
+});
+```
+
+```ts
+// 데이터를 받는 곳
+addEventListener("message", async (event) => {
+  if ("broadcast" in event.data) {
+    const allClients = await clients.matchAll();
+    for (const client of allClients) {
+      client.postMessage(event.broadcast);
+    }
+  }
+});
+```
+
+### 4) Window Post Message
+
+`window.open()`, `document.open()`을 실행할 때만 사용할 수 있다. → 적합하지 않음!
+
+참고: [Window: postMessage() method - Web APIs | MDN](https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage)
+
+```ts
+// 데이터를 보내는 곳
+targetWindow.postMessage(message, targetOrigin);
+```
+
+```ts
+// 데이터를 받는 곳
+window.addEventListener(
+  "message",
+  (event) => {
+    if (event.origin !== "http://localhost:8080") return;
+  },
+  false,
+);
+```
+
+## 3. Broadcast Channel 이란?
+
+브라우징 컨텍스트 간의 통신을 보다 쉽게 해주는 간단한 API이다. 즉, 창/탭, iframe, 웹 작업자 및 서비스 작업자 간의 통신이며, 지정된 채널에 게시된 메시지는 해당 채널의 모든 청취자에게 전달된다.
+
+`BroadcastChannel` 생성자는 채널 이름이라는 단일 매개변수를 사용한다. 이름은 채널을 식별하고 브라우징 컨텍스트 전반에 존재한다.
+
+## 출처
+
+- [브라우저 탭 간의 실시간 통신하는 4가지 방법](https://blog.bitsrc.io/4-ways-to-communicate-across-browser-tabs-in-realtime-e4f5f6cbedca)
+- [How to use the BroadcastChannel API in JavaScript | DigitalOcean](https://www.digitalocean.com/community/tutorials/js-broadcastchannel-api)
+- [[JavaScript] BroadcastChannel API란?](https://dev-record-levelup.tistory.com/6)

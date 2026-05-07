@@ -1,0 +1,60 @@
+---
+title: "Tailwind CSS default theme — ui-kit 업데이트 후 border 색상 이슈"
+description: "ui-kit 1.0.80 → 1.0.81 업데이트 후 포스 화면의 border 색상이 모두 검정으로 바뀐 사건. extends.colors가 theme.colors로 덮어씌워지면서 currentColor가 적용되어버린 원인 분석과 해결."
+date: "2024-06-13"
+tags: ["Tailwind CSS", "CSS", "트러블슈팅"]
+category: "CSS & UI"
+---
+
+## 발단
+
+> PL-8558: [포스] 화면 border 색상 오류 — DONE
+
+주문 위쪽, 총 0개 왼쪽 등의 위치에서 border 색상이 의도와 다르게 표시되는 이슈가 보고됐다.
+
+## 전개
+
+[이 코멘트](https://github.com/htbeyond/blue-byb-pos/pull/160#issuecomment-2154700409)에서 시작.
+
+`ui-kit`의 1.0.80 → 1.0.81 버전 변경점:
+
+[관련 PR](https://github.com/htbeyond/ui-kit/pull/242#issue-2093428229)
+
+> `extends`에 `colors`가 사라지고 그 상위인 `theme`의 `colors`에 덮어씌워지게 됨
+
+## 이슈 원인
+
+참고 문서:
+
+- [Theme Configuration - Tailwind CSS (v3)](https://v3.tailwindcss.com/docs/theme)
+- v3 default theme stub: [`stubs/config.full.js` (v3.4.17 기준)](https://github.com/tailwindlabs/tailwindcss/blob/v3.4.17/stubs/config.full.js)
+- v4부터는 CSS-first 설정으로 전환되어 `stubs/` 폴더가 삭제됨. default theme은 [`packages/tailwindcss/theme.css`](https://github.com/tailwindlabs/tailwindcss/blob/main/packages/tailwindcss/theme.css)에 CSS Variables 형태로 정의
+
+`theme.colors`로 덮어씌워지게 됨에 따라 `colors.gray.200`의 값을 가져오지 못해 `currentColor` 값이 default 값으로 들어가게 됨.
+
+따라서 `blue-byb-pos`에서 default가 설정되지 않았던 border의 color가 모두 `currentColor`인 black으로 바뀌게 되어 이슈가 발생함.
+
+## 해결 방안
+
+1. **border color를 정의하지 않은 부분을 찾아 모두 색을 넣어준다.** → 채택 (2번을 배포하고 시도해봤다.)
+2. `tailwind.config.js`에 `borderColor`에 DEFAULT 값을 넣어준다.
+   - `extend`에 넣어야 한다.
+
+```js
+// tailwind.config.js
+module.exports = {
+  theme: {
+    extend: {
+      borderColor: {
+        DEFAULT: '#e5e7eb', // colors.gray.200
+      },
+    },
+  },
+};
+```
+
+## 결론
+
+1. Tailwind CSS에 대한 지식 부족으로 발생했다.
+2. 공식 문서를 잘 읽어보자.
+3. 때때로 노가다도 하나의 방법이 될 수 있다.
