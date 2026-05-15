@@ -1,0 +1,277 @@
+---
+title: "Vite로 PWA 만들기 — Service Worker 등록과 manifest, 업데이트 전략"
+description: "CRA의 PWA 템플릿 대신 Vite 환경에서 PWA를 구성한 과정. serviceWorkerRegistration vs registerSW, service-worker.ts의 역할, manifest.json 옵션, autoUpdate/prompt 모드와 skipWaiting까지 정리."
+date: "2025-04-11"
+tags: ["PWA", "Vite", "Service Worker", "Workbox"]
+category: "브라우저 & Web API"
+---
+
+CRA로 PWA를 만드는 방법은 잘 알려져 있다.
+
+```bash
+npx create-react-app pwa-react --template cra-template-pwa-typescript
+```
+
+위 명령어를 실행하면 `serviceWorkerRegistration.ts`와 `service-worker.ts`가 포함된 프로젝트가 생성된다. 다만 이번엔 Vite 환경에서 같은 구조를 직접 꾸려야 했다.
+
+```bash
+npm create vite@latest pwa-template -- --template react-ts
+```
+
+빈 Vite 프로젝트에 PWA 기능을 얹기 위해 한 작업은 다음과 같다.
+
+- `serviceWorkerRegistration.ts` 추가
+- `service-worker.ts` 추가
+- 관련 패키지 설치
+
+```json
+"cra-template-pwa-typescript": "^2.0.0",
+"workbox-core": "^7.3.0",
+"workbox-expiration": "^7.3.0",
+"workbox-precaching": "^7.3.0",
+"workbox-routing": "^7.3.0",
+"workbox-strategies": "^7.3.0",
+"workbox-window": "^7.3.0"
+```
+
+## serviceWorkerRegistration.ts
+
+- **실행 컨텍스트**: 웹 앱의 메인 스레드(브라우저)
+- **클라이언트 사이드 코드**
+
+주요 역할은 다음과 같다.
+
+1. 서비스 워커 지원 여부 확인
+2. 서비스 워커 등록 프로세스 관리
+3. 업데이트 감지 및 알림
+4. 서비스 워커의 라이프사이클 관리
+
+```ts
+// 서비스 워커 등록 및 관리
+export function register(config?: Config) {
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("/service-worker.js");
+  }
+}
+```
+
+### registerSW — Vite PWA 플러그인 대체제
+
+Vite를 쓴다면 `vite-plugin-pwa`가 제공하는 `registerSW` 함수가 더 편하다. 위의 `serviceWorkerRegistration`이 하는 일을 고수준 API로 감싸 둔 것에 가깝다.
+
+```ts
+const updateSW = registerSW({
+  // 새 버전이 감지되었을 때
+  onNeedRefresh() {
+    setNeedRefresh(true);
+  },
+  // 오프라인 준비가 완료되었을 때
+  onOfflineReady() {
+    console.log("App ready to work offline");
+  },
+  // 서비스 워커가 등록되었을 때
+  onRegistered(registration) {
+    console.log("SW registered:", registration);
+  },
+  // 등록 중 에러가 발생했을 때
+  onRegisterError(error) {
+    console.error("SW registration error:", error);
+  },
+  immediate: true,
+});
+```
+
+| 기능 | 설명 |
+| --- | --- |
+| `onRegistered` | 서비스 워커 등록 완료 |
+| `onRegisterError` | 등록 실패 |
+| `onNeedRefresh` | 새 버전 감지 |
+| `onOfflineReady` | 오프라인 준비 완료 |
+| `immediate` | 즉시 등록 |
+| `periodicInterval` | 주기적 업데이트 체크 (ms) |
+
+반환된 `updateSW(true)`를 호출하면 수동 강제 업데이트도 가능하다.
+
+#### serviceWorkerRegistration.ts와의 차이
+
+- **API 추상화 수준**: `registerSW`는 고수준, `serviceWorkerRegistration`은 저수준
+- **자동화 범위**: 업데이트 알림 콜백만 받으면 끝 vs `postMessage({ type: "SKIP_WAITING" })`까지 직접 호출
+- **빌드 통합**: Vite 개발 서버, HMR과 매끄럽게 동작
+
+### 실제 사용 예시
+
+```tsx
+// App.tsx
+const [needRefresh, setNeedRefresh] = useState(false);
+
+useEffect(() => {
+  registerSW({
+    onNeedRefresh() {
+      setNeedRefresh(true); // 업데이트 배너 표시
+    },
+    onOfflineReady() {
+      // 오프라인 모드 준비 완료
+    },
+    immediate: true,
+  });
+}, []);
+```
+
+## service-worker.ts
+
+- **실행 컨텍스트**: 서비스 워커 스레드(백그라운드)
+- **서비스 워커 코드**
+
+주요 역할:
+
+- 리소스 캐싱 전략 정의
+- 오프라인 기능 구현
+- 푸시 알림 처리 → [PWA에 Push Notification 보내기 — FCM으로 서버 없이 구현하기](/blog/pwa-push-notification-fcm)
+- 백그라운드 동기화
+
+```ts
+// 캐시 전략 및 리소스 관리
+precacheAndRoute(self.__WB_MANIFEST);
+
+// 네트워크 요청 가로채기
+registerRoute(
+  ({ url }) => url.pathname.endsWith(".png"),
+  new StaleWhileRevalidate({
+    cacheName: "images",
+  }),
+);
+```
+
+### 두 파일의 관계 — 매니저와 직원
+
+| 파일 | 역할 비유 | 하는 일 |
+| --- | --- | --- |
+| `serviceWorkerRegistration.ts` | 매니저 | 서비스 워커 고용(등록), 상태 모니터링, 필요 시 교체 |
+| `service-worker.ts` | 직원 | 실제 캐싱, 네트워크 요청 처리, 오프라인 기능 제공 |
+
+```ts
+// serviceWorkerRegistration.ts (매니저)
+navigator.serviceWorker.register("/service-worker.js").then((registration) => {
+  // 서비스 워커 상태 관리
+});
+
+// service-worker.ts (직원)
+self.addEventListener("fetch", (event) => {
+  // 실제 네트워크 요청 처리
+});
+```
+
+## Manifest.json
+
+PWA의 기본 정보, 설치 및 표시 방식, 아이콘과 테마, 동작 방식을 정의한다.
+
+```jsonc
+{
+  // 앱의 전체 이름 (설치 시 표시)
+  "name": "PWA Template",
+  // 홈 화면 아이콘에 표시되는 짧은 이름
+  "short_name": "PWA",
+  // 앱 설치 시 표시되는 설명
+  "description": "A Progressive Web App Template",
+  // 앱이 시작될 때 로드할 URL
+  "start_url": "/",
+  // "standalone": 브라우저 UI를 숨기고 네이티브 앱처럼 표시
+  "display": "standalone",
+  // 로딩 중 배경색
+  "background_color": "#ffffff",
+  // 상태 바 등 테마 색상
+  "theme_color": "#ffffff",
+  // 기본 화면 방향
+  "orientation": "portrait",
+  // 아이콘 — "any maskable"은 기기별 적응형 아이콘 지원
+  "icons": [
+    {
+      "src": "/icons/favicon-96x96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/favicon-196x196.png",
+      "sizes": "196x196",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  // 바로가기 메뉴
+  "shortcuts": [],
+  // 앱 스토어/검색용 카테고리
+  "categories": ["productivity", "utilities"],
+  // 앱 설치 페이지용 스크린샷
+  "screenshots": [],
+  // 관련 네이티브 앱 우선 사용 여부
+  "prefer_related_applications": false
+}
+```
+
+## 업데이트 전략 — autoUpdate vs prompt
+
+PWA가 가진 가장 까다로운 부분 중 하나가 업데이트다. 새 버전이 배포됐을 때 사용자에게 어떻게 적용할지 두 가지 방식이 있다.
+
+### 자동 업데이트
+
+변경 사항이 감지되면 자동으로 화면을 reload 한다.
+
+```ts
+// vite.config.ts
+VitePWA({
+  registerType: "autoUpdate",
+  workbox: {
+    skipWaiting: true,
+  },
+});
+```
+
+### 수동 업데이트
+
+변경 사항이 생기면 업데이트 배너를 띄워 사용자가 새로고침을 하도록 유도한다. 사용자가 명시적으로 새로고침하기 전까지 새 버전이 적용되지 않는다.
+
+```ts
+// vite.config.ts
+VitePWA({
+  registerType: "prompt",
+  workbox: {
+    skipWaiting: false,
+  },
+});
+```
+
+### skipWaiting이 뭐길래?
+
+서비스 워커는 다음 라이프사이클을 거친다.
+
+> 설치(Installing) → 대기(Waiting) → 활성(Active)
+
+`skipWaiting`은 가운데 **대기 단계를 건너뛸지** 결정한다.
+
+| 값 | 동작 |
+| --- | --- |
+| `true` | 새 SW가 설치되면 즉시 활성화. 기존 페이지가 곧바로 새 SW를 사용. |
+| `false` | 새 SW는 대기 상태로 진입. 모든 탭이 닫히거나 사용자가 명시적으로 수락해야 활성화. |
+
+#### `skipWaiting: false`일 때의 시나리오
+
+1. 사용자가 v1 페이지를 열고 있음
+2. v2 업데이트가 배포됨
+3. 새 서비스 워커(v2)가 설치되지만 대기 상태로 머무름
+4. 업데이트 배너가 표시됨
+5. 사용자가 "업데이트" 버튼을 클릭할 때만 v2가 활성화
+
+`false`로 두면 다음 장점이 있다.
+
+- 사용자에게 더 나은 제어권 제공
+- 예기치 않은 업데이트로 작업 중인 데이터가 날아가는 일 방지
+- 사용자가 준비됐을 때 업데이트 적용 가능
+
+업무용 PWA처럼 사용자가 화면에서 작업 중인 데이터를 갖고 있을 가능성이 높다면 `false`가 안전하고, 단순한 정보 표시형 PWA라면 `true`가 사용자 경험상 깔끔하다.
+
+## 함께 보면 좋은 글
+
+여기까지 만들면 오프라인 캐싱과 설치 가능한 웹 앱은 갖춘 셈이다. 다음 단계로 푸시 알림이 필요했고, 같은 PWA 위에 FCM으로 구현한 과정은 별도로 정리했다.
+
+→ [PWA에 Push Notification 보내기 — FCM으로 서버 없이 구현하기](/blog/pwa-push-notification-fcm)

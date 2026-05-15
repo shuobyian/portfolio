@@ -51,6 +51,7 @@ const projects: Project[] = [
       "파일 업로드 모듈 구현: AWS S3 업로드/다운로드 처리. 게시글 작성 흐름과 첨부 파일 생성·삭제 라이프사이클을 연동하여 게시글 단위로 파일 일관 관리",
       "이후 2026.02-03에 BI 사전 검증 목적으로 Antd 디자인 시스템으로 마이그레이션 ([백오피스 리팩토링](/projects/backoffice-refactor) 참조)",
     ],
+    relatedPostSlugs: ["admin-als-frontend-deployment"],
   },
   {
     slug: "pharm-bridge",
