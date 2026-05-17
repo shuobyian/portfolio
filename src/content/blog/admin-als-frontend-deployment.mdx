@@ -91,27 +91,9 @@ rules:
 
 ## 4. 최종 흐름도
 
-```
-[Jenkins]
-   |
-   v
-소스 빌드 (pnpm build)
-   |
-   v
-dist/ 생성
-   |
-   v
-dist → PV 저장 (scp 또는 direct mount)
-   |
-   v
-[Persistent Volume]
-   |
-   v
-[Nginx Pod] (PV 마운트 → /usr/share/nginx/html)
-   |
-   v
-[Service] → [Ingress] → admin.alssolution.co.kr
-```
+<AdminAlsDeploymentDiagram />
+
+`dist 폴더 생성` 이후 산출물은 **서버 폴더로 복사 → PV에 저장**되고, Kubernetes의 **Nginx Pod가 그 PV를 `/usr/share/nginx/html`로 마운트**해 `admin.alssolution.co.kr`로 서빙한다. Pod·PV는 Kubernetes 클러스터 내부에 있으며, 인프라 설정은 `alssolution/gitops-als` 저장소의 `scm-admin/admin.yaml`·`deployment.yaml`이 단일 소스로 관리한다.
 
 ## 정리
 

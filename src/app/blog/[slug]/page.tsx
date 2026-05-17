@@ -5,7 +5,10 @@ import { MDXRemote } from "next-mdx-remote/rsc";
 import remarkGfm from "remark-gfm";
 import { Section } from "@/components/ui/section";
 import { getAllPosts, getPostBySlug } from "@/lib/blog";
+import { AdminAlsDeploymentDiagram } from "@/components/blog/admin-als-deployment-diagram";
 import type { Metadata } from "next";
+
+const mdxComponents = { AdminAlsDeploymentDiagram };
 
 export function generateStaticParams() {
   return getAllPosts().map((p) => ({ slug: p.slug }));
@@ -68,6 +71,7 @@ export default async function BlogPost({
       <article className="prose prose-neutral dark:prose-invert mt-12 max-w-none">
         <MDXRemote
           source={post.content}
+          components={mdxComponents}
           options={{ mdxOptions: { remarkPlugins: [remarkGfm] } }}
         />
       </article>
