@@ -51,7 +51,7 @@ export default function AboutPage() {
 
       <Section>
         <h2 className="text-2xl font-bold">경력</h2>
-        <p className="mt-1 text-sm text-muted-foreground">총 4년 6개월</p>
+        <p className="mt-1 text-sm text-muted-foreground">총 4년 8개월</p>
         <div className="mt-8 space-y-10">
           {experiences.map((exp) => (
             <div key={exp.company} className="border-l-2 border-accent pl-6">
