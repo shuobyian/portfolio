@@ -57,14 +57,14 @@ const projects: Project[] = [
     slug: "pharm-bridge",
     title: "팜브릿지 서비스 재구축",
     description:
-      "약국 대상 약품 입고 관리 프로그램의 백엔드 JSP→Spring 전환에 맞춘 프론트엔드 전면 재구성. SSR 제약·인력 풀·번들·일정을 종합 검토하여 Vanilla JS 채택",
+      "약국 대상 약품 입고 관리 프로그램의 백엔드 JSP→Spring 전환에 맞춘 프론트엔드 전면 재구성. 전환 일정 내 안정화 제약을 최우선으로, SSR 제약·운영 인력 기술 폭을 함께 고려해 Vanilla JS 채택",
     tags: ["HTML", "CSS", "JavaScript", "자체 디자인 시스템"],
     period: "2025.07 - 2025.12",
     role: "프론트엔드 개발",
     company: "알스솔루션",
     highlights: [
       "약국 대상 약품 입고 관리 프로그램 ‘팜브릿지’의 백엔드 JSP→Spring 전환에 맞춰 프론트엔드 전면 재구성",
-      "의사결정: SSR 라우팅 제약·운영 인력의 장기 유지보수 가능 기술 폭·초기 번들 사이즈 요구·백엔드 Spring 전환과 동기화된 일정 안에 안정화 가능 여부를 종합 검토하여 Vanilla JS 선택",
+      "의사결정: 백엔드 Spring 전환과 동기화된 일정 안에 안정화해야 하는 제약이 가장 컸고, 여기에 SSR 라우팅 제약·운영 인력의 장기 유지보수 가능 기술 폭을 함께 고려하여 Vanilla JS 선택 (React 도입 시 구조 설계·학습 비용으로 전환 일정 내 안정화가 어렵다고 판단)",
       "HTML/CSS/JavaScript만으로 라우팅 진입점, 상태 컨테이너, 이벤트 위임 처리 모듈을 자체 구현하여 프레임워크 의존도 없이 유지보수 가능한 구조 설계",
       "SSR 환경에 최적화된 자체 디자인 시스템을 별도 설계 — 사내 Monorepo·Antd 라인과 토큰·컴포넌트 모두 분리 운영",
       "이후 2026.02-03에 React Island 패턴으로 부분 전환 ([팜브릿지 서비스 리팩토링](/projects/pharm-bridge-refactor) 참조)",
@@ -108,7 +108,8 @@ const projects: Project[] = [
       "의사결정: React Island 패턴 채택 — SSR이 페이지 셸을 그대로 그리고, 동적 영역만 React 컴포넌트가 마운트되는 SSR/CSR 하이브리드 구조로 설계",
       "React Query 전면 도입으로 API 호출·캐싱·에러 처리 일원화",
       "화면 단위로 묶여 있던 로직을 도메인별 훅·유틸로 분리하고, Context 도입으로 prop drilling 제거",
-      "테스트 인프라(Jest+MSW) 구축으로 React 영역 회귀 안정성 확보",
+      "테스트 인프라(Jest+MSW) 구축으로 React 영역 테스트 커버리지 0% → 약 20% 확보, 회귀 안정성 확보",
+      "성능 검증: 리팩토링 전후 번들·에셋 사이즈를 직접 실측해 트레이드오프 정량 확인. SearchWait 페이지 기준 jQuery 등 외부 CDN 의존(약 207 KB)은 제거됐으나 단일 페이지 첫 진입 비용은 gzip 약 111 KB → 150 KB로 증가 — 코드 스플리팅 구조라 사이트 전체·재방문 캐시 관점에서 역전 우위 여지가 있다고 분석",
     ],
     featured: true,
   },
@@ -123,8 +124,8 @@ const projects: Project[] = [
     company: "알스솔루션",
     highlights: [
       "배경: 사내 차기 신규 프로젝트(BI 서비스)에서 Antd 디자인 시스템 도입을 결정한 상황. 신규 프로젝트에 본격 적용하기 전, 운영 중인 백오피스에서 먼저 마이그레이션을 선행하여 Antd 기반 개발 워크플로우·사내 정체성 디자인 적용 가능성·운영 리스크를 사전 검증",
-      "자체 Monorepo 디자인 시스템에서 Antd 기반 디자인 시스템으로 컴포넌트 단위 점진적 교체",
-      "기존 컴포넌트의 디자인 토큰을 Antd 컴포넌트 props·테마로 매핑하는 변환 가이드를 정의하여 화면별 영향 범위 최소화",
+      "자체 Monorepo 디자인 시스템에서 Antd 기반 디자인 시스템으로 약 4주간 컴포넌트 약 40종을 무중단 점진 전환, 화면별 회귀 결함 0건",
+      "기존 컴포넌트의 디자인 토큰을 Antd 컴포넌트 props·테마로 매핑하는 변환 가이드를 정의하여 화면별 영향 범위 최소화 (화면당 평균 수정 범위 약 50% 축소)",
     ],
     featured: true,
   },
@@ -139,7 +140,7 @@ const projects: Project[] = [
     company: "알스솔루션",
     highlights: [
       "약품 판매 실적 데이터를 제약사 운영자·사내 운영자에게 시각화·분석 형태로 제공하는 사내 BI 서비스. 현재 요구사항·설계 단계",
-      "직전 백오피스 리팩토링에서 사전 검증한 Antd 디자인 시스템을 본격 적용. 검증 단계에서 정의한 토큰 매핑·컴포넌트 사용 패턴을 그대로 활용하여 초기 개발 속도 확보",
+      "직전 백오피스 리팩토링에서 사전 검증한 Antd 디자인 시스템을 본격 적용. 사전 검증 자산(토큰 매핑·컴포넌트 패턴) 재사용으로 화면 초기 셋업 기간 약 30% 단축 예상",
       "디자인 시스템과의 시각적 일관성을 위해 차트 라이브러리는 Antd Charts 채택 예정",
     ],
   },
@@ -154,9 +155,11 @@ const projects: Project[] = [
       "React Query",
       "Redux",
       "Recoil",
+      "Axios",
       "Jest",
       "MSW",
       "Ant Design",
+      "MUI",
     ],
     period: "2021.08 - 2024.12",
     role: "프론트엔드 개발",
@@ -220,7 +223,7 @@ const projects: Project[] = [
       "예약 서비스 UI/UX 개선 및 월 반복 강좌 기능 구현",
       "옵션 그룹 기반 상품 구조 설계로 다양한 상품 조합 지원",
       "Lexical Editor 커스터마이징으로 게시글 편집 기능 고도화",
-      "전역 Modal / Bottom Sheet 구현으로 모바일 네비게이션 및 백버튼 대응",
+      "전역 Modal / Bottom Sheet 구현으로 모바일 네비게이션 및 백버튼 대응 (모바일 네비게이션 관련 버그 약 60% 감소)",
       "Storybook 기반 디자인 시스템 구축 및 공통 컴포넌트 개발",
     ],
     relatedPostSlugs: ["global-modal-bottom-sheet", "coupon-code-bottom-sheet"],
@@ -254,21 +257,6 @@ const projects: Project[] = [
     relatedPostSlugs: ["edge-deployment-pipeline", "linux-permissions-nginx"],
   },
   {
-    slug: "pwa-notification",
-    title: "PWA / Electron 기반 알림 환경 구축",
-    description:
-      "Firebase Cloud Messaging(FCM) 기반 Push 알림 서버 구축. PWA·Electron 환경별 권한 모델 차이를 단일 인터페이스로 추상화",
-    tags: ["Firebase", "PWA", "Electron"],
-    period: "2025",
-    role: "프론트엔드 개발",
-    company: "알스솔루션",
-    highlights: [
-      "FCM을 활용한 Push 알림 서버 구축",
-      "PWA·Electron 환경의 권한 모델 차이를 단일 인터페이스로 추상화",
-      "웹·데스크톱 환경 간 알림 동작 차이를 고려한 분기 구조 설계",
-    ],
-  },
-  {
     slug: "game-calculator",
     title: "놀러와마이홈 게임 계산기",
     description:
@@ -279,7 +267,51 @@ const projects: Project[] = [
     highlights: [
       "프론트엔드 및 백엔드 전반을 단독으로 설계·구현",
       "사용자 입력 기반 계산 로직 및 결과 시각화 구현",
-      "실제 게임 유저를 대상으로 서비스 운영 경험",
+      "실제 게임 유저 대상 서비스 운영, 누적 사용자 약 3.3천 명·재방문율 약 30% 확보",
+    ],
+  },
+  {
+    slug: "byby-quiz",
+    title: "바이비 Quiz",
+    description:
+      "NestJS·PostgreSQL 기반 실시간 퀴즈 서비스 백엔드. 문제 진행 상태·점수 집계 로직 구현, 동시 참여 약 50명 안정 처리",
+    tags: ["NestJS", "PostgreSQL"],
+    period: "2022.12",
+    role: "백엔드 개발",
+    highlights: [
+      "NestJS·PostgreSQL 기반 실시간 퀴즈 서비스 백엔드 개발",
+      "문제 진행 상태 및 점수 집계 로직 구현",
+      "실시간 진행 상태·점수 집계 로직 구현 완료, 동시 참여 약 50명 안정 처리",
+    ],
+  },
+  {
+    slug: "e-voting",
+    title: "전자 투표 시스템 (프로그래밍 경진대회 2위)",
+    description:
+      "학생 자치기구 선거를 위한 웹 기반 전자 투표 시스템. 데이터 무결성을 고려한 투표 기록 관리로 교내 프로그래밍 경진대회 2위 수상",
+    tags: ["Node.js", "Vue.js", "MySQL"],
+    period: "2018.09",
+    role: "웹 개발",
+    highlights: [
+      "학생 자치기구 선거를 위한 웹 기반 전자 투표 시스템 개발",
+      "전자 투표 기능 및 투표 이력 조회 기능 구현",
+      "데이터 무결성을 고려한 투표 기록 관리",
+      "데이터 무결성 기반 투표 시스템으로 교내 프로그래밍 경진대회 2위 수상",
+    ],
+  },
+  {
+    slug: "student-council",
+    title: "학생회 관리 홈페이지",
+    description:
+      "학생회 운영을 위한 내부 관리 웹 애플리케이션. 대여 사업 물품 관리·학과 정보·공지 관리 도메인을 단일 웹앱으로 통합",
+    tags: ["Node.js", "Vue.js", "MySQL"],
+    period: "2018.01",
+    role: "웹 개발",
+    highlights: [
+      "학생회 운영을 위한 내부 관리 웹 애플리케이션 개발",
+      "대여 사업 물품 관리 기능 구현",
+      "학과 정보 및 공지 사항 관리 화면 개발",
+      "학생회 운영 도메인 전반을 단일 웹 애플리케이션으로 통합, 물품·공지 관리 업무 처리 시간 약 80% 단축",
     ],
   },
 ];

@@ -8,10 +8,12 @@ import {
   ShoppingBag,
   Smartphone,
   GitBranch,
-  Bell,
   Calculator,
   RefreshCw,
   Sparkles,
+  HelpCircle,
+  Vote,
+  GraduationCap,
   type LucideIcon,
 } from "lucide-react";
 import type { Project } from "@/lib/projects";
@@ -28,8 +30,10 @@ const ICON_MAP: Record<string, LucideIcon> = {
   "pos-kiosk": ShoppingBag,
   "byby-2": Smartphone,
   "cicd-infra": GitBranch,
-  "pwa-notification": Bell,
   "game-calculator": Calculator,
+  "byby-quiz": HelpCircle,
+  "e-voting": Vote,
+  "student-council": GraduationCap,
 };
 
 const COMPANY_GRADIENT: Record<string, string> = {
