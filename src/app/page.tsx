@@ -35,13 +35,16 @@ export default function Home() {
               <br />
               <span className="text-accent">장수빈</span>입니다
             </h1>
-            <p className="mt-4 max-w-xl text-lg text-muted-foreground leading-relaxed">
-              예약·결제·POS·KIOSK 등 상태·캐시·동기화 복잡도가 높은 도메인을
-              5년간 다뤄온 프론트엔드 개발자입니다. React·React Query 기반 상태/캐시
-              설계와 다중 윈도우 동기화·SSR/CSR 하이브리드 같은 난도 높은 문제를
-              직접 풀어왔고, 전국 500개 단지·MAU 10만 규모 서비스의 장기 운영과
-              신설 조직 프론트엔드 표준 0→1 정착을 함께 경험했습니다. 안정적 운영과
-              초기 구축 양쪽이 필요한 자리에 즉시 기여할 수 있습니다.
+            <p className="mt-4 max-w-2xl text-xl font-medium leading-relaxed sm:text-2xl">
+              예약·결제·POS·KIOSK 등{" "}
+              <span className="text-accent">상태·캐시·동기화 복잡도가 높은 도메인</span>
+              을 5년간 다뤄오며, 안정적 운영과 0→1 초기 구축 양쪽에 즉시 기여할 수
+              있는 프론트엔드 개발자입니다.
+            </p>
+            <p className="mt-4 max-w-xl text-base text-muted-foreground leading-relaxed">
+              다중 윈도우 동기화, SSR/CSR 하이브리드, 옵션 그룹 상품 모델링 같은
+              문제를 직접 설계해 풀었고, 전국 500개 단지·MAU 10만 규모 서비스와
+              신설 조직의 프론트엔드 표준을 함께 다뤘습니다.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link

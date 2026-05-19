@@ -49,7 +49,7 @@ const projects: Project[] = [
       "자체 Monorepo 디자인 시스템을 첫 적용한 프로젝트. 토큰·컴포넌트 구조를 운영 환경에서 처음 검증하여 사내 표준 정착의 기반 마련",
       "기능 단위 컴포넌트 분리로 메뉴 추가 시 기존 화면 영향 없이 확장 가능한 구조 설계",
       "파일 업로드 모듈 구현: AWS S3 업로드/다운로드 처리. 게시글 작성 흐름과 첨부 파일 생성·삭제 라이프사이클을 연동하여 게시글 단위로 파일 일관 관리",
-      "이후 2026.02-03에 BI 사전 검증 목적으로 Antd 디자인 시스템으로 마이그레이션 ([백오피스 리팩토링](/projects/backoffice-refactor) 참조)",
+      "이후 2026.02-03에 BI 사전 검증 목적으로 Antd 디자인 시스템으로 마이그레이션 ([사내 백오피스 리팩토링](/projects/backoffice-refactor) 참조)",
     ],
     relatedPostSlugs: ["admin-als-frontend-deployment"],
   },
@@ -115,7 +115,7 @@ const projects: Project[] = [
   },
   {
     slug: "backoffice-refactor",
-    title: "백오피스 리팩토링 (Antd 마이그레이션)",
+    title: "사내 백오피스 리팩토링 (Antd 마이그레이션)",
     description:
       "차기 BI 프로젝트의 Antd 도입 리스크를 운영 중인 백오피스에서 사전 검증한 파일럿. 자체 Monorepo 디자인 시스템 → Antd 컴포넌트 단위 점진적 교체",
     tags: ["React", "TypeScript", "Ant Design"],
@@ -133,14 +133,14 @@ const projects: Project[] = [
     slug: "bi-service",
     title: "BI 서비스 신규 구축",
     description:
-      "약품 판매 실적 데이터를 제약사 운영자·사내 운영자에게 시각화·분석 형태로 제공하는 사내 BI 서비스. 직전 백오피스 리팩토링에서 사전 검증한 Antd 디자인 시스템 본격 적용",
+      "약품 판매 실적 데이터를 제약사 운영자·사내 운영자에게 시각화·분석 형태로 제공하는 사내 BI 서비스. 직전 사내 백오피스 리팩토링에서 사전 검증한 Antd 디자인 시스템 본격 적용",
     tags: ["React", "TypeScript", "Ant Design", "Antd Charts"],
     period: "2026.04 - 진행중",
     role: "프론트엔드 개발",
     company: "알스솔루션",
     highlights: [
       "약품 판매 실적 데이터를 제약사 운영자·사내 운영자에게 시각화·분석 형태로 제공하는 사내 BI 서비스. 현재 요구사항·설계 단계",
-      "직전 백오피스 리팩토링에서 사전 검증한 Antd 디자인 시스템을 본격 적용. 사전 검증 자산(토큰 매핑·컴포넌트 패턴) 재사용으로 화면 초기 셋업 기간 약 30% 단축 예상",
+      "직전 사내 백오피스 리팩토링에서 사전 검증한 Antd 디자인 시스템을 본격 적용. 사전 검증 자산(토큰 매핑·컴포넌트 패턴) 재사용으로 화면 초기 셋업 기간 약 30% 단축 예상",
       "디자인 시스템과의 시각적 일관성을 위해 차트 라이브러리는 Antd Charts 채택 예정",
     ],
   },
