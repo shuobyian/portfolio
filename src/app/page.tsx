@@ -22,41 +22,46 @@ export default function Home() {
   return (
     <>
       {/* Hero */}
-      <section className="py-24 sm:py-32">
-        <div className="mx-auto max-w-5xl px-6">
+      <section className="relative overflow-hidden py-28 sm:py-40">
+        <div className="mesh-bg" aria-hidden>
+          <div className="mesh-blob" />
+        </div>
+        <div className="relative mx-auto max-w-5xl px-6">
           <motion.div
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease: "easeOut" }}
           >
-            <p className="text-sm font-medium text-accent">안녕하세요, 저는</p>
-            <h1 className="mt-2 text-4xl font-bold tracking-tight sm:text-5xl">
-              프론트엔드 개발자
+            <div className="inline-flex items-center gap-2 rounded-full border border-border bg-background/50 px-3 py-1 text-xs text-muted-foreground backdrop-blur-md">
+              <span className="size-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgb(52_211_153/0.8)]" />
+              지금 새로운 기회 탐색 중
+            </div>
+            <h1 className="mt-6 text-5xl font-semibold tracking-tight sm:text-7xl">
+              안녕하세요,
               <br />
-              <span className="text-accent">장수빈</span>입니다
+              저는{" "}
+              <span className="bg-gradient-to-r from-indigo-400 via-fuchsia-400 to-cyan-400 bg-clip-text text-transparent">
+                장수빈
+              </span>
+              입니다.
             </h1>
-            <p className="mt-4 max-w-2xl text-xl font-medium leading-relaxed sm:text-2xl">
-              예약·결제·POS·KIOSK 등{" "}
-              <span className="text-accent">상태·캐시·동기화 복잡도가 높은 도메인</span>
-              을 5년간 다뤄오며, 안정적 운영과 0→1 초기 구축 양쪽에 즉시 기여할 수
-              있는 프론트엔드 개발자입니다.
+            <p className="mt-6 max-w-2xl text-lg leading-relaxed text-muted-foreground sm:text-xl">
+              예약·결제·POS·KIOSK처럼{" "}
+              <span className="text-foreground">상태·캐시·동기화 복잡도가 높은 도메인</span>을
+              5년간 다뤄온 프론트엔드 개발자입니다. 안정적 운영과 0→1 초기 구축
+              양쪽에 즉시 기여할 수 있습니다.
             </p>
-            <p className="mt-4 max-w-xl text-base text-muted-foreground leading-relaxed">
-              다중 윈도우 동기화, SSR/CSR 하이브리드, 옵션 그룹 상품 모델링 같은
-              문제를 직접 설계해 풀었고, 전국 500개 단지·MAU 10만 규모 서비스와
-              신설 조직의 프론트엔드 표준을 함께 다뤘습니다.
-            </p>
-            <div className="mt-8 flex flex-wrap gap-3">
+            <div className="mt-10 flex flex-wrap gap-3">
               <Link
                 href="/projects"
-                className="inline-flex items-center gap-2 rounded-lg bg-accent px-5 py-2.5 text-sm font-medium text-accent-foreground hover:opacity-90 transition-opacity"
+                className="group inline-flex items-center gap-2 rounded-full bg-foreground px-5 py-2.5 text-sm font-medium text-background hover:opacity-90 transition-opacity"
               >
                 프로젝트 보기
-                <ArrowRight size={16} />
+                <ArrowRight size={16} className="transition-transform group-hover:translate-x-0.5" />
               </Link>
               <a
                 href="/resume.pdf"
-                className="inline-flex items-center gap-2 rounded-lg border border-border px-5 py-2.5 text-sm font-medium hover:bg-muted transition-colors"
+                className="inline-flex items-center gap-2 rounded-full border border-border bg-background/40 px-5 py-2.5 text-sm font-medium backdrop-blur-md hover:bg-muted transition-colors"
               >
                 이력서 다운로드
                 <Download size={16} />
