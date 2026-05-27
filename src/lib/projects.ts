@@ -143,6 +143,7 @@ const projects: Project[] = [
       "직전 사내 백오피스 리팩토링에서 사전 검증한 Antd 디자인 시스템을 본격 적용. 사전 검증 자산(토큰 매핑·컴포넌트 패턴) 재사용으로 화면 초기 셋업 기간 약 30% 단축 예상",
       "디자인 시스템과의 시각적 일관성을 위해 차트 라이브러리는 Antd Charts 채택 예정",
     ],
+    relatedPostSlugs: ["bi-react-query-zustand-architecture"],
   },
   {
     slug: "community-platform",

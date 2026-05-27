@@ -6,9 +6,19 @@ import remarkGfm from "remark-gfm";
 import { Section } from "@/components/ui/section";
 import { getAllPosts, getPostBySlug } from "@/lib/blog";
 import { AdminAlsDeploymentDiagram } from "@/components/blog/admin-als-deployment-diagram";
+import {
+  BiProviderStackDiagram,
+  BiSessionBootstrapDiagram,
+  BiDependencyDirectionDiagram,
+} from "@/components/blog/bi-state-architecture-diagram";
 import type { Metadata } from "next";
 
-const mdxComponents = { AdminAlsDeploymentDiagram };
+const mdxComponents = {
+  AdminAlsDeploymentDiagram,
+  BiProviderStackDiagram,
+  BiSessionBootstrapDiagram,
+  BiDependencyDirectionDiagram,
+};
 
 export function generateStaticParams() {
   return getAllPosts().map((p) => ({ slug: p.slug }));

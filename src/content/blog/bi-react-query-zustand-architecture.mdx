@@ -1,0 +1,95 @@
+---
+title: "BI 서비스의 상태 관리 구조 — React Query는 서버 상태 게이트웨이, Zustand는 캐시 + 영속화"
+description: "als-bi 프로젝트에서 서버 상태(React Query)와 클라이언트 전역 상태(Zustand)를 어떻게 나누고 어디서 연결하는지, 그리고 SessionBootstrap이 풀어주는 쿠키 ↔ store 정합성 문제까지 정리."
+date: "2026-05-27"
+tags: ["React Query", "Zustand", "상태관리", "Architecture"]
+category: "React"
+---
+
+> [BI 서비스 신규 구축](/projects/bi-service)
+
+als-bi를 새로 깔면서 가장 먼저 정한 규칙은 하나다. **서버 상태와 클라이언트 전역 상태를 한 통에 담지 않는다.** 이 글은 그 규칙을 어떤 형태로 구현했고, 두 레이어가 어디서 만나는지를 정리한 것이다.
+
+## 1. 큰 그림
+
+als-bi의 상태는 네 군데에 나눠져 있다.
+
+- **Zustand 스토어** (`src/stores/`): 진짜 전역으로 살아남아야 하는 값만. 현재는 로그인 사용자(`authStore`)와 테마 모드(`themeStore`) 두 가지뿐이고, 둘 다 `persist`로 localStorage에 동기화된다.
+- **React Query 클라이언트** (`src/lib/queryClient.ts`): 단일 인스턴스. 전역 mutation 에러 토스트도 여기서 처리.
+- **Provider 조립**: `src/main.tsx`에서 끝낸다.
+- **API 훅**: 각 feature 폴더(`src/features/{name}/api*`) 안에서 정의.
+
+핵심 분리는 단순하다. **인증의 권위는 alpha 서버 쿠키(HttpOnly)에 있고**, Zustand의 `user`는 그 쿠키에 딸려오는 정보를 캐싱하는 보조 자료다. React Query는 서버를 향한 모든 요청·응답이 통과하는 게이트웨이.
+
+Provider 조립 순서는 다음과 같다.
+
+<BiProviderStackDiagram />
+
+`SessionBootstrap`을 `RouterProvider` 바로 위에 둔 건, **라우터가 가드를 검사하기 전에 store와 쿠키의 정합성을 한 번 맞추기 위해서**다.
+
+## 2. Zustand — 영속화 범위가 결정적이다
+
+`themeStore`는 모드 값을 통째로 영속화하지만, `authStore`는 그렇지 않다.
+
+`authStore`에는 `user`와 `pendingPasswordReset` 두 값이 있는데, `pendingPasswordReset`에는 비밀번호 평문이 들어갈 수 있어 절대 localStorage에 남으면 안 된다. 그래서 `persist`의 `partialize` 옵션으로 **`user`만 골라 저장**한다. 코드 한 줄이지만 보안 관점에서는 결정적인 한 줄.
+
+권한 판정은 store가 아니라 별도 헬퍼(`isAdmin(user)`)에 둔다. store는 **상태와 상태 변경**만 책임지고, **정책 판정**은 분리해야 테스트와 재사용이 쉬워진다.
+
+## 3. React Query — feature별 3-계층 패턴
+
+`queryClient.ts`의 전역 설정은 두 가지가 핵심이다.
+
+- **`MutationCache.onError`로 모든 mutation 에러를 한 곳에서 처리.** 메시지 우선순위는 백엔드 응답 → AxiosError·ApiError → fallback. 개별 mutation이 빠지고 싶으면 `meta.skipGlobalError` 플래그를 쓴다.
+- 쿼리 기본값: `staleTime` 1분, `gcTime` 5분, 재시도 1회, 포커스 시 refetch 비활성화. 보수적으로 잡고 필요할 때만 늘리는 쪽이 추적이 쉬웠다.
+
+쿼리 키는 `['domain', 'sub', ...]` 튜플로 통일했다. 도메인이 앞에 오니 invalidate 범위를 잡을 때 prefix 매칭이 자연스럽게 작동한다.
+
+가장 신경 쓴 건 **api 모듈 내부의 3-계층 패턴**이다.
+
+1. **순수 fetcher** (`fetchCurrentUser`) — 서버 호출만. store도 캐시도 안 만진다.
+2. **store 동기화 함수** (`loadCurrentUser`) — fetcher를 호출하고 결과를 `setUser`로 store에 반영.
+3. **React Query 훅** (`useMeQuery`) — 컴포넌트가 소비하는 진입점.
+
+이 3-계층을 유지하는 이유는 단순하다. 로그인, 부트스트랩, 사용자 정보 새로고침이 전부 `loadCurrentUser`를 거치게 하면, **store ↔ 서버 동기화 지점이 한 곳에 모인다.** 누가 user를 바꿨는지 추적할 때 이 파일만 보면 된다.
+
+## 4. 두 레이어가 만나는 지점
+
+결합 지점이 어디에 어떻게 있는지가 이 구조의 핵심이다.
+
+- **부트스트랩**: `SessionBootstrap`이 `loadCurrentUser`를 한 번 호출하고, 실패하면 store를 비운다.
+- **일반 로그인**: 서버 응답이 비밀번호 초기화 요구가 아닌 한, mutation 안에서 곧장 `loadCurrentUser`를 호출. 컴포넌트는 mutation 성공 여부만 보면 되고 **중간 상태가 없다.**
+- **어드민 로그인**: 받아온 사용자를 `isAdmin`으로 검사해 실패하면 서버 로그아웃 + store logout 후 throw. 권한 실패가 일반 에러와 같은 채널(전역 토스트)로 흐른다.
+- **로그아웃**: 서버 mutation + `logoutLocal` + 페이지 이동을 한 훅으로 묶는다. 서버 실패 시 로컬 상태는 유지.
+
+## 5. SessionBootstrap이 풀어준 문제
+
+가장 신경 쓴 부분. 풀어야 했던 문제는 셋이다.
+
+1. 인증의 권위는 서버 쿠키에 있고, 클라이언트 JS는 그 쿠키 내용을 못 본다.
+2. 그런데 `authStore.user`는 localStorage에 persist되어 살아 있다.
+3. 둘이 어긋날 수 있다 — 쿠키는 만료됐는데 localStorage에는 user가 남아 가드를 통과시켜버리거나, 다른 탭에서 로그인했는데 이 탭은 비어 있어 불필요하게 로그인 화면으로 보내거나.
+
+해결책은 **앱 마운트 시 단 한 번** `/me`를 던져 확인하는 것이다.
+
+<BiSessionBootstrapDiagram />
+
+200이면 `loadCurrentUser`가 store를 자연스럽게 sync하고, 401이면 store를 비우고, 그 사이 pending에서는 화면 전체를 Spin으로 덮어 가드의 오판을 차단한다. **로컬 캐시는 보조 자료고, 진실의 출처는 서버 쿠키다.**
+
+## 6. 의존 방향
+
+새 feature를 추가할 때 이 방향이 깨지지 않게 신경 썼다.
+
+<BiDependencyDirectionDiagram />
+
+**stores는 어떤 feature도 import하지 않는다.** 이 단방향이 깨지면 store에 도메인 로직이 새어 들어가고 곧 순환 의존이 시작된다.
+
+## 7. 정리
+
+als-bi 상태 관리에서 가장 자주 떠올린 문장은 "이 값은 누구의 것인가"였다.
+
+- **Zustand는 캐시 + 영속화.** 진짜 인증은 쿠키가 들고 있다.
+- **React Query는 서버 상태 게이트웨이.** 전역 mutation 에러 핸들러로 토스트를 일원화.
+- **store ↔ query 결합은 `loadCurrentUser` 한 함수에 집중.**
+- **SessionBootstrap이 라우터 바깥에서 정합성을 맞춰주고 앱을 연다.**
+
+이 구조가 정착된 뒤로는 "지금 사용자가 로그인된 상태인지"를 묻는 코드를 어디에 둘지 헷갈리지 않게 됐다. 라우터 진입 이후라면 `authStore.user`를 selector로 보고, 서버에 다시 묻고 싶다면 `loadCurrentUser`를 부른다. 이 두 갈래 외에는 없다.
