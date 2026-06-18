@@ -1,0 +1,258 @@
+---
+title: "ARIA 위젯 패턴 — 탭 · 아코디언 · 스위치, 진짜 어려움은 키보드다"
+description: "WAI-ARIA APG 기준으로 탭·아코디언·disclosure·스위치·메뉴·라이브 리전을 필요한 ARIA + 키보드 동작 + 흔한 실수 중심으로 정리한다. 핵심은 roving tabindex와 화살표 키."
+date: "2026-06-18"
+tags: ["ARIA", "접근성", "a11y", "키보드", "roving tabindex"]
+category: "브라우저 & Web API"
+---
+
+> [ARIA 제대로 알고 쓰기](/blog/aria-accessible-modal)의 후속편이다.
+
+앞 글에서 ARIA는 "알리는 도구일 뿐 동작은 직접 구현"이라는 걸 정리했다. 이번엔 그 원칙이 실제 위젯에서 어떻게 굴러가는지 본다. WAI-ARIA APG(Authoring Practices Guide) 기준으로 자주 쓰이는 위젯 패턴을 **필요한 ARIA + 키보드 동작 + 흔한 실수** 중심으로 묶었다.
+
+미리 박아둘 핵심은 이거다. 이 패턴들의 진짜 어려움은 ARIA 속성이 아니라 **키보드 인터랙션**이다. "화살표 키로 탭 이동", "Home/End", "roving tabindex" — 동작을 아느냐가 갈린다. 속성 몇 개 붙이는 건 쉽다.
+
+## 0. 먼저: 네이티브로 되는 건 네이티브로
+
+| 하려는 것 | 네이티브 | ARIA 직접 구현 |
+|---|---|---|
+| 펼치기/접기, 아코디언 | `<details>` / `<summary>` | disclosure 패턴 |
+| 토글 스위치 | `<input type="checkbox">` | `role="switch"` |
+| 모달 | `<dialog>` + `showModal()` | `role="dialog"` |
+| 탭 | (네이티브 없음) | tab 패턴 필수 |
+
+탭은 네이티브 요소가 없어 직접 구현이 불가피하지만, 아코디언·스위치는 네이티브가 더 안전하다. 앞 글의 제1규칙 그대로다.
+
+## 1. 탭 (Tabs)
+
+### 구조
+
+```tsx
+<div className="tabs">
+  {/* 탭 목록 */}
+  <div role="tablist" aria-label="상품 정보">
+    <button
+      role="tab"
+      id="tab-desc"
+      aria-selected={active === "desc"}
+      aria-controls="panel-desc"
+      tabIndex={active === "desc" ? 0 : -1}   // ★ roving tabindex
+      onClick={() => setActive("desc")}
+      onKeyDown={onTabKeyDown}
+    >
+      설명
+    </button>
+    <button
+      role="tab"
+      id="tab-review"
+      aria-selected={active === "review"}
+      aria-controls="panel-review"
+      tabIndex={active === "review" ? 0 : -1}
+      onClick={() => setActive("review")}
+      onKeyDown={onTabKeyDown}
+    >
+      리뷰
+    </button>
+  </div>
+
+  {/* 패널 */}
+  <div role="tabpanel" id="panel-desc" aria-labelledby="tab-desc" tabIndex={0} hidden={active !== "desc"}>
+    상품 설명…
+  </div>
+  <div role="tabpanel" id="panel-review" aria-labelledby="tab-review" tabIndex={0} hidden={active !== "review"}>
+    리뷰…
+  </div>
+</div>
+```
+
+### 필요한 ARIA
+
+| 요소 | 속성 | 의미 |
+|---|---|---|
+| 컨테이너 | `role="tablist"` + `aria-label` | 탭 묶음 + 이름 |
+| 컨테이너 | `aria-orientation="vertical"` | 세로 탭일 때(기본 horizontal) |
+| 각 탭 | `role="tab"` | 탭 |
+| 각 탭 | `aria-selected="true/false"` | 현재 선택 |
+| 각 탭 | `aria-controls="<패널 id>"` | 어떤 패널을 여는지 |
+| 패널 | `role="tabpanel"` + `aria-labelledby="<탭 id>"` | 패널 + 이름=탭 |
+| 패널 | `tabIndex={0}` | 패널 자체를 탭 순서에 (포커스 가능 자식 없을 때) |
+
+### roving tabindex
+
+탭의 핵심 개념이다. 탭 목록 안에서 **Tab 키는 한 번만** 작동해야 한다. 탭이 5개라고 Tab을 5번 눌러 지나가게 만들면 안 된다.
+
+- **선택된 탭만 `tabIndex=0`**, 나머지는 `tabIndex=-1`.
+- 그래서 Tab 키로는 "현재 탭 → 패널"로 한 번에 이동한다.
+- **탭 사이 이동은 화살표 키**가 담당한다.
+
+### 키보드 동작
+
+| 키 | 동작 |
+|---|---|
+| `Tab` | 탭리스트 진입(활성 탭) → 다시 Tab → 패널 |
+| `←` `→` (horizontal) | 이전/다음 탭으로 포커스 이동 (끝에서 순환) |
+| `↑` `↓` (vertical) | 세로 탭일 때 이동 |
+| `Home` / `End` | 첫 / 마지막 탭 |
+| `Enter` / `Space` | (수동 활성화 모드) 포커스된 탭 선택 |
+
+```ts
+function onTabKeyDown(e) {
+  const keys = ["ArrowRight", "ArrowLeft", "Home", "End"];
+  if (!keys.includes(e.key)) return;
+  e.preventDefault();
+  // 다음 인덱스 계산 후 해당 탭에 .focus() + (자동 활성화면) setActive
+}
+```
+
+### 자동 활성화 vs 수동 활성화
+
+- **자동(automatic)**: 화살표로 포커스가 가면 **즉시 패널도 전환**. APG 기본 권장이다.
+- **수동(manual)**: 화살표는 포커스만 옮기고, **Enter/Space로 활성화**. 패널 내용 로딩이 비싸거나(요청 발생) 큰 경우에 권장한다.
+
+정리하면 이렇다. 탭은 roving tabindex로 Tab 키를 한 번만 쓰고, 화살표로 탭을 옮긴다. 패널 전환 비용이 크면 자동 대신 수동 활성화를 쓴다.
+
+## 2. 아코디언 (Accordion)
+
+아코디언은 결국 **disclosure(펼치기/접기) 위젯의 묶음**이다.
+
+### 구조
+
+```tsx
+<div>
+  <h3>
+    <button
+      id="acc-head-1"
+      aria-expanded={open === 1}
+      aria-controls="acc-panel-1"
+      onClick={() => toggle(1)}
+    >
+      배송 안내
+    </button>
+  </h3>
+  <div
+    role="region"
+    id="acc-panel-1"
+    aria-labelledby="acc-head-1"
+    hidden={open !== 1}
+  >
+    배송 내용…
+  </div>
+  {/* 항목 반복 */}
+</div>
+```
+
+### 필요한 ARIA + 포인트
+
+| 요소 | 속성 | 의미 |
+|---|---|---|
+| 헤더 버튼 | `<button>` (꼭 button!) | 클릭/키보드 기본 제공 |
+| 헤더를 `<h3>`로 감쌈 | 제목 구조 | SR이 헤딩으로 탐색 |
+| 버튼 | `aria-expanded="true/false"` | 펼침 상태 |
+| 버튼 | `aria-controls="<패널 id>"` | 제어 대상 |
+| 패널 | `role="region"` + `aria-labelledby="<버튼 id>"` | 영역 + 이름 |
+| 패널 | `hidden` (접힘 시) | 트리에서 제거 |
+
+여기서 가장 흔한 실수가 헤더를 `<div onClick>`으로 만드는 것이다. **`<button>`** 이어야 Enter/Space·포커스·role이 공짜로 따라온다. 그 버튼을 `<h3>`로 감싸 **헤딩 구조**를 줘야 SR 사용자가 "헤딩 단위 점프"로 빠르게 훑을 수 있다.
+
+### 키보드 동작
+
+| 키 | 동작 |
+|---|---|
+| `Enter` / `Space` | 패널 펼침/접힘 토글 |
+| `Tab` | 다음 포커스 요소로 (탭과 달리 roving 아님) |
+| `↑` `↓` (선택) | 헤더 사이 이동 (구현 시) |
+| `Home` / `End` (선택) | 첫 / 마지막 헤더 |
+
+탭과의 결정적 차이가 여기 있다. 아코디언 헤더는 **각각 일반 Tab 순서**에 있다(roving tabindex가 아니다). 화살표 이동은 선택 사항이다.
+
+### 네이티브 대안
+
+```html
+<details>
+  <summary>배송 안내</summary>
+  <p>배송 내용…</p>
+</details>
+```
+
+`<details>`/`<summary>`는 토글·`aria-expanded`·키보드를 **브라우저가 처리**한다. 단일·단순 아코디언이면 이게 제일 안전하다. 다만 "하나만 열림" 같은 제약이나 애니메이션 세밀 제어가 필요하면 직접 구현으로 넘어간다.
+
+## 3. Disclosure (펼치기/접기 단일)
+
+"더보기", FAQ 한 줄 같은 단일 토글이다. 아코디언의 한 조각이라고 보면 된다.
+
+```tsx
+<button aria-expanded={open} aria-controls="more" onClick={() => setOpen(!open)}>
+  더보기
+</button>
+<div id="more" hidden={!open}>…</div>
+```
+
+- 필요한 건 **`aria-expanded` + `aria-controls`** 뿐이다.
+- 키보드: `Enter`/`Space` 토글 (button이면 공짜).
+- 화살표 키는 **불필요**하다.
+
+`AppBar` 스크롤 토글이나 "전체 보기 >" 트리거 같은 것도 본질은 disclosure/trigger 계열이다.
+
+## 4. 스위치 / 토글 (Switch)
+
+```tsx
+// 권장: 네이티브 체크박스에 role만
+<input type="checkbox" role="switch" checked={on} onChange={...} aria-label="알림" />
+
+// 또는 커스텀
+<button role="switch" aria-checked={on} aria-label="알림" onClick={toggle} />
+```
+
+- `role="switch"` + **`aria-checked`** (checkbox의 on/off 버전).
+- 키보드: `Space`(권장), `Enter` 토글.
+- 시각적으론 체크 아이콘이라도, 접근성을 더하려면 감싸는 컨트롤에 `role="checkbox"`/`aria-checked`를 두거나 네이티브 체크박스를 쓰는 게 정석이다. 클릭만 받는 `div`로 만들어 두면 SR이 상태를 못 읽는다.
+
+## 5. 그 외 빠른 참조
+
+### Tooltip
+
+```tsx
+<button aria-describedby="tip">?</button>
+<div role="tooltip" id="tip">도움말 텍스트</div>
+```
+
+- `role="tooltip"` + 트리거의 **`aria-describedby`** 로 연결.
+- 포커스/hover에 표시, **ESC로 닫기** 지원, 포커스는 트리거에 유지.
+
+### Menu (드롭다운 메뉴)
+
+- 버튼: `aria-haspopup="menu"` + `aria-expanded`.
+- 목록: `role="menu"`, 항목: `role="menuitem"`.
+- 키보드: `↑↓` 항목 이동, `Esc` 닫기, `Enter` 실행 — 탭처럼 roving tabindex.
+- 흔한 오용 하나. 단순 링크 목록(네비)에 `role="menu"`를 쓰면 안 된다. 그건 그냥 `<nav><ul>`이다. `menu`는 앱 명령(데스크톱 메뉴) 의미다.
+
+### Combobox (자동완성)
+
+- input: `role="combobox"` + `aria-expanded` + `aria-controls`(리스트) + `aria-activedescendant`(가상 포커스).
+- 가장 복잡한 패턴이다. **라이브러리(Downshift, Radix, React Aria) 사용을 권한다.**
+
+### 알림 (Toast / Live Region)
+
+```tsx
+<div role="status" aria-live="polite">상품 구매를 완료했어요</div>
+```
+
+- **`aria-live`**: `polite`(현재 읽기 끝나면) / `assertive`(즉시 끊고). 토스트는 보통 `polite`, 에러는 `assertive`.
+- `role="status"`(=polite) / `role="alert"`(=assertive)로 축약할 수 있다.
+- 토스트에 `role="status"`만 줘도 성공/실패 메시지가 SR에 자동 안내된다.
+
+## 정리: 패턴별 한눈에
+
+| 패턴 | 핵심 ARIA | 키보드 | roving tabindex |
+|---|---|---|---|
+| **탭** | tablist/tab/tabpanel, `aria-selected`, `aria-controls` | `←→`, Home/End | ✅ 필요 |
+| **아코디언** | button+`aria-expanded`+`aria-controls`, region | Enter/Space | ❌ (일반 Tab) |
+| **Disclosure** | `aria-expanded`+`aria-controls` | Enter/Space | ❌ |
+| **Switch** | `role="switch"`+`aria-checked` | Space | ❌ |
+| **Tooltip** | `role="tooltip"`+`aria-describedby` | Esc | ❌ |
+| **Menu** | `role="menu/menuitem"`+`aria-haspopup` | `↑↓`, Esc | ✅ |
+| **Live(Toast)** | `aria-live`/`role="status\|alert"` | — | — |
+
+한 줄로 요약하면 이렇다. *탭과 메뉴는 화살표 키 + roving tabindex로 '한 번의 Tab'을 만들고, 아코디언·disclosure는 그냥 `<button>` + `aria-expanded`면 충분하다. 복잡한 콤보박스는 직접 만들기보다 검증된 라이브러리를 쓴다.*
+
+그리고 앞 글과 이어지는 공통 원칙. ARIA 속성은 '알림'일 뿐, **화살표 키·포커스 이동·Esc 같은 동작은 전부 직접 구현**해야 한다. 그래서 가능하면 네이티브(`<details>`, `<button>`, `<input>`)를 먼저 쓴다.
