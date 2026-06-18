@@ -11,6 +11,7 @@ import {
   BiSessionBootstrapDiagram,
   BiDependencyDirectionDiagram,
 } from "@/components/blog/bi-state-architecture-diagram";
+import { AlsFanInGraphDiagram } from "@/components/blog/als-fanin-architecture-diagram";
 import type { Metadata } from "next";
 
 const mdxComponents = {
@@ -18,6 +19,7 @@ const mdxComponents = {
   BiProviderStackDiagram,
   BiSessionBootstrapDiagram,
   BiDependencyDirectionDiagram,
+  AlsFanInGraphDiagram,
 };
 
 export function generateStaticParams() {

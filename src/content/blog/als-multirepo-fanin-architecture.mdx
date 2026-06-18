@@ -1,0 +1,79 @@
+---
+title: "알스솔루션 멀티레포 의존 구조 분석 — 3개 허브로 수렴하는 fan-in 아키텍처"
+description: "알스솔루션의 여러 레포가 어떻게 결합돼 있는지 분석. 앱끼리는 서로 의존하지 않고 모든 결합이 공유 라이브러리(부트스트랩·API 계약·린트)로 단방향 fan-in 하는 구조, 그리고 처음 식별했던 정확버전 핀·툴체인 drift 리스크가 이후 어떻게 해소됐는지까지 정리."
+date: "2026-06-01"
+tags: ["Architecture", "Monorepo", "의존성 관리", "DevOps"]
+category: "아키텍처"
+---
+
+## 한 줄 요약
+
+**3개 허브로 수렴하는 라이브러리 fan-in 구조다.** 앱끼리는 서로 의존하지 않고, 모든 결합이 공유 라이브러리로 한 방향으로만 흐른다. 처음 분석에서 가장 크게 지적했던 두 리스크 — `@als/als-api`의 정확버전 핀(0.0.32)과 툴체인 메이저 drift — 는 이후 정리 작업을 거쳐 해소됐고, 그 과정에서 버전 관리를 자동화하는 도구(`als-deps`)까지 생겼다. 직전 버전 분석에서 "남은 것"으로 꼽았던 두 항목 — `eslint-plugin-react-hooks` 메이저 split과 pnpm 버전 split — 도 그 뒤 마저 닫혔고, drift 감시는 이제 CI 메타 잡으로 자동화됐다. 이 글은 **구조 자체**와 **리스크가 어떻게 닫혔는지**를 함께 정리한다.
+
+## 관계 그래프
+
+<AlsFanInGraphDiagram />
+
+위에서 `als-fe-kit`(부트스트랩 허브)이 5개 레포로 **fan-out**하고, 소비처들은 다시 `@als/als-api`·`@als/eslint-config-als` 두 허브로 **fan-in**한다. 결합의 방향이 전부 "소비처 → 허브" 한쪽이라는 게 핵심이다. `als-gantt-chart`는 처음엔 완전한 위성이었지만 지금은 **린트 허브에만 합류**한 부분 통합 상태다(API 허브는 여전히 미소비). 위성 중 `design/als-design`도 그 사이 린트 허브(`^0.0.10`)·API 허브(`^0.1.0`)에 핀을 맞췄지만, **앱이 여전히 import하지 않아** 그래프상으로는 활성 엣지가 아니다. 완전히 독립인 위성으로 남은 건 `mcp`(서드파티) 하나뿐이다.
+
+## 레이어 분류
+
+| 레이어 | repo | 역할 | 채널 |
+| --- | --- | --- | --- |
+| 부트스트랩 | `@als/fe-kit` (ca-env · als-deps) | 셋업 + 토큰 발급 + 버전 일괄 관리 + drift 감시 CI | git `#v0.2.1` (npx) |
+| 애플리케이션 | `alpha-als`, `admin-als` | 서비스 앱 | 앱 빌드 산출물 배포 |
+| 공유 라이브러리(허브) | `als-api` → `@als/als-api`, `eslint-config-als` → `@als/eslint-config-als` | API 계약 · 린트 규칙 | 패키지 배포 |
+| 부분 통합 | `als-gantt-chart` | Jira 간트 뷰어 (린트 허브만 합류) | 앱 배포 |
+| 위성 | `mcp`, `design/als-design` | 서드파티 · 디자인 시스템 | 서드파티 · `@als-design` |
+
+## 공유 라이브러리 의존 (3종)
+
+| 종류 | 소비처 → 대상 | 핀 |
+| --- | --- | --- |
+| api-contract | `alpha-als`, `admin-als` → `@als/als-api` | 캐럿 `^0.1.x` (alpha `^0.1.8` / admin `^0.1.0`) |
+| lint-config | `alpha-als`, `admin-als`, `als-api`, `als-gantt-chart` → `@als/eslint-config-als` | `^0.0.10` |
+| bootstrap-tool | `alpha-als`, `admin-als`, `als-api`, `eslint-config-als`, `als-gantt-chart` → `@als/fe-kit` | `npx github:…#v0.2.1` |
+
+**앱 → 앱 의존은 0건.** `alpha-als`의 단방향 import 원칙이 레포 그래프 레벨에서도 그대로 나타난다. 린트 허브 소비처는 gantt가 합류하며 3개에서 4개로 늘었고, 여기에 위성 `design/als-design`까지 `^0.0.10`으로 핀을 맞췄다. API 허브는 정확핀 졸업 이후 활발히 커져 `release/0.1.8`까지 올라갔는데(ALPHA 엔드포인트·어드민 계정·액세스 토큰 게터 등), 소비처 선언 핀이 alpha `^0.1.8` · admin `^0.1.0`으로 갈렸다. 캐럿이라 설치 시점엔 둘 다 0.1.8로 수렴하지만 **선언 바닥값(floor)이 벌어진** 상태로, `als-deps`가 잡아내는 전형적인 case다.
+
+## 버전 매트릭스 (✅ = 수렴 완료, ⚠️ = 남은 drift)
+
+| 의존성 | alpha-als | admin-als | als-api | gantt | eslint-cfg |
+| --- | --- | --- | --- | --- | --- |
+| react | ^19.2.5 | ^19.1.0 | – | ^19.1.0 ✅ | – |
+| vite | ^8.0.9 | ^8.0.9 ✅ | ^8.0.9 | ^8.0.9 ✅ | – |
+| typescript | ~6.0.2 | ~6.0.2 ✅ | ~6.0.2 | ~6.0.2 ✅ | `<7` peer ✅ |
+| eslint | ^9.39.4 | ^9.21.0 | ^9.25.0 | ^9.39.4 | ^9.0.0 peer ✅ |
+| react-hooks plugin | ^7.1.1 | ^7.1.1 ✅ | ^7.1.1 ✅ | ^7.1.1 | ^7.0.0 peer ✅ |
+| antd | ^6.3.6 | ^6.3.1 | – | – (Tailwind4) | – |
+| axios | ^1.15.2 | ^1.10.0 | ^1.10.0 (peer) | – | – |
+| @als/als-api | ^0.1.8 | ^0.1.0 ⚠️ | – | – | – |
+| @als/eslint-config-als | ^0.0.10 | ^0.0.10 | ^0.0.10 | ^0.0.10 | – |
+| pnpm | 10.7.0 | 10.7.0 ✅ | 10.7.0 | 10.7.0 | 10.7.0 |
+
+처음 분석 때 vite는 5~8로 메이저가 4개나 벌어져 있었고 react 18 vs 19, ts 5 vs 6, eslint 8 vs 9가 공존했다. 지금은 **Vite 8 / TS 6 / React 19 / ESLint 9로 거의 전부 수렴**했다. 직전 분석에서 마지막 drift로 꼽았던 `eslint-plugin-react-hooks` 메이저(admin·als-api가 v5)와 pnpm minor(admin 10.5.2)도 그 뒤 정리돼, 지금은 **react-hooks 전 소비처 v7 통일 · pnpm 전 레포 10.7.0 통일**이다. 남은 건 `@als/als-api` 선언 바닥값 차이(alpha `^0.1.8` vs admin `^0.1.0`, 캐럿 해소 시 동일)와 antd minor(`6.3.6` vs `6.3.1`)뿐 — 둘 다 캐럿 안에서 같은 버전으로 풀린다.
+
+## 처음 지적한 리스크는 어떻게 닫혔나
+
+분석은 그 자체로 끝나지 않고 정리 작업의 로드맵으로 작동했다. 각 레포 커밋 로그가 처음 식별한 항목을 거의 1:1로 따라간다.
+
+1. **`@als/als-api` 정확핀(0.0.32) → 캐럿 `^0.1.0`.** `0.0.32 → 0.0.33 → ^0.1.0`으로 "버전 라인을 졸업"시켜 patch가 자동으로 따라오게 했다. 더 나아가 멀티레포를 유지하면서 버전 skew를 잡기 위해 `als-fe-kit`에 **`als-deps` CLI**를 새로 넣었다 — 소비처 간 `@als/*` 버전 drift를 검사하고(`check`) 한 번에 올리는(`bump --latest --install --commit`) 도구다. 워크스페이스로 묶는 대신 도구로 동기화하는 선택.
+2. **린트 허브 peer 뒤처짐 해소.** 처음엔 허브가 `eslint ^8 · ts ^5` peer라 `eslint 9 · ts 6`을 쓰는 앱보다 뒤처져 있었다. 지금은 레거시 airbnb v19(FlatCompat) 구성을 **airbnb-extended(flat config 네이티브)**로 갈아엎고 peer를 `eslint ^9 · typescript >=5.7 <7`로 올렸다. peer 경고·중복 설치의 근본 원인이 사라졌다.
+3. **axios 중복 제거.** `@als/als-api`가 axios를 runtime dependency로 들고 있어 앱과 인스턴스가 갈릴 위험이 있었는데, **peerDependency + external**로 바꿔 소비처의 axios 하나만 쓰도록 정리했다.
+4. **툴체인 수렴.** `als-api`가 먼저 Vite 8 / TS 6 baseline으로 옮겨 파일럿을 한 뒤, `admin-als`(Vite 6→8, TS 5.7→6)와 `als-gantt-chart`(React 18→19, Vite 5→8, npm→pnpm)가 차례로 따라왔다.
+5. **react-hooks 플러그인 메이저 통일.** 직전 분석에서 마지막 drift로 남겨 뒀던 `eslint-plugin-react-hooks` v5 vs v7 split을, 린트 허브가 플러그인을 **peer `^7.0.0`으로 고정**(0.0.10)하고 `admin-als`·`als-api`를 `^5 → ^7.1.1`로 올리며 닫았다. 이제 전 소비처가 v7이고, "허브가 버전을 못 박고 소비처가 따라온다"는 패턴이 그대로 작동했다.
+6. **pnpm 통일 + drift 감시 자동화.** 뒤처져 있던 `admin-als`의 `packageManager`를 `10.5.2 → 10.7.0`으로 맞춰 전 레포가 같은 pnpm을 쓰게 했다. 그리고 매번 손으로 `als-deps check`를 돌리는 대신, `@als/fe-kit`에 **`frontend-deps-drift.Jenkinsfile`** 메타 잡을 넣어 소비처 간 `@als/*` drift를 CI에서 주기적으로 감시하게 했다. 탐지가 사람 손에서 파이프라인으로 넘어간 셈이다.
+
+## 남은 것
+
+직전 분석에서 꼽았던 마무리 항목(react-hooks split·pnpm split)은 닫혔고, 남은 건 더 가벼워졌다.
+
+- **`@als/als-api` 선언 바닥값 split** — `alpha-als`는 `^0.1.8`, `admin-als`는 `^0.1.0`. 캐럿이라 설치되는 실제 버전은 둘 다 0.1.8로 같지만, 선언 floor가 벌어진 건 `als-deps check`(또는 drift CI 잡)가 잡아내는 항목이다. `als-deps bump @als/als-api --latest --install --commit` 한 번이면 정렬된다.
+- **`design/als-design` 부분 합류** — `als-scm → als` 도메인 마이그레이션을 거치며 린트 허브 `^0.0.10`·API 허브 `^0.1.0`엔 핀을 맞췄지만, 자체 툴체인(Vite 6 · TS 5.7)은 여전히 baseline보다 뒤처져 있고 앱도 `@als-design`을 import하지 않는다. 연결할 의도면 툴체인까지 baseline으로 끌어올리고, 아니면 관계를 공식적으로 "휴면(dormant)"으로 분류해야 한다.
+- **antd minor split** — `alpha 6.3.6` vs `admin 6.3.1`. 캐럿 안에서 풀리는 minor 차이라 실질 영향은 없다.
+
+## 정리
+
+이 구조의 장점은 명확하다. **앱끼리 직접 얽히지 않으니 한 앱의 변경이 다른 앱으로 새지 않는다.** 단방향 import 원칙이 코드 레벨을 넘어 레포 그래프 레벨에서도 지켜지고 있다.
+
+그 단방향을 떠받치는 허브의 버전 관리가 수동이라는 게 원래의 비용이었는데, 그 비용을 **도구(`als-deps`)와 CI 감시 잡으로 흡수**하고 정확핀을 캐럿으로 졸업시키면서 멀티레포의 약점을 상당 부분 메웠다. 분석에서 "다음 손댈 지점"으로 꼽았던 것들 — API 허브 버전 동기화 자동화, 린트 허브 peer를 앱과 같은 메이저로 끌어올리기, react-hooks 플러그인 메이저 통일, pnpm 정렬 — 이 거의 그대로 실행됐다는 점이, 이 구조가 의도를 가지고 관리되고 있다는 증거다. 가장 활발한 `alpha-als`가 내부적으로 `apps/*` + `packages/shared` 모노레포로 정리되고 vitest·Playwright 테스트 하니스까지 갖춘 것도, 이 fan-in 골격이 실제 개발 압력 아래서 버티고 있다는 방증이다.
