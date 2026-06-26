@@ -12,6 +12,24 @@ import {
   BiDependencyDirectionDiagram,
 } from "@/components/blog/bi-state-architecture-diagram";
 import { AlsFanInGraphDiagram } from "@/components/blog/als-fanin-architecture-diagram";
+import { EventLoopDiagram } from "@/components/blog/event-loop-diagram";
+import { RenderClosureDiagram } from "@/components/blog/render-closure-diagram";
+import { ClosureDefinitionDiagram } from "@/components/blog/closure-definition-diagram";
+import { StructuralSharingDiagram } from "@/components/blog/structural-sharing-diagram";
+import { EsmLoadingDiagram } from "@/components/blog/esm-loading-diagram";
+import { MappedTypeDiagram } from "@/components/blog/mapped-type-diagram";
+import { VarianceDiagram } from "@/components/blog/variance-diagram";
+import { InferExtractionDiagram } from "@/components/blog/infer-extraction-diagram";
+import { StrictFlagsDiagram } from "@/components/blog/strict-flags-diagram";
+import { ConcurrentPriorityDiagram } from "@/components/blog/concurrent-priority-diagram";
+import { ServerComponentDiagram } from "@/components/blog/server-component-diagram";
+import { RenderPipelineDiagram } from "@/components/blog/render-pipeline-diagram";
+import { CompositorThreadDiagram } from "@/components/blog/compositor-thread-diagram";
+import { HttpCacheFlowDiagram } from "@/components/blog/http-cache-flow-diagram";
+import { CookieSecurityDiagram } from "@/components/blog/cookie-security-diagram";
+import { HttpVersionsDiagram } from "@/components/blog/http-versions-diagram";
+import { ScriptLoadingDiagram } from "@/components/blog/script-loading-diagram";
+import { ResourceHintsDiagram } from "@/components/blog/resource-hints-diagram";
 import type { Metadata } from "next";
 
 const mdxComponents = {
@@ -20,6 +38,24 @@ const mdxComponents = {
   BiSessionBootstrapDiagram,
   BiDependencyDirectionDiagram,
   AlsFanInGraphDiagram,
+  EventLoopDiagram,
+  RenderClosureDiagram,
+  ClosureDefinitionDiagram,
+  StructuralSharingDiagram,
+  EsmLoadingDiagram,
+  MappedTypeDiagram,
+  VarianceDiagram,
+  InferExtractionDiagram,
+  StrictFlagsDiagram,
+  ConcurrentPriorityDiagram,
+  ServerComponentDiagram,
+  RenderPipelineDiagram,
+  CompositorThreadDiagram,
+  HttpCacheFlowDiagram,
+  CookieSecurityDiagram,
+  HttpVersionsDiagram,
+  ScriptLoadingDiagram,
+  ResourceHintsDiagram,
 };
 
 export function generateStaticParams() {

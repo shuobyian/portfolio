@@ -3,6 +3,8 @@ import path from "path";
 import matter from "gray-matter";
 import readingTime from "reading-time";
 
+export type PostType = "project" | "tech";
+
 export interface BlogPost {
   slug: string;
   title: string;
@@ -10,6 +12,7 @@ export interface BlogPost {
   date: string;
   tags: string[];
   category: string;
+  type: PostType;
   readingTime: string;
   content: string;
 }
@@ -33,6 +36,7 @@ export function getAllPosts(): BlogPost[] {
       date: data.date ?? "",
       tags: data.tags ?? [],
       category: data.category ?? "기타",
+      type: (data.type === "project" ? "project" : "tech") as PostType,
       readingTime: readingTime(content).text,
       content,
     };

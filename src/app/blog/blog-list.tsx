@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { Calendar, Clock } from "lucide-react";
-import type { BlogPost } from "@/lib/blog";
+import type { BlogPost, PostType } from "@/lib/blog";
 
 const CATEGORY_ORDER = [
   "React",
@@ -12,27 +12,73 @@ const CATEGORY_ORDER = [
   "CSS & UI",
 ] as const;
 
+type TypeFilter = "all" | PostType;
+
+const TYPE_TABS: { value: TypeFilter; label: string }[] = [
+  { value: "all", label: "전체" },
+  { value: "project", label: "프로젝트" },
+  { value: "tech", label: "기술" },
+];
+
 export function BlogList({ posts }: { posts: BlogPost[] }) {
+  const [typeFilter, setTypeFilter] = useState<TypeFilter>("all");
+  const [selected, setSelected] = useState<string | null>(null);
+
+  const byType = useMemo(
+    () =>
+      typeFilter === "all"
+        ? posts
+        : posts.filter((p) => p.type === typeFilter),
+    [posts, typeFilter]
+  );
+
   const categories = useMemo(() => {
-    const present = new Set(posts.map((p) => p.category));
+    const present = new Set(byType.map((p) => p.category));
     return [
       ...CATEGORY_ORDER.filter((c) => present.has(c)),
       ...Array.from(present).filter(
         (c) => !CATEGORY_ORDER.includes(c as (typeof CATEGORY_ORDER)[number])
       ),
     ];
-  }, [posts]);
+  }, [byType]);
 
-  const [selected, setSelected] = useState<string | null>(null);
+  const filtered =
+    selected && categories.includes(selected)
+      ? byType.filter((p) => p.category === selected)
+      : byType;
 
-  const filtered = selected
-    ? posts.filter((p) => p.category === selected)
-    : posts;
+  const selectType = (value: TypeFilter) => {
+    setTypeFilter(value);
+    setSelected(null); // 타입 전환 시 카테고리 필터 초기화
+  };
 
   return (
     <>
-      {/* Category badges */}
-      <div className="mt-8 flex flex-wrap gap-2">
+      {/* Primary type tabs */}
+      <div className="mt-8 inline-flex rounded-lg border border-border p-1">
+        {TYPE_TABS.map((tab) => {
+          const count =
+            tab.value === "all"
+              ? posts.length
+              : posts.filter((p) => p.type === tab.value).length;
+          return (
+            <button
+              key={tab.value}
+              onClick={() => selectType(tab.value)}
+              className={`rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
+                typeFilter === tab.value
+                  ? "bg-accent text-accent-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {tab.label} ({count})
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Category badges (scoped to selected type) */}
+      <div className="mt-5 flex flex-wrap gap-2">
         <button
           onClick={() => setSelected(null)}
           className={`rounded-full px-3 py-1 text-sm transition-colors ${
@@ -41,10 +87,10 @@ export function BlogList({ posts }: { posts: BlogPost[] }) {
               : "bg-muted text-muted-foreground hover:text-foreground"
           }`}
         >
-          전체 ({posts.length})
+          전체 ({byType.length})
         </button>
         {categories.map((category) => {
-          const count = posts.filter((p) => p.category === category).length;
+          const count = byType.filter((p) => p.category === category).length;
           return (
             <button
               key={category}

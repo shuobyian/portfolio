@@ -1,0 +1,98 @@
+---
+title: "URL 입력부터 화면 렌더까지 — CRP와 reflow·repaint"
+description: "주소창에 URL을 입력한 순간부터 픽셀이 그려지기까지의 전 과정을 정리한다. DNS·TCP·TLS·HTTP 네트워크 단계와, DOM·CSSOM·Render Tree·Layout·Paint·Composite로 이어지는 Critical Rendering Path. reflow와 repaint의 차이, transform·opacity가 싼 이유와 렌더링 최적화 팁까지."
+date: "2026-06-25"
+tags: ["브라우저", "렌더링", "Critical Rendering Path", "reflow", "성능"]
+category: "브라우저 & Web API"
+type: "tech"
+---
+
+> 주소창에 URL을 치면 화면이 뜬다. 그 사이에 무슨 일이 일어나는가? 네트워크부터 픽셀까지의 전 과정과, 그 안에서 성능을 좌우하는 reflow·repaint를 정리한다.
+
+## 1. 큰 그림
+
+크게 **네트워크 → 파싱 → 렌더링** 세 단계다.
+
+<RenderPipelineDiagram />
+
+## 2. 네트워크 — HTML을 받아오기까지
+
+URL을 입력하면 브라우저는 먼저 서버에서 HTML을 받아온다.
+
+1. **DNS 조회** — 도메인(`example.com`)을 IP 주소로 변환
+2. **TCP 연결** — 서버와 3-way 핸드셰이크
+3. **TLS 핸드셰이크** — HTTPS면 암호화 연결 수립
+4. **HTTP 요청·응답** — 서버가 HTML 문서를 내려줌
+
+받은 HTML을 브라우저가 파싱하기 시작하면서 본격적인 렌더링이 시작된다.
+
+## 3. 파싱 — DOM과 CSSOM
+
+- **HTML → DOM**: HTML을 파싱해 **DOM 트리**(문서 구조) 생성
+- **CSS → CSSOM**: CSS를 파싱해 **CSSOM 트리**(스타일 규칙) 생성
+
+이 둘은 **병렬로** 만들어진다. 그런데 중간에 **JavaScript가 끼어들 수 있다.**
+
+```html
+<script src="app.js"></script> <!-- 파싱을 멈추고 JS를 받아 실행 -->
+```
+
+- 기본 `<script>`는 **HTML 파싱을 막는다(parser-blocking).** JS가 DOM을 조작할 수 있어 브라우저가 기다린다.
+- 또 JS는 CSSOM을 읽을 수 있어, **CSS 로딩이 JS 실행을 막기도** 한다.
+- 그래서 `<script>`에 `defer`(파싱 후 순서대로) / `async`(받는 즉시)를 줘 차단을 피한다.
+
+## 4. Render Tree — 화면에 그릴 것만
+
+DOM과 CSSOM을 합쳐 **렌더 트리(Render Tree)** 를 만든다. 핵심은 **실제로 화면에 보이는 것만** 포함한다는 점이다.
+
+- `display: none` 요소는 **렌더 트리에서 제외** (공간도 차지 안 함)
+- `visibility: hidden`은 **포함** (공간은 차지하되 안 보임)
+
+## 5. Critical Rendering Path — 픽셀이 되기까지
+
+**Critical Rendering Path(CRP)** 는 HTML·CSS·JS를 화면 픽셀로 바꾸는 일련의 단계다. 렌더 트리 이후는 세 단계로 그려진다.
+
+### ① Layout (= reflow)
+
+각 요소의 **크기와 위치를 계산**한다. "이 박스가 화면 어디에, 얼마만큼" 을 정하는 단계. 한 요소가 바뀌면 주변·자식까지 다시 계산될 수 있어 **가장 비싸다.**
+
+### ② Paint (= repaint)
+
+계산된 레이아웃을 바탕으로 **픽셀을 칠한다** — 색, 배경, 글자, 그림자 등.
+
+### ③ Composite (합성)
+
+여러 **레이어를 GPU로 합쳐** 최종 화면을 만든다. 가장 저렴하다.
+
+## 6. reflow vs repaint — 무엇이 비싼가
+
+화면을 바꾸는 변경은 **어느 단계부터 다시 하느냐**에 따라 비용이 다르다.
+
+| 변경 종류 | 다시 하는 단계 | 비용 |
+| --- | --- | --- |
+| 크기·위치 (width, top, font-size, DOM 추가) | **Layout → Paint → Composite** (reflow) | 🔴 비쌈 |
+| 색·배경·visibility | **Paint → Composite** (repaint) | 🟡 중간 |
+| `transform` · `opacity` | **Composite만** | 🟢 저렴 |
+
+핵심은 **`transform`·`opacity`는 Layout과 Paint를 건너뛰고 합성만 거친다**는 것이다. GPU에서 별도 레이어로 처리되기 때문이다. 그래서 애니메이션은 `left`/`top`이 아니라 `transform`으로 해야 부드럽다.
+
+```css
+/* ❌ 매 프레임 reflow → 버벅임 */
+.box { left: 100px; transition: left 0.3s; }
+
+/* ✅ composite만 → 부드러움 */
+.box { transform: translateX(100px); transition: transform 0.3s; }
+```
+
+## 7. 렌더링 최적화 팁
+
+- **애니메이션은 `transform`·`opacity`로** — reflow/repaint 회피
+- **reflow를 유발하는 속성 읽기를 묶기** — `offsetTop`·`getBoundingClientRect` 등을 쓰기와 번갈아 하면 *강제 동기 레이아웃(layout thrashing)* 이 발생. 읽기는 읽기끼리, 쓰기는 쓰기끼리 모은다.
+- **DOM 변경 일괄 처리** — 여러 번 나눠 바꾸지 말고 한 번에 (DocumentFragment 등)
+- **레이어 승격은 신중히** — `will-change`로 레이어를 미리 만들 수 있지만 남용하면 메모리 증가 (왜 그런지는 [GPU 레이어 합성 글](/blog/gpu-compositing-will-change)에서 깊이 다룬다)
+
+> 참고로 브라우저의 화면 갱신(reflow·paint)은 매크로태스크 사이, 마이크로태스크를 다 비운 뒤에 일어난다. 부드러운 애니메이션을 `setTimeout`이 아니라 `requestAnimationFrame`으로 그려야 하는 이유다. ([이벤트 루프 글](/blog/javascript-event-loop) 참고)
+
+## 8. 정리
+
+> URL을 입력하면 **DNS → TCP → TLS → HTTP**로 HTML을 받고, 브라우저가 **HTML→DOM·CSS→CSSOM**을 파싱해 **Render Tree**를 만든 뒤 **Layout(reflow) → Paint(repaint) → Composite** 순으로 그린다. 이 경로가 Critical Rendering Path다. Layout이 가장 비싸고 Composite가 가장 싸므로, **애니메이션은 `transform`·`opacity`로** 처리해 reflow·repaint를 피하는 게 성능의 핵심이다.

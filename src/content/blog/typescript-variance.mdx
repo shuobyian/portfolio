@@ -1,0 +1,102 @@
+---
+title: "공변과 반공변 — 함수 매개변수는 왜 방향이 뒤집힐까"
+description: "변성(variance)을 '이 자리에 넣어도 호출이 안전한가'라는 한 기준으로 정리한다. 반환 타입·배열이 공변인 이유, 함수 매개변수가 반공변인 이유를 Dog/Animal 치환 예제로 풀고, TypeScript의 이변(bivariance)과 strictFunctionTypes까지 짚는다."
+date: "2026-06-24"
+tags: ["TypeScript", "공변성", "반공변성", "타입 시스템"]
+category: "TypeScript"
+type: "tech"
+---
+
+> "함수 매개변수는 반공변이다"는 말은 외우기 어렵다. 하지만 **"이 자리에 넣어도 호출이 안전한가?"** 한 가지만 따지면 전부 자연스럽게 풀린다.
+
+## 1. 변성(Variance)이란
+
+변성은 **타입 간 서브타입 관계가, 그 타입을 감싼 복합 타입(반환·매개변수·배열·제네릭)에서 어떻게 이어지는가**를 다룬다. 예를 들어 "`Dog`가 `Animal`의 하위 타입이면, `Dog 배열`도 `Animal 배열`의 하위 타입인가?" 같은 질문이다.
+
+## 2. 준비 — 서브타입 관계
+
+```typescript
+class Animal { name = ""; }
+class Dog extends Animal { bark() {} }
+// Dog는 더 구체적 → Dog <: Animal (Dog는 Animal의 서브타입)
+```
+
+핵심 직관: **서브타입(`Dog`)은 슈퍼타입(`Animal`)이 필요한 자리에 대신 들어갈 수 있다** (리스코프 치환).
+
+## 3. 한눈에 보기
+
+<VarianceDiagram />
+
+화살표 `A ▶ B`는 "A는 B의 하위 타입"을 뜻한다. 반환 타입은 `Dog`가 하위인 채로 **방향이 유지(공변)** 되고, 매개변수는 `Animal`이 하위가 되어 **방향이 반전(반공변)** 된다. 왜 그런지 하나씩 보자.
+
+## 4. 공변 (Covariance) — 방향 유지
+
+서브타입 관계가 그대로 보존된다. **반환 타입**과 **읽기 배열**이 공변이다.
+
+```typescript
+// 반환 타입 — 공변
+type GetAnimal = () => Animal;
+const get: GetAnimal = () => new Dog(); // ✅ Dog를 반환해도 OK
+
+// 배열 — 공변
+let animals: Animal[] = [];
+let dogs: Dog[] = [];
+animals = dogs; // ✅ Dog[]를 Animal[]로 취급
+```
+
+직관: **"더 구체적인 걸 내놓는 건 안전하다."** Animal을 기대하는 쪽에 Dog를 줘도 Dog는 Animal이니 문제없다.
+
+## 5. 반공변 (Contravariance) — 방향 반전
+
+**함수의 매개변수**가 반공변이다. 서브타입 방향이 거꾸로 뒤집힌다.
+
+```typescript
+type AnimalFn = (a: Animal) => void;
+type DogFn = (d: Dog) => void;
+
+const animalFn: AnimalFn = (a) => console.log(a.name);
+const dogFn: DogFn = (d) => d.bark();
+
+let f: DogFn;
+f = animalFn; // ✅ OK — '넓은 걸 받는 함수'를 대입 가능 (매개변수 반공변)
+
+let g: AnimalFn;
+// g = dogFn; // ❌ 안전하지 않음 (strictFunctionTypes 기준)
+```
+
+**왜 거꾸로인가?** 안전성으로 따지면 명확하다.
+
+- `DogFn` 자리(`f`)는 호출자가 **Dog를 넘길 것**이라 약속된 자리다. 여기에 `animalFn`(Animal을 받는 함수)을 넣어도, 들어오는 Dog는 Animal의 일종이라 **animalFn이 충분히 처리**한다 → 안전 ✅
+- `AnimalFn` 자리(`g`)엔 호출자가 **임의의 Animal(예: Cat)** 을 넘길 수 있는데, 거기에 `dogFn`을 넣으면 `Cat.bark()`를 호출하다 **터진다** → 위험 ❌
+
+→ 매개변수는 **"더 넓은(슈퍼타입) 걸 받는 함수가 하위 타입"** 이 된다. 그래서 `AnimalFn <: DogFn`, 방향이 뒤집힌다.
+
+## 6. 이변 (Bivariance) — TypeScript의 실용적 예외
+
+TypeScript는 **메서드 문법의 매개변수**(와 `strictFunctionTypes`가 꺼진 함수)를 **양방향 모두 허용**한다. 이론상 안전하지 않지만, 이벤트 핸들러·배열 메서드 등 실용성 때문에 의도적으로 느슨하게 둔 것이다.
+
+```typescript
+interface Handler {
+  on(cb: (e: Animal) => void): void; // 메서드 표기 → 매개변수 이변(느슨)
+}
+
+type Fn = (cb: (e: Animal) => void) => void; // 함수 타입 표기 → 반공변(엄격)
+```
+
+`strictFunctionTypes`는 **함수 타입 표기**에만 반공변을 적용하고, **메서드 표기**에는 적용하지 않는다. 같은 코드라도 어떻게 썼느냐에 따라 검사 강도가 달라진다.
+
+## 7. 정리
+
+| 변성 | 방향 | 어디서 |
+| --- | --- | --- |
+| **공변** | 유지 (`Dog`가 하위 그대로) | 반환 타입, 읽기 배열 |
+| **반공변** | 반전 (`Animal`이 하위로) | 함수 매개변수 (strictFunctionTypes) |
+| **이변** | 양방향(비안전) | TS 메서드 매개변수 |
+| **불변** | 불가 | 읽기·쓰기 모두 하는 가변 타입 |
+
+### 외우는 법
+
+- **출력(반환·읽기) → 공변**: 더 구체적인 걸 주는 건 안전
+- **입력(매개변수) → 반공변**: 더 넓은 걸 받는 게 안전
+
+> **한 줄 정리** — 공변은 "내놓는 것(반환)"에서 서브타입 방향을 유지하고, 반공변은 "받는 것(매개변수)"에서 방향을 뒤집는다. 판단 기준은 언제나 **"이 자리에 넣어도 호출이 안전한가?"** 하나다.

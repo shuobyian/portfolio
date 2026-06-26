@@ -1,0 +1,154 @@
+---
+title: "조건부 타입과 infer — 타입을 계산하는 법"
+description: "T extends U ? X : Y 조건부 타입과 infer 키워드로 함수 반환·배열 요소·Promise 내부 타입을 추출하는 원리를 정리한다. 헷갈리는 분배(distributive) 동작, 재귀 조건부 타입, 템플릿 리터럴 추출, infer 제약까지. ReturnType·Awaited의 정체를 직접 읽어본다."
+date: "2026-06-24"
+tags: ["TypeScript", "조건부 타입", "infer", "타입 시스템"]
+category: "TypeScript"
+type: "tech"
+---
+
+> `ReturnType<T>`는 어떻게 함수의 반환 타입을 알아낼까? 답은 **조건부 타입 + infer**다. TypeScript가 "타입을 계산하는" 방식을 단계적으로 본다.
+
+## 1. 조건부 타입 — 타입 수준의 if
+
+`T extends U ? X : Y` 형태로 **타입을 조건에 따라 분기**한다.
+
+```typescript
+type IsString<T> = T extends string ? true : false;
+
+type A = IsString<"hello">; // true
+type B = IsString<number>;  // false
+```
+
+`T extends U`는 "T가 U에 **할당 가능한가(서브타입인가)**"를 묻는다. 값의 if가 아니라 **타입의 if**다.
+
+## 2. infer — 조건 안에서 타입을 "추출"
+
+`infer`는 **조건부 타입의 `extends` 절 안에서, 매칭되는 부분의 타입을 변수로 뽑아내는** 키워드다. "이 자리에 들어있는 타입을 R이라고 부를게"라고 선언하는 것과 같다.
+
+<InferExtractionDiagram />
+
+```typescript
+type MyReturnType<T> = T extends (...args: any[]) => infer R ? R : never;
+
+type Fn = () => { id: number; name: string };
+type R = MyReturnType<Fn>; // { id: number; name: string }
+```
+
+동작 방식:
+
+- `T`가 "어떤 인자를 받아 **무언가**를 반환하는 함수" 모양에 맞는지 검사
+- 맞으면 그 **무언가**(반환 타입)를 `R`에 담아 반환, 안 맞으면 `never`
+
+이게 내장 `ReturnType<T>`의 실제 구현이다.
+
+## 3. infer는 어디서든 "그 자리"를 뽑는다
+
+infer는 함수 반환뿐 아니라 **타입 구조의 어떤 위치든** 꺼낼 수 있다. 패턴은 항상 같다 — "이런 모양이면, 그 안의 ___ 자리를 꺼낸다."
+
+```typescript
+// 첫 번째 매개변수
+type FirstArg<T> = T extends (first: infer P, ...rest: any[]) => any ? P : never;
+type P = FirstArg<(name: string, age: number) => void>; // string
+
+// 배열의 요소
+type ElementType<T> = T extends (infer E)[] ? E : never;
+type E = ElementType<number[]>; // number
+
+// Promise 내부
+type Unwrap<T> = T extends Promise<infer V> ? V : T;
+type V = Unwrap<Promise<string>>; // string
+
+// 객체 속성
+type PropType<T> = T extends { value: infer V } ? V : never;
+type W = PropType<{ value: number }>; // number
+```
+
+## 4. 분배 조건부 타입 (Distributive) — 유니온에서 자동 반복
+
+조건부 타입의 `T`가 **유니온이고 "벗겨진(naked)" 타입 파라미터**면, 유니온의 각 멤버에 **개별 적용한 뒤 다시 합친다.** 의외로 헷갈리는 핵심 동작이다.
+
+```typescript
+type ToArray<T> = T extends any ? T[] : never;
+
+type R = ToArray<string | number>;
+// 분배: ToArray<string> | ToArray<number>
+// = string[] | number[]   ❗ (string | number)[] 가 아님
+```
+
+`Exclude`도 이 분배 덕분에 동작한다.
+
+```typescript
+type MyExclude<T, U> = T extends U ? never : T;
+
+type R = MyExclude<"a" | "b" | "c", "a">;
+// ("a"→never) | ("b"→"b") | ("c"→"c") = "b" | "c"
+```
+
+**분배를 끄려면** `[]`로 감싸 벗겨진 상태를 막는다.
+
+```typescript
+type NoDistribute<T> = [T] extends [any] ? T[] : never;
+type R = NoDistribute<string | number>; // (string | number)[]
+```
+
+## 5. 실전 — 내장 유틸리티의 정체
+
+이제 내장 유틸리티들이 어떻게 만들어졌는지 읽을 수 있다.
+
+```typescript
+type Parameters<T> = T extends (...args: infer P) => any ? P : never;
+type ReturnType<T> = T extends (...args: any[]) => infer R ? R : never;
+type InstanceType<T> = T extends new (...args: any[]) => infer R ? R : never;
+type NonNullable<T> = T extends null | undefined ? never : T; // + 분배
+```
+
+## 6. 심화 ① — 재귀 조건부 타입
+
+조건부 타입은 **자기 자신을 다시 호출**할 수 있다. 중첩 Promise를 끝까지 벗기는 `Awaited`가 그 예다.
+
+```typescript
+type DeepAwaited<T> = T extends Promise<infer V> ? DeepAwaited<V> : T;
+type R = DeepAwaited<Promise<Promise<string>>>; // string
+
+// 배열 평탄화
+type Flatten<T> = T extends (infer E)[] ? Flatten<E> : T;
+type F = Flatten<number[][][]>; // number
+```
+
+## 7. 심화 ② — infer + 템플릿 리터럴
+
+문자열 패턴에서 부분을 뽑을 수도 있다.
+
+```typescript
+type Greeting<S> = S extends `Hello, ${infer Name}!` ? Name : never;
+type N = Greeting<"Hello, 수빈!">; // "수빈"
+
+// 라우트 파라미터 추출
+type Param<S> = S extends `/users/${infer Id}` ? Id : never;
+type Id = Param<"/users/42">; // "42"
+```
+
+## 8. 심화 ③ — infer 제약 (TS 4.7+)
+
+추출하면서 동시에 타입을 제약할 수 있다.
+
+```typescript
+type FirstString<T> = T extends [infer F extends string, ...any[]] ? F : never;
+type R = FirstString<["hi", 1, 2]>; // "hi"
+```
+
+## 9. 정리
+
+| 도구 | 역할 |
+| --- | --- |
+| **조건부 타입** `T extends U ? X : Y` | 타입 수준의 if 분기 |
+| **infer** | 조건 안에서 매칭되는 부분의 타입을 추출 |
+| **분배 동작** | 유니온이면 멤버별로 자동 반복 후 합침 |
+| **재귀** | 조건부 타입이 자기 자신 호출 (깊은 구조 처리) |
+
+> **한 줄 정리** — 조건부 타입은 타입을 조건으로 분기하고, `infer`는 그 조건 안에서 "이 자리의 타입"을 꺼낸다. 둘을 합치면 함수 반환·배열 요소·Promise 내부를 추출하고, 재귀·템플릿 리터럴과 결합해 복잡한 타입 변환까지 만들 수 있다. `ReturnType`·`Parameters`·`Awaited`가 전부 이 조합이다.
+
+---
+
+기본 유틸리티 타입과 매핑 타입은 [TypeScript 유틸리티 타입](/blog/typescript-utility-types) 글에서 다룬다.

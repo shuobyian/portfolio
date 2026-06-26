@@ -1,0 +1,151 @@
+---
+title: "TypeScript 유틸리티 타입 — 원리부터 실무 조합까지"
+description: "Partial·Pick·Omit·Record·ReturnType 등 자주 쓰는 유틸리티 타입을 분류별로 정리하고, 이들이 매핑 타입(`[K in keyof T]`)으로 어떻게 구현되는지 직접 만들어 본다. 타입 중복을 없애고 단일 출처를 유지하는 실무 조합 패턴까지."
+date: "2026-06-24"
+tags: ["TypeScript", "유틸리티 타입", "매핑 타입", "제네릭"]
+category: "TypeScript"
+type: "tech"
+---
+
+> `Partial<T>`, `Pick<T, K>` 같은 유틸리티 타입은 편의 도구가 아니라 **타입의 단일 출처(source of truth)를 지키는 핵심 수단**이다. 무엇이 있고, 어떻게 만들어지는지 정리한다.
+
+기준 타입으로 설명한다.
+
+```typescript
+interface User {
+  id: number;
+  name: string;
+  email: string;
+  age?: number;
+}
+```
+
+## 1. 객체 변형 (가장 많이 씀)
+
+### `Partial<T>` — 모든 속성을 선택적으로
+
+```typescript
+function updateUser(id: number, changes: Partial<User>) {}
+updateUser(1, { name: "수빈" }); // 일부만 넘겨도 OK
+```
+
+### `Required<T>` — 모든 속성을 필수로 (Partial의 반대)
+
+```typescript
+type RequiredUser = Required<User>; // age?도 age로 강제
+```
+
+### `Readonly<T>` — 모든 속성을 읽기 전용으로
+
+```typescript
+const u: Readonly<User> = { id: 1, name: "수빈", email: "a@b.c" };
+u.name = "철수"; // ❌ 컴파일 에러
+```
+
+### `Pick<T, K>` / `Omit<T, K>` — 고르거나 제외
+
+```typescript
+type UserPreview = Pick<User, "id" | "name">;  // { id; name }
+type NewUser = Omit<User, "id">;                // id 제외 (생성 시 자주 씀)
+```
+
+### `Record<K, V>` — 키-값 객체 타입
+
+```typescript
+type Roles = Record<"admin" | "user", boolean>; // { admin: boolean; user: boolean }
+type UserMap = Record<string, User>;            // { [key: string]: User }
+```
+
+## 2. 유니온 조작
+
+```typescript
+type Status = "active" | "inactive" | "pending";
+
+type Active = Exclude<Status, "pending">;   // "active" | "inactive" (제거)
+type Picked = Extract<Status, "active">;    // "active" (추출)
+type T = NonNullable<string | null>;        // string (null·undefined 제거)
+```
+
+## 3. 함수 / 클래스에서 타입 추출
+
+```typescript
+function getUser() {
+  return { id: 1, name: "수빈" };
+}
+
+type User = ReturnType<typeof getUser>;        // { id: number; name: string }
+type Args = Parameters<typeof getUser>;        // [] (매개변수 튜플)
+type Data = Awaited<ReturnType<typeof fetchUser>>; // Promise 풀어낸 타입
+```
+
+> 실무 꿀팁 — API 함수의 반환 타입을 `ReturnType`/`Awaited`로 뽑아 쓰면, 함수 구현이 바뀌어도 타입이 자동으로 따라온다. 타입을 손으로 다시 적을 필요가 없다.
+
+기타: `InstanceType<T>`(클래스 인스턴스), `ConstructorParameters<T>`(생성자 인자).
+
+## 4. 문자열 변형
+
+```typescript
+type T1 = Uppercase<"abc">;    // "ABC"
+type T2 = Capitalize<"hello">; // "Hello"
+```
+
+## 5. 원리 — 유틸리티 타입은 "마법"이 아니다
+
+대부분은 **매핑 타입(`[K in keyof T]`) + `keyof`** 로 구현된다. `Partial`이 동작하는 과정을 그림으로 보자.
+
+<MappedTypeDiagram />
+
+`keyof T`로 키들의 유니온(`"id" | "name" | "email" | "age"`)을 얻고, `[K in keyof T]`로 그 키를 하나씩 순회하며 `?`를 붙인다. 그게 전부다. 그래서 직접 구현할 수 있다.
+
+```typescript
+// Partial 직접 구현
+type MyPartial<T> = { [K in keyof T]?: T[K] };
+
+// Readonly 직접 구현
+type MyReadonly<T> = { readonly [K in keyof T]: T[K] };
+
+// Pick 직접 구현 (K는 T의 키로 제약)
+type MyPick<T, K extends keyof T> = { [P in K]: T[P] };
+
+// Required 직접 구현 (-? 로 optional 제거)
+type MyRequired<T> = { [K in keyof T]-?: T[K] };
+```
+
+`-?`는 optional을 제거하는 수정자다. 이런 원리를 알면 **도메인 전용 커스텀 유틸리티**도 만들 수 있다.
+
+```typescript
+// 특정 키만 optional로 만드는 커스텀 유틸리티
+type PartialBy<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
+
+type Draft = PartialBy<User, "email">; // email만 선택적, 나머지는 그대로
+```
+
+## 6. 실무 조합 패턴
+
+유틸리티 타입은 **조합할 때** 진짜 강력하다.
+
+```typescript
+// 생성 폼: id 제외 + 나머지는 일부만 입력 가능
+type UserForm = Partial<Omit<User, "id">>;
+
+// 응답 타입을 API 함수에서 자동 도출 (중복 정의 제거)
+type UserResponse = Awaited<ReturnType<typeof api.getUser>>;
+
+// 상수 객체에서 타입 뽑기
+const ROLES = { admin: "관리자", user: "회원" } as const;
+type RoleKey = keyof typeof ROLES;        // "admin" | "user"
+type RoleValue = (typeof ROLES)[RoleKey]; // "관리자" | "회원"
+```
+
+핵심은 **타입을 한 곳에서 정의하고, 나머지는 거기서 파생**시키는 것이다. `User`만 바꾸면 `UserForm`·`UserPreview`·`NewUser`가 전부 자동으로 따라오므로 타입 불일치가 생기지 않는다.
+
+## 7. 정리
+
+| 분류 | 유틸리티 타입 |
+| --- | --- |
+| 객체 변형 | `Partial` · `Required` · `Readonly` · `Pick` · `Omit` · `Record` |
+| 유니온 조작 | `Exclude` · `Extract` · `NonNullable` |
+| 함수/클래스 | `ReturnType` · `Parameters` · `Awaited` · `InstanceType` |
+| 문자열 | `Uppercase` · `Lowercase` · `Capitalize` |
+
+> **한 줄 정리** — 유틸리티 타입은 기존 타입을 변형해 새 타입을 만드는 내장 도구이고, 대부분 매핑 타입으로 구현돼 있어 직접 만들 수도 있다. 타입을 단일 출처에서 파생시켜 중복과 불일치를 없애는 것이 본질이다.

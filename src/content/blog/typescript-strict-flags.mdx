@@ -1,0 +1,154 @@
+---
+title: "TypeScript strict 플래그 — strict: true가 켜는 8가지"
+description: "tsconfig의 strict: true가 한꺼번에 켜는 하위 플래그들을 정리한다. 타입 안전의 두 축인 strictNullChecks·noImplicitAny부터 strictFunctionTypes·strictPropertyInitialization·useUnknownInCatchVariables까지, 각 플래그가 무엇을 막는지와 JS→TS 마이그레이션 시 점진 적용 전략."
+date: "2026-06-25"
+tags: ["TypeScript", "tsconfig", "strict", "타입 안전성"]
+category: "TypeScript"
+type: "tech"
+---
+
+> `"strict": true` 한 줄은 사실 **8개의 플래그를 한꺼번에 켜는 묶음**이다. 무엇이 켜지고, 각각 어떤 버그를 막는지 정리한다.
+
+## 1. strict는 묶음이다
+
+<StrictFlagsDiagram />
+
+`strict: true`를 켜면 아래 8개가 모두 켜진다. 그중 **타입 안전의 두 축**은 `strictNullChecks`와 `noImplicitAny`이고, 나머지는 함수·클래스·this·catch의 빈틈을 메우는 보조 플래그다.
+
+## 2. 핵심 ① `strictNullChecks` — null/undefined 안전
+
+`null`·`undefined`를 모든 타입에서 분리해, "null일 수 있는 값"은 쓰기 전에 반드시 확인하게 강제한다.
+
+```typescript
+let name: string = null; // ❌ null은 string에 할당 불가
+
+let name2: string | null = null;
+name2.toUpperCase();     // ❌ name2가 null일 수 있음
+if (name2 !== null) {
+  name2.toUpperCase();   // ✅ string으로 좁혀져 안전
+}
+```
+
+→ 실무 런타임 버그의 큰 비중인 **NPE(null 참조 에러)** 를 컴파일 단계에서 잡는다. 가장 중요한 플래그.
+
+## 3. 핵심 ② `noImplicitAny` — 암묵적 any 차단
+
+타입을 명시 안 했는데 추론도 실패하면, 옛날엔 조용히 `any`가 됐다. 이걸 에러로 만든다.
+
+```typescript
+function greet(name) {         // ❌ 'name'이 암묵적으로 any
+  return "안녕 " + name;
+}
+function greet2(name: string) { // ✅
+  return "안녕 " + name;
+}
+```
+
+→ `any`가 코드에 퍼져 타입 검사를 무력화하는 걸 막는다. strictNullChecks 다음으로 중요.
+
+## 4. `strictFunctionTypes` — 함수 매개변수 반공변 검사
+
+함수 타입을 할당할 때 매개변수를 **반공변**으로 엄격히 검사한다.
+
+```typescript
+let f: (x: Dog) => void;
+let g: (x: Animal) => void;
+
+f = g; // ✅ 넓은 걸 받는 함수를 대입
+g = f; // ❌ 안전하지 않음 — 이 플래그가 잡음
+```
+
+단, **메서드 문법**에는 적용되지 않고 함수 타입 표기에만 적용된다. (자세히는 [공변과 반공변](/blog/typescript-variance) 글에서)
+
+## 5. `strictPropertyInitialization` — 클래스 속성 초기화 강제
+
+클래스 속성이 생성자에서 반드시 초기화되게 한다. (`strictNullChecks`도 켜져 있어야 동작)
+
+```typescript
+class User {
+  name: string; // ❌ 초기화 안 됨 → undefined 위험
+  constructor() {}
+}
+
+class User2 {
+  name = "";                       // 기본값
+  name2!: string;                  // '!'로 "나중에 꼭 할당" 단언
+  constructor(public name3: string) {} // 생성자 매개변수
+}
+```
+
+## 6. `strictBindCallApply` — bind/call/apply 인자 검사
+
+`bind`·`call`·`apply`로 호출할 때 인자 타입을 검사한다.
+
+```typescript
+function add(a: number, b: number) { return a + b; }
+
+add.call(null, 1, "2"); // ❌ "2"는 number가 아님
+add.call(null, 1, 2);   // ✅
+```
+
+## 7. `noImplicitThis` — this의 암묵적 any 금지
+
+`this` 타입을 추론할 수 없을 때 에러를 낸다.
+
+```typescript
+function fn() {
+  console.log(this.name); // ❌ 'this'가 암묵적 any
+}
+function fn2(this: { name: string }) {
+  console.log(this.name); // ✅ this 타입 명시
+}
+```
+
+## 8. `useUnknownInCatchVariables` — catch 변수를 unknown으로 (TS 4.4+)
+
+`catch`의 에러 변수가 `any`가 아니라 **`unknown`** 이 된다. 쓰기 전에 좁히도록 강제한다.
+
+```typescript
+try {
+  /* ... */
+} catch (e) {
+  e.message; // ❌ e는 unknown
+  if (e instanceof Error) {
+    e.message; // ✅ 좁힌 뒤 사용
+  }
+}
+```
+
+## 9. `alwaysStrict` — JS 엄격 모드 강제
+
+모든 파일을 자바스크립트 **엄격 모드(`"use strict"`)** 로 파싱하고 출력에도 넣는다. (TS의 strict가 아니라 JS 런타임의 strict mode)
+
+## 10. 정리
+
+| 플래그 | 막는 것 | 중요도 |
+| --- | --- | --- |
+| `strictNullChecks` | null/undefined 미처리 (NPE) | ⭐⭐⭐ |
+| `noImplicitAny` | 암묵적 any 확산 | ⭐⭐⭐ |
+| `strictFunctionTypes` | 함수 매개변수 불안전 할당 | ⭐⭐ |
+| `strictPropertyInitialization` | 클래스 속성 미초기화 | ⭐⭐ |
+| `strictBindCallApply` | bind/call/apply 인자 오류 | ⭐ |
+| `noImplicitThis` | this의 암묵적 any | ⭐ |
+| `useUnknownInCatchVariables` | catch 에러 무검증 사용 | ⭐ |
+| `alwaysStrict` | JS 엄격 모드 강제 | ⭐ |
+
+## 11. 마이그레이션 팁
+
+기존 JS 프로젝트를 옮길 때 `strict`를 한 번에 켜면 에러가 폭발한다. 그래서 보통 **하나씩 켜며 점진적으로** 잡는다.
+
+```jsonc
+// tsconfig.json — 점진 적용 예
+{
+  "compilerOptions": {
+    "noImplicitAny": true,    // ① 먼저 any부터
+    "strictNullChecks": true, // ② 그다음 null 안전
+    // 안정화되면 최종적으로:
+    // "strict": true
+  }
+}
+```
+
+`noImplicitAny` → `strictNullChecks` 순으로 닫고, 나머지는 `strict: true`로 한 번에 마무리하는 흐름이 무난하다.
+
+> **한 줄 정리** — `strict: true`는 8개 플래그의 묶음이고, 그중 **`strictNullChecks`(null 안전)와 `noImplicitAny`(any 차단)** 가 타입 안전성의 두 축이다. 마이그레이션은 이 둘부터 점진적으로 켜는 게 정석이다.

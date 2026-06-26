@@ -1,0 +1,131 @@
+---
+title: "토큰을 어디에 둘까 — 쿠키 옵션과 저장 위치의 보안 트레이드오프"
+description: "HttpOnly·Secure·SameSite가 각각 무슨 공격을 막고 무엇은 못 막는지, localStorage와 HttpOnly 쿠키의 트레이드오프, __Host- 접두사, 그리고 액세스 토큰은 메모리·리프레시 토큰은 HttpOnly 쿠키에 두는 실무 패턴까지. 핵심은 'XSS는 HttpOnly, CSRF는 SameSite'라는 두 축이다."
+date: "2026-06-25"
+tags: ["보안", "쿠키", "인증", "XSS", "CSRF"]
+category: "브라우저 & Web API"
+type: "tech"
+---
+
+> "토큰은 HttpOnly 쿠키에 두세요"는 자주 듣는 답이다. 하지만 **각 옵션이 어떤 공격을 막고, 어떤 건 못 막는지**까지 말할 수 있어야 한다. 쿠키 보안은 결국 **XSS와 CSRF라는 서로 다른 두 공격을 따로 막는** 이야기다.
+
+## 1. 쿠키의 본질 — 자동 전송이라는 양날의 검
+
+쿠키의 가장 큰 특징은 **브라우저가 요청에 자동으로 실어 보낸다**는 점이다. 이게 강점이자 약점이다.
+
+- **강점** — JS가 토큰을 만질 필요가 없다. `HttpOnly`로 잠그면 XSS로 탈취 불가.
+- **약점** — 자동 전송이라 **공격자 사이트가 유발한 요청에도 딸려 간다.** 이게 CSRF의 근본 원인.
+
+그래서 쿠키 보안은 두 축으로 갈린다: **XSS는 `HttpOnly`로, CSRF는 `SameSite`로.**
+
+<CookieSecurityDiagram />
+
+## 2. 핵심 속성 — 무엇을 막는가
+
+### HttpOnly — XSS 방어
+
+```
+Set-Cookie: token=abc; HttpOnly
+```
+
+`document.cookie`로 읽을 수 없게 한다. XSS 스크립트가 주입돼도 토큰을 **훔쳐 외부로 보낼 수 없다.**
+
+> ⚠️ 흔한 오해: HttpOnly가 XSS 자체를 막진 않는다. **토큰 유출**을 막을 뿐이다. XSS가 있으면 공격자는 토큰을 읽지 못해도, 이미 로그인된 그 브라우저에서 **요청을 대신 보낼 수 있다**(쿠키가 자동 전송되니까). 즉 HttpOnly는 "토큰이 서버 밖으로 새는 것"을 막지, "그 세션 악용"까지 막진 않는다. XSS 자체는 입력 검증·CSP로 따로 막아야 한다.
+
+### Secure — 평문 전송 차단
+
+```
+Set-Cookie: token=abc; Secure
+```
+
+HTTPS 연결에서만 전송된다. 중간자(MITM)가 평문 HTTP에서 쿠키를 가로채는 걸 막는다. 운영 환경에선 사실상 필수.
+
+### SameSite — CSRF 방어
+
+가장 헷갈리는 속성. **다른 사이트에서 출발한 요청에 쿠키를 실을지** 결정한다.
+
+| 값 | 동작 | CSRF 방어 | 비고 |
+| --- | --- | --- | --- |
+| `Strict` | 크로스사이트 요청에 **절대 안 보냄** | 강함 | 외부 링크로 들어오면 로그아웃처럼 보임(UX 저하) |
+| `Lax` | 안전한 최상위 탐색(GET 링크 클릭)만 허용 | 보통 | 대부분 브라우저 **기본값** |
+| `None` | 항상 보냄 | 없음 | **반드시 `Secure` 동반** 필요 |
+
+CSRF는 "공격자 페이지(`evil.com`)가 우리 서버(`bank.com`)로 요청을 쏘는" 공격이다. `SameSite=Lax/Strict`면 그 크로스사이트 요청에 쿠키가 안 실리니 공격이 무력화된다.
+
+> `Lax`가 기본값이라 요즘은 별도 CSRF 토큰 없이도 상당 부분 방어된다. 단 `Lax`도 **GET 탐색**은 허용하므로, 상태를 바꾸는 작업은 반드시 POST/PUT/DELETE로 둬야 한다는 전제가 깔린다.
+
+## 3. 자주 놓치는 속성
+
+### Domain / Path — 전송 범위
+
+```
+Set-Cookie: token=abc; Domain=example.com; Path=/
+```
+
+- `Domain` 생략 시 **정확히 그 호스트**에만(서브도메인 제외). 명시하면 서브도메인까지 공유 → 넓힐수록 노출면 증가.
+- 인증 쿠키는 **범위를 최소화**하는 게 안전하다.
+
+### `__Host-` 접두사 — 강제 안전장치
+
+```
+Set-Cookie: __Host-token=abc; Secure; Path=/   // Domain 지정 금지
+```
+
+`__Host-` 접두사를 붙이면 브라우저가 **Secure + Path=/ + Domain 미지정**을 강제한다. 서브도메인을 탈취한 공격자가 상위 도메인에 쿠키를 심는(쿠키 주입) 공격을 막는 강력한 방어라, 인증 쿠키에 권장된다.
+
+### Expires / Max-Age — 수명
+
+- 미지정 → **세션 쿠키**(브라우저 닫으면 삭제)
+- 지정 → 영속 쿠키. 길수록 편하지만 탈취 시 피해 기간도 길어진다.
+
+## 4. 쿠키 vs localStorage — 트레이드오프
+
+| 기준 | HttpOnly 쿠키 | localStorage |
+| --- | --- | --- |
+| XSS 토큰 탈취 | **방어됨** (JS 접근 불가) | 취약 (`getItem`으로 바로 유출) |
+| CSRF | 취약 → **SameSite로 방어** 필요 | 안전 (자동 전송 안 됨) |
+| 자동 전송 | O (편리하고 위험한 양면) | X (헤더에 수동 첨부) |
+| 다른 도메인 API | CORS·SameSite 설정 까다로움 | 헤더로 보내기 단순 |
+
+핵심은 **둘 다 단독으로는 완벽하지 않다**는 것이다.
+
+- 쿠키 → XSS엔 강하지만 CSRF 대비가 필요
+- localStorage → CSRF엔 안전하지만 **XSS 한 방에 토큰이 통째로 털린다**
+
+XSS가 더 치명적(토큰 완전 유출 → 서버 밖에서도 악용)이라, 일반적으로 **HttpOnly 쿠키 + SameSite**가 선호된다.
+
+## 5. 실무 권장 패턴 — 토큰을 둘로 나눈다
+
+```
+액세스 토큰(수명 짧음)  → JS 메모리(변수)에 보관, Authorization 헤더로 전송
+리프레시 토큰(수명 김)  → HttpOnly + Secure + SameSite 쿠키
+```
+
+- 액세스 토큰을 **메모리**에 두면 새로고침 시 사라지지만(XSS 노출면 최소화), 리프레시 쿠키로 즉시 재발급한다.
+- 리프레시 토큰은 HttpOnly라 XSS로 못 읽고, SameSite로 CSRF도 막는다.
+- 재발급 엔드포인트(`/refresh`)만 쿠키를 쓰므로, **CSRF 방어 지점이 한 곳으로 좁혀진다.**
+
+```
+Set-Cookie: __Host-refresh=xxx; HttpOnly; Secure; SameSite=Strict; Path=/refresh
+```
+
+## 6. 빠진 한 조각 — SameSite=None을 써야 할 때
+
+프론트와 API가 **다른 도메인**(예: `app.com` ↔ `api.com`)이면 `SameSite=None; Secure`가 불가피하다. 이 경우 CSRF가 다시 열리므로:
+
+1. **CSRF 토큰**(double-submit 또는 동기화 토큰)을 병행하거나,
+2. 가능하면 **같은 사이트로 배치**(서브도메인 + 리버스 프록시)해 `Lax/Strict`를 유지한다.
+
+실무에서 가장 자주 부딪히는 트레이드오프다.
+
+## 7. 정리
+
+| 속성 | 막는 것 | 한 줄 |
+| --- | --- | --- |
+| `HttpOnly` | XSS **토큰 탈취** | JS가 못 읽음 (세션 악용은 별개) |
+| `Secure` | MITM | HTTPS 전용 |
+| `SameSite` | **CSRF** | 크로스사이트 전송 제한 (`Lax` 기본) |
+| `__Host-` | 쿠키 주입 | Secure + Path=/ + Domain금지 강제 |
+| `Domain/Path` | 노출면 | 최소 범위로 |
+
+> **한 줄 정리** — 쿠키 보안은 *XSS는 `HttpOnly`, CSRF는 `SameSite`* 로 **서로 다른 두 공격을 따로** 막는 일이다. 어느 하나도 만능이 아니라, `HttpOnly + Secure + SameSite`(+ 필요 시 `__Host-`·CSRF 토큰)를 **조합**해야 완성된다.

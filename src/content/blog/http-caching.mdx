@@ -1,0 +1,117 @@
+---
+title: "HTTP 캐시 — 강한 캐시와 조건부 캐시, 그리고 304"
+description: "Cache-Control·ETag·Last-Modified가 동작하는 방식을 강한 캐시(요청조차 안 보냄)와 조건부 캐시(stale 시 검증 → 304 재사용) 두 단계로 정리한다. no-cache와 no-store의 차이, immutable·stale-while-revalidate, 그리고 '해시 자산은 영구 캐시, HTML은 no-cache'라는 실무 배포 전략까지."
+date: "2026-06-25"
+tags: ["HTTP", "캐시", "Cache-Control", "ETag", "성능"]
+category: "브라우저 & Web API"
+type: "tech"
+---
+
+> `no-cache`는 캐시를 안 한다는 뜻이 아니다. HTTP 캐시가 동작하는 두 단계 — 강한 캐시와 조건부 캐시 — 를 흐름부터 정리한다.
+
+## 1. 캐시 방식은 두 가지
+
+같은 리소스를 매번 받으면 느리고 서버 부담도 크다. 그래서 받은 걸 재사용하는데, 방식이 둘이다.
+
+- **강한 캐시(Strong)** — 아예 **요청을 안 보내고** 로컬 캐시를 바로 씀 (가장 빠름)
+- **조건부 캐시(Conditional)** — 서버에 **"바뀌었어?"만 물어보고**, 안 바뀌었으면 본문 없이 재사용
+
+## 2. 전체 흐름
+
+<HttpCacheFlowDiagram />
+
+캐시가 **fresh**면 요청 없이 바로 쓰고(강한 캐시), **stale**이면 조건부 요청을 보내 `304`(재사용) 또는 `200`(새 본문)을 받는다.
+
+## 3. 강한 캐시 — `Cache-Control: max-age`
+
+서버가 응답에 유효 기간을 실어 보낸다.
+
+```http
+Cache-Control: max-age=3600
+```
+
+- "이 리소스는 **3600초 동안 신선(fresh)** 하다"
+- 그 기간 안에 다시 필요하면 **서버에 요청조차 안 보내고** 캐시를 쓴다 → 네트워크 탭에 `(memory cache)` / `(disk cache)`
+- 기간이 지나면 **stale**이 되어 조건부 요청으로 넘어간다
+
+> `Expires`(절대 시각)도 같은 역할이지만 옛날 방식이고 `max-age`가 우선한다.
+
+## 4. 조건부 캐시 — `ETag` / `Last-Modified`
+
+캐시가 stale 되면 버리지 않고 **"진짜 바뀌었는지" 검증(revalidation)** 한다.
+
+### ETag — 콘텐츠의 지문
+
+```http
+응답: ETag: "abc123"
+요청: If-None-Match: "abc123"
+```
+
+서버가 현재 ETag와 비교 → 같으면 **`304 Not Modified`**(본문 없음, 캐시 재사용), 다르면 `200`(새 본문).
+
+### Last-Modified — 마지막 수정 시각
+
+```http
+응답: Last-Modified: Wed, 25 Jun 2026 10:00:00 GMT
+요청: If-Modified-Since: Wed, 25 Jun 2026 10:00:00 GMT
+```
+
+동작은 같지만 **초 단위**라 1초 내 여러 변경을 구분 못 한다. 그래서 **ETag가 더 정확**하고, 둘 다 있으면 ETag가 우선이다.
+
+## 5. Cache-Control 주요 디렉티브
+
+| 디렉티브 | 의미 |
+| --- | --- |
+| `max-age=N` | N초 동안 신선 |
+| `no-cache` | 캐시는 하되 **쓰기 전 매번 서버에 검증** |
+| `no-store` | **아예 저장 안 함** (민감 데이터) |
+| `private` | 브라우저만 캐시 (공유 캐시 금지) |
+| `public` | CDN·프록시도 캐시 가능 |
+| `immutable` | 만료 전엔 검증조차 생략 |
+| `s-maxage=N` | 공유 캐시(CDN) 전용 max-age |
+| `stale-while-revalidate=N` | stale이어도 일단 주고 뒤에서 갱신 |
+
+### ⚠️ `no-cache` vs `no-store` — 면접 단골 함정
+
+- **`no-cache`**: 저장은 **함**. 단 쓸 때마다 서버에 검증(조건부 요청). 안 바뀌면 304로 재사용 → "항상 최신 확인"
+- **`no-store`**: 저장 **자체를 안 함**. 매번 풀 다운로드 → 결제·개인정보 등
+
+이름과 달리 `no-cache`도 캐시를 한다.
+
+## 6. 캐시는 어디에 저장되나
+
+- **브라우저 캐시(private)** — 메모리 캐시(초고속) / 디스크 캐시
+- **공유 캐시(shared)** — CDN·프록시. `public`·`s-maxage`로 제어하며 여러 사용자가 공유
+
+## 7. 실무 패턴 (핵심)
+
+### 정적 자산 — 해시 파일명 + 영구 캐시
+
+```http
+Cache-Control: public, max-age=31536000, immutable
+```
+
+```
+app.a1b2c3.js   ← 파일명에 콘텐츠 해시
+```
+
+내용이 바뀌면 **해시(파일명)가 바뀌므로** 새 URL = 새 리소스다. 그래서 1년 + `immutable`로 박아도 안전하다. Vite·webpack이 빌드 시 파일명에 해시를 붙이는 이유다.
+
+### HTML — 항상 최신 확인
+
+```http
+Cache-Control: no-cache
+```
+
+HTML은 어떤 자산(해시 파일명)을 부를지 가리키는 **진입점**이라 항상 최신이어야 한다. `no-cache`로 매번 검증 → 안 바뀌면 304(가벼움), 바뀌면 새 HTML.
+
+> 이 조합(**HTML은 no-cache, 자산은 immutable 영구 캐시**)이 배포 후에도 사용자가 항상 최신 버전을 보면서 캐시 이점을 누리는 표준 전략이다.
+
+### API 응답
+
+- 민감·실시간 → `no-store`
+- 잠깐 캐시 가능 → 짧은 `max-age` 또는 `stale-while-revalidate`
+
+## 8. 정리
+
+> HTTP 캐시는 **강한 캐시(`max-age`로 요청조차 안 보냄)** 와 **조건부 캐시(stale 시 `ETag`/`Last-Modified`로 검증 → 304면 재사용)** 두 단계로 동작한다. `no-cache`는 "매번 검증", `no-store`는 "저장 금지"로 다르다. 실무에선 **해시 파일명 자산은 1년 immutable, HTML은 no-cache**가 정석이다.

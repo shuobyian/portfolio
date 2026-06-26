@@ -1,0 +1,230 @@
+---
+title: "React 19 변경점 정리 — Actions, use, 그리고 Server Components"
+description: "React 19의 핵심을 Actions(useActionState·useFormStatus·useOptimistic)와 보일러플레이트 제거(forwardRef·Context.Provider 사라짐)로 정리한다. use API, 문서 메타데이터, 제거된 API와 함께, Server Components가 무엇이고 SSR과 어떻게 다른지 경계·조합 규칙까지 자세히 다룬다."
+date: "2026-06-25"
+tags: ["React", "React 19", "Server Components", "Actions", "use"]
+category: "React"
+type: "tech"
+---
+
+> React 19의 핵심은 두 가지다 — **Actions**(비동기 폼·낙관적 업데이트의 표준화)와 **보일러플레이트 제거**(forwardRef·Context.Provider·수동 pending이 사라짐). 그리고 **Server Components**의 정식화.
+
+## 1. Actions — 비동기 폼 처리의 표준화
+
+폼 제출 같은 비동기 작업의 **대기·에러·낙관적 업데이트**를 React가 직접 관리한다.
+
+```jsx
+function UpdateName() {
+  const [error, submitAction, isPending] = useActionState(
+    async (prevState, formData) => {
+      const error = await updateName(formData.get("name"));
+      if (error) return error;
+      redirect("/profile");
+      return null;
+    },
+    null,
+  );
+
+  return (
+    <form action={submitAction}>
+      <input name="name" />
+      <button disabled={isPending}>저장</button>
+      {error && <p>{error}</p>}
+    </form>
+  );
+}
+```
+
+- `action`에 함수를 넘기면 제출 시 자동 호출
+- `isPending`을 React가 알아서 관리 (수동 `useState` 불필요)
+- 내부적으로 transition으로 처리돼 UI가 안 끊긴다
+
+**보조 훅:**
+
+```jsx
+// 부모 <form>의 상태를 prop 없이 읽기
+const { pending } = useFormStatus();
+
+// 낙관적 업데이트 내장 (서버 응답 전 미리 보여주고 실패 시 롤백)
+const [optimisticName, setOptimisticName] = useOptimistic(name);
+```
+
+→ [stale closure 글](/blog/react-stale-closure)에서 직접 구현하던 낙관적 업데이트가 훅으로 표준화됐다.
+
+## 2. `use` API — Promise·Context를 조건부로 읽기
+
+`use`는 훅 규칙(최상단 고정)에서 자유로워 **조건문·반복문 안에서도** 호출할 수 있다.
+
+```jsx
+function Comments({ commentsPromise }) {
+  const comments = use(commentsPromise); // Promise를 읽음 (Suspense 연동)
+  return comments.map((c) => <p key={c.id}>{c.text}</p>);
+}
+
+function Heading({ children }) {
+  if (children == null) return null;
+  const theme = use(ThemeContext); // 조건부 context 읽기
+  return <h1 style={{ color: theme.color }}>{children}</h1>;
+}
+```
+
+## 3. ref 단순화 — forwardRef 불필요
+
+```jsx
+// ref를 그냥 prop으로 받는다
+function Input({ ref, ...props }) {
+  return <input ref={ref} {...props} />;
+}
+
+// ref 콜백이 cleanup 함수를 반환할 수 있다
+<div ref={(node) => {
+  return () => { /* 언마운트 시 정리 */ };
+}} />
+```
+
+`forwardRef`는 아직 동작하지만 더 이상 필요 없고 향후 deprecated 예정이다.
+
+## 4. Context를 Provider로 직접 사용
+
+```jsx
+// 기존: <ThemeContext.Provider value={theme}>
+<ThemeContext value={theme}>{children}</ThemeContext>
+```
+
+## 5. 문서 메타데이터 · 리소스 프리로딩
+
+`<title>`·`<meta>`·`<link>`를 컴포넌트 어디서 렌더해도 **`<head>`로 자동 호이스팅**된다.
+
+```jsx
+function Post({ post }) {
+  return (
+    <article>
+      <title>{post.title}</title>
+      <meta name="description" content={post.excerpt} />
+      <h1>{post.title}</h1>
+    </article>
+  );
+}
+```
+
+리소스 프리로딩 API도 추가됐다.
+
+```jsx
+import { preload, preinit } from "react-dom";
+preinit("https://.../script.js", { as: "script" });
+preload("https://.../font.woff2", { as: "font" });
+```
+
+## 6. Server Components — 자세히
+
+React 19에서 **React Server Components(RSC)** 가 정식 안정화됐다. 가장 큰 패러다임 변화라 따로 자세히 본다.
+
+<ServerComponentDiagram />
+
+### 무엇인가
+
+컴포넌트를 **서버에서만 실행**하고, 그 **결과(RSC payload)만** 클라이언트로 보낸다. 즉 컴포넌트의 **코드(JS)가 브라우저 번들에 포함되지 않는다.**
+
+```jsx
+// Server Component (기본값) — 서버에서만 실행
+async function ProductPage({ id }) {
+  const product = await db.products.find(id); // DB 직접 접근!
+  return <h1>{product.name}</h1>;
+}
+```
+
+- `async` 컴포넌트로 **DB·파일·서버 자원에 직접 접근**
+- `await`로 데이터를 가져와 바로 렌더 (클라이언트 useEffect 페칭 불필요)
+- 무거운 라이브러리(마크다운 파서 등)를 써도 **번들 크기 0** — 서버에서만 돌기 때문
+
+### Client Component와의 경계 — `"use client"`
+
+상호작용(useState·이벤트·브라우저 API)이 필요한 컴포넌트는 파일 맨 위에 `"use client"`를 선언한다.
+
+```jsx
+"use client";
+import { useState } from "react";
+
+export function Counter() {
+  const [n, setN] = useState(0); // 상태·이벤트는 클라이언트에서만
+  return <button onClick={() => setN(n + 1)}>{n}</button>;
+}
+```
+
+이 `"use client"` 지점이 **서버/클라이언트 경계**다. 여기서부터 아래로는 클라이언트 코드로 브라우저에 전송된다.
+
+### SSR과 무엇이 다른가
+
+자주 헷갈리는 부분이다.
+
+| | SSR | Server Components |
+| --- | --- | --- |
+| 실행 위치 | 서버에서 HTML 생성 | 서버에서만 실행 |
+| 클라이언트로 가는 것 | HTML + **전체 컴포넌트 JS** | RSC payload (해당 컴포넌트 JS는 **안 감**) |
+| hydrate 대상 | 전체 | **Client Component만** |
+| 데이터 페칭 | 보통 별도 | 컴포넌트 안에서 `await` |
+
+SSR은 "초기 HTML을 서버에서 만들어 주는 것"이고, RSC는 "**컴포넌트 자체를 서버에 남기는 것**"이다. 둘은 배타적이지 않고 함께 쓰인다.
+
+### 조합 규칙
+
+- **Server는 Client를 import**할 수 있다 (자식으로 렌더)
+- **Client는 Server를 import 못 한다** — 대신 `children`/props로 **받을 수는** 있다
+
+```jsx
+// ✅ Server Component가 Client Component를 children으로 끼워 넣기
+function Page() {            // Server
+  return (
+    <ClientLayout>          {/* Client */}
+      <ServerContent />     {/* Server — children으로 전달 */}
+    </ClientLayout>
+  );
+}
+```
+
+### Server Actions (`"use server"`)
+
+클라이언트에서 **서버 함수를 직접 호출**하는 메커니즘. Actions(1번)와 결합해 폼 제출을 서버까지 잇는다.
+
+```jsx
+async function createPost(formData) {
+  "use server";
+  await db.posts.create({ title: formData.get("title") });
+}
+
+// 클라이언트 폼에서 그대로 action으로 사용
+<form action={createPost}>...</form>
+```
+
+### 이점
+
+- **번들 감소** — 서버 컴포넌트 JS가 클라이언트로 안 감
+- **데이터 접근 단순화** — 컴포넌트에서 직접 `await` (워터폴·API 레이어 감소)
+- **보안** — 비밀키·DB 쿼리가 서버에만 남음
+
+> 단, RSC는 **번들러·서버 인프라 지원**이 필요하다. 현재는 Next.js(App Router) 같은 프레임워크에서 주로 쓴다.
+
+## 7. 제거된 것들 (Breaking)
+
+- `propTypes`, `defaultProps`(함수 컴포넌트) 제거 → 기본 매개변수 사용
+- 문자열 ref(`ref="x"`), 레거시 Context 제거
+- `ReactDOM.render`·`hydrate` 제거 → `createRoot`·`hydrateRoot`만
+- `react-test-renderer` deprecated
+
+```jsx
+// defaultProps 대신 기본 매개변수
+function Button({ size = "md" }) { /* ... */ }
+```
+
+## 8. 정리
+
+| 영역 | 핵심 |
+| --- | --- |
+| **Actions** | `useActionState` · `useFormStatus` · `useOptimistic` · `<form action>` |
+| **use** | Promise·Context를 조건부로 읽기 |
+| **ref** | prop으로 직접 전달 (forwardRef 불필요) + cleanup |
+| **Context** | `<Context>` 자체가 Provider |
+| **문서** | 메타데이터 호이스팅 · 리소스 프리로딩 |
+| **Server Components** | 서버에서만 실행 · 번들 0 · 직접 데이터 접근 |
+
+> **한 줄 정리** — React 19는 **Actions로 비동기 폼을 표준화**하고 **보일러플레이트(forwardRef·Provider·수동 pending)를 걷어냈다.** 그리고 **Server Components**를 정식화해, 컴포넌트를 서버에 남겨 번들을 줄이고 데이터 접근을 단순화하는 길을 열었다.
