@@ -9,6 +9,7 @@ const CATEGORY_ORDER = [
   "React",
   "DevOps & 배포",
   "브라우저 & Web API",
+  "보안",
   "CSS & UI",
 ] as const;
 

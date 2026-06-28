@@ -30,6 +30,7 @@ import { CookieSecurityDiagram } from "@/components/blog/cookie-security-diagram
 import { HttpVersionsDiagram } from "@/components/blog/http-versions-diagram";
 import { ScriptLoadingDiagram } from "@/components/blog/script-loading-diagram";
 import { ResourceHintsDiagram } from "@/components/blog/resource-hints-diagram";
+import { WebSecurityDefenseDiagram } from "@/components/blog/web-security-defense-diagram";
 import type { Metadata } from "next";
 
 const mdxComponents = {
@@ -56,6 +57,7 @@ const mdxComponents = {
   HttpVersionsDiagram,
   ScriptLoadingDiagram,
   ResourceHintsDiagram,
+  WebSecurityDefenseDiagram,
 };
 
 export function generateStaticParams() {
