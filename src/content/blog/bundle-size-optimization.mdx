@@ -1,0 +1,113 @@
+---
+title: "번들 크기를 줄이는 전략 — 코드 스플리팅부터 의존성 다이어트까지"
+description: "초기 번들이 왜 성능을 좌우하는지부터, 코드 스플리팅(React.lazy·동적 import)·트리 셰이킹(ESM·sideEffects)·의존성 다이어트(경량 대체·부분 import)·번들 분석까지 정리한다. 압축·폴리필 같은 흔히 놓치는 포인트와 React/Next 관점의 적용까지."
+date: "2026-06-29"
+tags: ["성능", "번들", "코드 스플리팅", "트리 셰이킹", "최적화"]
+category: "브라우저 & Web API"
+type: "tech"
+---
+
+> 번들이 크면 받는 시간(LCP)뿐 아니라 **파싱·실행 시간(INP)** 까지 늘어난다. 자바스크립트는 바이트당 비용이 이미지보다 비싸다. 번들을 줄이는 전략을 단계별로 정리한다.
+
+## 1. 왜 번들 크기가 중요한가
+
+- **다운로드 시간** — 네트워크가 느릴수록 직접 타격 (LCP 악화)
+- **파싱·컴파일·실행** — JS는 받은 뒤에도 메인 스레드에서 처리해야 함 → long task → **INP 악화**
+- 같은 1MB라도 이미지보다 **JS가 더 비싸다** (이미지는 디코드뿐, JS는 실행까지)
+
+→ "안 쓰는 코드를 안 보내기"와 "지금 필요한 것만 보내기"가 핵심이다.
+
+## 2. 코드 스플리팅 — 지금 필요한 것만
+
+가장 효과가 큰 전략. 하나의 거대한 번들을 쪼개 **초기엔 entry만 받고, 나머지는 필요할 때** 로드한다.
+
+<CodeSplittingDiagram />
+
+### 라우트 단위 (가장 일반적)
+
+```jsx
+import { lazy, Suspense } from "react";
+
+const Dashboard = lazy(() => import("./Dashboard")); // 별도 청크
+
+<Suspense fallback={<Spinner />}>
+  <Dashboard />
+</Suspense>;
+```
+
+라우트별로 청크가 분리돼, 그 페이지에 들어갈 때만 해당 코드를 받는다. (Next.js App Router는 **라우트 분할이 기본**)
+
+### 컴포넌트·조건부 단위
+
+무겁지만 자주 안 쓰는 컴포넌트(에디터, 차트, 모달)는 필요한 순간에만.
+
+```jsx
+const Editor = lazy(() => import("./RichEditor")); // 편집 모드 진입 시 로드
+
+// 조건부 동적 import — 라이브러리 자체를 늦게
+async function exportPdf() {
+  const { jsPDF } = await import("jspdf"); // 내보내기 누를 때만 로드
+  // ...
+}
+```
+
+## 3. 트리 셰이킹 — 안 쓰는 코드 제거
+
+빌드 시 **사용하지 않는 export를 떨어낸다.** 단 조건이 있다.
+
+- **ESM**(`import`/`export`)이어야 함 — 정적 분석 가능
+- 라이브러리가 `package.json`에 **`"sideEffects": false`** 를 선언해야 안전하게 제거
+- **부분 import**로 도와주기
+
+```js
+import { debounce } from "lodash-es"; // ✅ ESM, 트리 셰이킹 됨
+import _ from "lodash";                // ❌ 전체 포함 (CommonJS)
+import debounce from "lodash/debounce"; // ✅ 부분 import (CJS여도 해당 모듈만)
+```
+
+> 원리(정적 vs 동적)는 [ESM vs CommonJS](/blog/esm-vs-commonjs) 글에서 자세히 다룬다.
+
+## 4. 의존성 다이어트 — 무거운 라이브러리 교체
+
+번들의 상당 부분은 보통 **node_modules**다. 무거운 의존성을 경량 대안으로 바꾼다.
+
+| 무거움 | 경량 대안 |
+| --- | --- |
+| `moment` | `dayjs` · `date-fns` (트리 셰이킹 가능) |
+| `lodash` | `lodash-es` · 부분 import · 네이티브 메서드 |
+| 큰 아이콘 팩 전체 import | 개별 아이콘 import |
+| `axios` (단순 용도) | 네이티브 `fetch` |
+
+- **중복 의존성 제거** — 같은 라이브러리의 여러 버전이 들어오는지 확인
+- **moment 같은 로케일** — 불필요한 로케일 데이터 제외
+
+## 5. 번들 분석 — 측정 먼저
+
+"무엇이 큰지" 모르면 최적화도 못 한다. 분석 도구로 **큰 모듈을 추적**한다.
+
+| 번들러 | 도구 |
+| --- | --- |
+| Vite/Rollup | `rollup-plugin-visualizer` |
+| webpack | `webpack-bundle-analyzer` |
+| Next.js | `@next/bundle-analyzer` |
+| 범용 | `source-map-explorer` |
+
+트리맵에서 비정상적으로 큰 청크를 찾아 → 코드 스플리팅하거나 경량 대체한다.
+
+## 6. 흔히 놓치는 포인트
+
+- **압축** — gzip/brotli는 전송 크기를 크게 줄인다 (대부분 서버·CDN에서 자동, 확인 필수)
+- **폴리필 과다** — `browserslist`로 타깃 브라우저를 좁혀 불필요한 폴리필 제거
+- **`@babel/preset-env`의 `useBuiltIns`** — 필요한 폴리필만 주입
+- **소스맵은 별도** — 번들에 인라인하지 말고 분리(프로덕션 노출 주의)
+- **이미지·폰트는 번들이 아님** — JS 번들과 구분해서 따로 최적화 (오해 주의)
+
+## 7. React / Next.js 관점
+
+- **`React.lazy` + `Suspense`** / Next `dynamic()` — 컴포넌트 분할
+- Next **App Router는 라우트 분할이 기본**, Server Components는 **서버 코드가 번들에서 제외**됨 ([RSC 글](/blog/react-19-changes))
+- 분할한 청크는 `<Link>` prefetch나 매직 코멘트로 미리 받기 ([리소스 힌트 글](/blog/script-loading-resource-hints))
+
+## 8. 정리
+
+> 번들 최적화의 두 축은 **"안 쓰는 코드 제거(트리 셰이킹)"** 와 **"지금 필요한 것만 로드(코드 스플리팅)"** 다. 여기에 **의존성 다이어트**(경량 대체·부분 import)와 **번들 분석**(측정)을 더한다. 항상 **분석으로 큰 모듈을 찾고 → 분할하거나 교체**하는 순서로 접근한다.

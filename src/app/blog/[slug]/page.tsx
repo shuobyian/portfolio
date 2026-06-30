@@ -31,6 +31,8 @@ import { HttpVersionsDiagram } from "@/components/blog/http-versions-diagram";
 import { ScriptLoadingDiagram } from "@/components/blog/script-loading-diagram";
 import { ResourceHintsDiagram } from "@/components/blog/resource-hints-diagram";
 import { WebSecurityDefenseDiagram } from "@/components/blog/web-security-defense-diagram";
+import { CoreWebVitalsDiagram } from "@/components/blog/core-web-vitals-diagram";
+import { CodeSplittingDiagram } from "@/components/blog/code-splitting-diagram";
 import type { Metadata } from "next";
 
 const mdxComponents = {
@@ -58,6 +60,8 @@ const mdxComponents = {
   ScriptLoadingDiagram,
   ResourceHintsDiagram,
   WebSecurityDefenseDiagram,
+  CoreWebVitalsDiagram,
+  CodeSplittingDiagram,
 };
 
 export function generateStaticParams() {
