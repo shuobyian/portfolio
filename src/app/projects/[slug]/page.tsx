@@ -7,6 +7,11 @@ import { getPostBySlug } from "@/lib/blog";
 import { PosKioskDeepDive } from "@/components/projects/pos-kiosk-deep-dive";
 import { PharmBridgeRefactorDeepDive } from "@/components/projects/pharm-bridge-refactor-deep-dive";
 import { BiServiceDeepDive } from "@/components/projects/bi-service-deep-dive";
+import { CommunityPlatformDeepDive } from "@/components/projects/community-platform-deep-dive";
+import { DesignSystemDeepDive } from "@/components/projects/design-system-deep-dive";
+import { PharmBridgeDeepDive } from "@/components/projects/pharm-bridge-deep-dive";
+import { BackofficeRefactorDeepDive } from "@/components/projects/backoffice-refactor-deep-dive";
+import { WbsDeepDive } from "@/components/projects/wbs-deep-dive";
 import type { Metadata } from "next";
 
 function renderHighlight(text: string) {
@@ -164,6 +169,11 @@ export default async function ProjectDetail({
         <PharmBridgeRefactorDeepDive />
       )}
       {project.slug === "bi-service" && <BiServiceDeepDive />}
+      {project.slug === "community-platform" && <CommunityPlatformDeepDive />}
+      {project.slug === "design-system" && <DesignSystemDeepDive />}
+      {project.slug === "pharm-bridge" && <PharmBridgeDeepDive />}
+      {project.slug === "backoffice-refactor" && <BackofficeRefactorDeepDive />}
+      {project.slug === "wbs" && <WbsDeepDive />}
     </Section>
   );
 }

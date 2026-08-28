@@ -38,19 +38,128 @@ const tradeoffs = [
   "SSR→React 전환 자체의 마이그레이션 비용(공수·회귀 위험)은 별도이며, 번들 분석 범위 밖이다.",
 ];
 
+function ReactIslandDiagram() {
+  return (
+    <svg
+      viewBox="0 0 820 380"
+      className="h-auto w-full text-foreground"
+      role="img"
+      aria-label="React Island 구조 — 서버가 페이지 셸 전체를 그대로 그리고, 상호작용이 필요한 영역에만 React 컴포넌트가 마운트된다. 라우팅은 계속 서버가 소유한다"
+    >
+      <defs>
+        <marker
+          id="pbr-island-arrow"
+          viewBox="0 0 10 10"
+          refX="9"
+          refY="5"
+          markerWidth="6"
+          markerHeight="6"
+          orient="auto-start-reverse"
+        >
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor" />
+        </marker>
+      </defs>
+
+      <text x="410" y="28" textAnchor="middle" className="fill-foreground" fontSize="14" fontWeight="600">
+        페이지는 서버가, 섬만 React가
+      </text>
+
+      <g className="text-foreground">
+        <rect x="120" y="52" width="580" height="248" rx="12" fill="currentColor" fillOpacity="0.04" stroke="currentColor" strokeOpacity="0.35" strokeWidth="1.5" />
+      </g>
+      <text x="140" y="74" className="fill-muted-foreground" fontSize="11" fontWeight="600">
+        SSR이 그린 페이지 셸 — 라우팅·SEO는 서버가 계속 소유
+      </text>
+
+      <g className="text-foreground">
+        <rect x="140" y="86" width="540" height="34" rx="7" fill="currentColor" fillOpacity="0.06" stroke="currentColor" strokeOpacity="0.3" strokeWidth="1.25" />
+      </g>
+      <text x="410" y="108" textAnchor="middle" className="fill-muted-foreground" fontSize="10">
+        헤더 · 내비게이션 (정적)
+      </text>
+
+      <g className="text-accent">
+        <rect x="140" y="132" width="260" height="88" rx="9" fill="currentColor" fillOpacity="0.12" stroke="currentColor" strokeWidth="1.5" />
+      </g>
+      <text x="270" y="158" textAnchor="middle" className="fill-foreground" fontSize="12" fontWeight="600">
+        React Island
+      </text>
+      <text x="270" y="178" textAnchor="middle" className="fill-muted-foreground" fontSize="10">
+        검색 조건 · 결과 테이블
+      </text>
+      <text x="270" y="196" textAnchor="middle" className="fill-muted-foreground" fontSize="10">
+        React Query가 조회·캐싱·에러 담당
+      </text>
+      <text x="270" y="212" textAnchor="middle" className="fill-muted-foreground" fontSize="10">
+        도메인별 훅 · Context
+      </text>
+
+      <g className="text-accent">
+        <rect x="420" y="132" width="260" height="88" rx="9" fill="currentColor" fillOpacity="0.12" stroke="currentColor" strokeWidth="1.5" />
+      </g>
+      <text x="550" y="158" textAnchor="middle" className="fill-foreground" fontSize="12" fontWeight="600">
+        React Island
+      </text>
+      <text x="550" y="178" textAnchor="middle" className="fill-muted-foreground" fontSize="10">
+        입고 등록 폼
+      </text>
+      <text x="550" y="196" textAnchor="middle" className="fill-muted-foreground" fontSize="10">
+        섬끼리는 서로를 모른다
+      </text>
+      <text x="550" y="212" textAnchor="middle" className="fill-muted-foreground" fontSize="10">
+        각자 독립 마운트
+      </text>
+
+      <g className="text-foreground">
+        <rect x="140" y="232" width="540" height="34" rx="7" fill="currentColor" fillOpacity="0.06" stroke="currentColor" strokeOpacity="0.3" strokeWidth="1.25" />
+      </g>
+      <text x="410" y="254" textAnchor="middle" className="fill-muted-foreground" fontSize="10">
+        푸터 · 안내 문구 (정적)
+      </text>
+
+      <text x="410" y="288" textAnchor="middle" className="fill-muted-foreground" fontSize="10">
+        정적 영역은 손대지 않는다 — 전환 범위가 곧 리스크 범위다
+      </text>
+
+      <g className="text-accent">
+        <line x1="410" y1="300" x2="410" y2="326" stroke="currentColor" strokeWidth="1.5" markerEnd="url(#pbr-island-arrow)" />
+      </g>
+      <text x="410" y="348" textAnchor="middle" className="fill-foreground" fontSize="11">
+        SSR 라우팅 제약을 지키면서 상호작용이 필요한 곳만 점진 전환할 수 있다
+      </text>
+    </svg>
+  );
+}
+
 export function PharmBridgeRefactorDeepDive() {
   return (
     <div className="mt-16 border-t border-border pt-12">
-      <h2 className="text-2xl font-bold">번들 사이즈 실측 자세히 보기</h2>
+      <h2 className="text-2xl font-bold">전환 자세히 보기</h2>
       <p className="mt-2 text-muted-foreground">
-        SSR(jQuery 기반) → React 전환의 효과를 체감이 아니라 실측 데이터로
-        검증한 기록 — 무엇이 좋아졌고, 무엇이 오히려 나빠졌으며, 어디까지가
-        측정이고 어디부터가 추정인지.
+        바꿀 수 없는 SSR 라우팅 제약 위에서 React를 어디까지 들여왔는지, 그리고
+        그 전환의 효과를 체감이 아니라 실측으로 검증한 기록 — 무엇이 좋아졌고,
+        무엇이 오히려 나빠졌으며, 어디까지가 측정이고 어디부터가 추정인지.
       </p>
+
+      <div className="mt-8 rounded-lg border border-border p-6">
+        <h3 className="text-sm font-medium uppercase tracking-wide text-accent">
+          1. 구조 — 페이지가 아니라 섬을 바꾼다
+        </h3>
+        <p className="mt-3 leading-relaxed text-muted-foreground">
+          SSR 라우팅은 SEO와 서버 의존성 때문에 변경 대상이 아니었다. 그래서
+          페이지 전체를 React로 가져오는 대신, 서버가 셸을 그대로 그리고
+          상호작용이 필요한 영역에만 React를 마운트하는 Island 패턴을 택했다.
+          전환 범위가 곧 회귀 리스크 범위라, 정적인 곳은 건드리지 않는 것이
+          그대로 이득이 된다.
+        </p>
+        <div className="mt-6">
+          <ReactIslandDiagram />
+        </div>
+      </div>
 
       <div className="mt-8 rounded-lg border border-border bg-muted/30 p-6">
         <h3 className="text-sm font-medium uppercase tracking-wide text-accent">
-          1. 측정 기준
+          2. 측정 기준
         </h3>
         <p className="mt-3 leading-relaxed">
           동일한 SearchWait 화면을 기준으로 SSR(jQuery) 버전과 React(코드
@@ -62,7 +171,7 @@ export function PharmBridgeRefactorDeepDive() {
 
       <div className="mt-8">
         <h3 className="text-sm font-medium uppercase tracking-wide text-accent">
-          2. 전후 비교
+          3. 전후 비교
         </h3>
         <div className="mt-4 grid gap-4 md:grid-cols-2">
           {sizeComparison.map((row) => {
@@ -106,7 +215,7 @@ export function PharmBridgeRefactorDeepDive() {
 
       <div className="mt-8 rounded-lg border border-border p-6">
         <h3 className="text-sm font-medium uppercase tracking-wide text-accent">
-          3. 전환의 실질 이득
+          4. 전환의 실질 이득
         </h3>
         <ul className="mt-4 space-y-3 text-sm leading-relaxed text-muted-foreground">
           <li className="flex gap-2">
@@ -148,7 +257,7 @@ export function PharmBridgeRefactorDeepDive() {
 
       <div className="mt-8 rounded-lg border border-accent/30 bg-accent/5 p-6">
         <h3 className="text-sm font-medium uppercase tracking-wide text-accent">
-          4. 정직하게 짚는 한계
+          5. 정직하게 짚는 한계
         </h3>
         <ul className="mt-4 space-y-3 text-sm leading-relaxed text-muted-foreground">
           {tradeoffs.map((t, i) => (
