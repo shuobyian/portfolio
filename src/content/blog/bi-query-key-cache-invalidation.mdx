@@ -1,0 +1,228 @@
+---
+title: "Query Key는 캐시 주소이자 계정 경계다 — BI 서비스의 React Query 캐시 규칙"
+description: "Query Key 설계 규칙, mutation 이후 cancel → invalidate 순서, 삭제 시 remove가 필요한 이유, 그리고 계정 전환·늦은 401을 다루는 세션 세대 스코프까지. BI 서비스 두 앱이 공유하는 캐시 정책을 정리했다."
+date: "2026-08-28"
+tags: ["React Query", "캐시", "Query Key", "Architecture", "세션"]
+category: "React"
+type: "project"
+---
+
+> [BI 서비스 신규 구축](/projects/bi-service)
+
+[앞 글](/blog/bi-react-query-zustand-architecture)에서 서버 상태(React Query)와 클라이언트 전역 상태(Zustand)를 어떻게 나눴는지 정리했다. 이 글은 그 다음 문제다. **서버 상태를 React Query에 맡기기로 했다면, 그 캐시를 언제 어떻게 갱신할 것인가.**
+
+두 앱(제약사용 서비스 · 사내 어드민)이 하나의 QueryClient와 같은 정책을 공유하기 때문에, 규칙을 말로만 두면 금방 갈라진다. 그래서 사내 개발 문서로 정리해둔 규칙을 공개용으로 다듬었다. 사내 SDK 이름이나 배포 설정 같은 내부 값은 일반화했다.
+
+## 1. Query Key는 세 가지 역할을 겸한다
+
+처음엔 Query Key를 그냥 "캐시 주소"로만 생각했다. 실제로 굴려보니 세 가지를 동시에 맡고 있었다.
+
+1. **캐시 주소** — 같은 key면 캐시와 진행 중인 요청을 공유한다
+2. **invalidation 단위** — prefix로 무엇을 함께 갱신할지가 key 구조로 결정된다
+3. **계정 경계** — 로그인 계정이 바뀔 때 무엇을 지울지 판단하는 기준
+
+여기에 하나가 더 붙었다. 오류 관측에서 **비식별 operation 이름**의 출처도 key다. 그래서 key 설계를 대충 하면 캐시 버그, 계정 간 데이터 누수, 관측 데이터 오염이 한꺼번에 온다.
+
+### 기본 형태
+
+```plaintext
+[도메인 root, 리소스/뷰, 식별자 또는 서버 조회 params]
+```
+
+| 목적 | Key |
+| --- | --- |
+| 계약사 전체 | `['company']` |
+| 계약사 목록 prefix | `['company', 'list']` |
+| 계약사 목록 variant | `['company', 'list', params]` |
+| 계약사 상세 | `['company', 'detail', companySeq]` |
+| 분석 추이 | `['analysis', 메뉴, 리소스, 지표, 기간/단위/보기]` |
+
+도메인 root는 prefix invalidation의 기본 단위다. 그래서 **어드민과 서비스에서 같은 이름의 리소스라도 캐시 의미가 다르면 root를 분리**한다 — `notices`와 `client-notices`처럼. 이름이 같다고 묶었다가는 어드민에서 공지를 수정했을 때 서비스 쪽 공개 목록까지 무의미하게 갱신된다.
+
+### key factory를 단일 소스로
+
+```ts
+export const noticeKeys = {
+  all: ['notices'] as const,
+  lists: () => ['notices', 'list'] as const,
+  list: (params: NoticeListParams) => ['notices', 'list', params] as const,
+  detail: (publicId: string | null) => ['notices', 'detail', publicId] as const,
+  attachments: (publicId: string | null) => ['notices', 'attachments', publicId] as const,
+}
+```
+
+조회·invalidation·remove가 **모두 같은 factory를 쓴다.** hook 안에서 key를 다시 적는 순간 오타 하나로 "invalidate는 했는데 화면은 안 바뀌는" 버그가 생기고, 이건 런타임에 조용히 실패해서 잡기 어렵다.
+
+key factory는 각 도메인의 `queries.ts`에 둔다. 중앙 파일 한 곳에 모으면 그 파일이 모든 feature의 의존성이 돼버린다. 다른 feature가 캐시를 갱신해야 할 때만 공유 티어에 최소 root를 공개한다.
+
+### 서버 응답을 바꾸는 값만 넣는다
+
+페이지·정렬·검색어·상세 식별자·분석 기간과 지표처럼 **서버 응답을 바꾸는 값은 전부** key에 들어간다. 반대로 서버가 전체를 주고 화면에서만 거르는 값은 넣지 않는다.
+
+채널분석의 상위 제품 목록이 그렇다. 전 채널 데이터를 한 번에 받고 탭 전환은 클라이언트에서 처리하므로 채널은 key에 없다. 여기에 채널을 넣으면 탭을 누를 때마다 같은 응답을 다시 받는다.
+
+### `null` sentinel과 배열 구조 유지
+
+비활성·미지정 segment는 `''`나 `-1`이 아니라 `null`로 통일한다.
+
+```ts
+['notices', 'detail', null]
+['analysis', 'market', 'index', null]
+```
+
+`enabled: false`인 query도 key는 만들어지기 때문에, sentinel이 제각각이면 disabled query마다 tuple shape이 달라진다. `null`로 고정하면 실제 식별자와 충돌하지 않고 로그·테스트에서 해석하기도 쉽다.
+
+숫자 식별자는 `Number.isSafeInteger(seq) && seq > 0`일 때만 실제 key와 `enabled: true`에 쓴다. `NaN`·`Infinity`·음수·0·소수는 전부 `null` key로 정규화하고 조회를 막는다. URL 파라미터를 그대로 `Number()`에 넣으면 `NaN`이 key에 들어가는데, `NaN !== NaN`이라 캐시가 영원히 매칭되지 않는다.
+
+배열은 `join(',')`으로 직렬화하지 않고 구조를 유지한다.
+
+```ts
+['analysis', 'region', 'trend', metric, [...sidoCodes], [...sigunguCodes], ...]
+```
+
+`['11,22']`와 `['11', '22']`가 충돌하지 않게 하려면 이래야 한다.
+
+## 2. Mutation 이후: cancel → invalidate
+
+쓰기 직전에 시작된 조회가 mutation 성공 뒤에 도착하면, **새 서버 상태를 예전 응답이 덮는다.** invalidate만으로는 막을 수 없다. 이미 날아간 요청은 invalidate와 무관하게 완료되고 캐시에 쓰이기 때문이다.
+
+<QueryStaleResponseRaceDiagram />
+
+그래서 mutation 이후의 순서를 헬퍼로 고정했다.
+
+```plaintext
+mutation 성공/정착
+  → 기존 일치 query cancel
+  → 같은 prefix invalidate
+  → active observer refetch
+  → 필요하면 완료를 await
+```
+
+```ts
+onSuccess: (_data, { companySeq }) =>
+  cancelAndInvalidateQueries(queryClient, companyKeys.detail(companySeq))
+```
+
+화면에서 `queryClient.invalidateQueries`를 직접 부르지 않고 이 헬퍼만 쓰게 한 이유는 단순하다. **순서를 매번 기억하게 두면 언젠가 빠진다.** 헬퍼 하나로 만들어두면 리뷰에서 "직접 invalidate 호출"만 찾으면 된다.
+
+### 삭제는 invalidate가 아니라 remove
+
+삭제 후 도메인 root 전체를 invalidate하면, 아직 상세 화면에 붙어 있는 observer가 **삭제된 리소스를 다시 GET해서 404를 만든다.** 사용자는 "삭제했는데 오류 화면이 뜨는" 경험을 한다.
+
+```plaintext
+DELETE 성공
+  ├─ lists() cancel → invalidate
+  ├─ 연관 카운트/목록 invalidate
+  └─ 삭제된 detail/attachments cancel → remove
+      → 완료 뒤 목록으로 이동
+```
+
+목록은 갱신, 삭제된 상세는 제거. 이 둘을 구분하는 게 핵심이다.
+
+### await할 것과 background로 보낼 것
+
+mutation callback이 invalidation Promise를 반환하면 mutation의 pending 상태가 refetch 완료까지 늘어난다. 전부 await하면 저장 버튼의 로딩이 불필요하게 길어지고, 전부 background로 두면 이동한 화면이 옛 데이터를 보여준다.
+
+| 상황 | 정책 |
+| --- | --- |
+| 저장 직후 화면/이동이 최신 데이터에 의존 | await |
+| 현재 상세만 최신이면 되고 목록은 보조 | 상세 await, 나머지 background |
+| 성공 UI와 직접 관계없는 보조 캐시 | background |
+| 서로 독립인 여러 cache | `Promise.all` |
+| 부분 성공이 가능한 mutation | `onSettled` |
+
+마지막 줄이 실무에서 자주 걸린다. 여러 계정을 한 번에 삭제하는 것처럼 **서버에서 일부만 반영될 수 있는** mutation은 `onSuccess`가 아니라 `onSettled`에서 실제 서버 상태를 다시 받아야 한다. 성공했다고 가정하고 캐시를 고치면 부분 실패가 화면에 반영되지 않는다.
+
+### 외부에서 온 변경 신호는 cancel하지 않는다
+
+SSE 알림은 현재 브라우저가 수행한 쓰기가 아니다. 여기에 같은 cancel → invalidate를 쓰면, 연속으로 들어오는 이벤트가 **아직 데이터도 못 받은 최초 조회를 계속 취소하고 재시작**시킨다. 화면은 영원히 로딩이다.
+
+그래서 외부 신호 전용 헬퍼를 따로 뒀다. cancel 없이 invalidate만 한다. "누가 쓰기를 했는가"가 캐시 갱신 방식을 가른다는 게 이 구분의 요지다.
+
+## 3. 계정이 바뀌면 캐시는 남는다
+
+서비스 앱의 일부 key에는 사용자·계약사 식별자가 없다.
+
+```plaintext
+['dashboard', 'summary']
+['service-company', 'accounts']
+```
+
+서버가 쿠키 세션으로 "현재 로그인한 계약사"를 판단해서 응답하기 때문이다. key만 보면 누구의 데이터인지 알 수 없다. **그래서 계정이 바뀌면 이전 계정의 캐시를 반드시 제거해야 한다.** 안 지우면 로그아웃 후 다른 계정으로 로그인했을 때 이전 계약사의 대시보드가 잠깐 보인다.
+
+여기서 `queryClient.clear()`를 쓰지 않았다. clear는 **실행 중인 로그인/로그아웃 mutation과 부팅용 `/me` query까지** 지워서 인증 흐름 자체를 끊는다. 대신 정확히 `['auth', 'me']`만 보존하고 나머지를 predicate로 제거한다.
+
+`auth` root 전체를 보존하지 않은 것도 의도적이다. 나중에 `['auth', 'permissions']` 같은 계정별 데이터가 생기면 그건 지워져야 하니까. 길이와 segment가 모두 일치하는 `['auth', 'me']`만 특별 취급한다.
+
+## 4. 늦게 도착한 401을 어떻게 볼 것인가
+
+401이 왔다고 무조건 로그아웃시키면 안 된다. 그 401이 **어느 세션에서 시작된 요청의 응답인지**에 따라 의미가 다르다.
+
+모든 요청은 시작 시점의 세션 세대를 기록한다. 오류가 도착하면 그 세대로 스코프를 나눈다.
+
+<SessionScopeGenerationDiagram />
+
+`external-stale`이 특히 중요하다. 다른 탭에서 새 계정으로 로그인해 세대가 올라간 상태에서, 이전 세대의 401이 이 탭에 도착한 경우다. 여기서 전역 로그아웃을 하면 **방금 다른 탭에서 로그인한 세션까지 날아간다.** 그래서 현재 탭만 로컬 종료하고 새 토큰은 건드리지 않는다.
+
+동시에 여러 401이 와도 실제로 세션을 종료한 최초 오류만 안내를 띄운다. 안 그러면 화면에 같은 모달이 다섯 개 쌓인다.
+
+### 403은 로그아웃 조건이 아니다
+
+401만 세션 만료로 처리하고 403은 제외했다. **403은 정상 세션에서 역할·리소스 권한이 거부된 경우일 수 있다.** 어드민 일반 권한 사용자가 마스터 전용 API를 호출하면 403이 오는데, 여기서 로그아웃시키면 권한 없는 메뉴를 한 번 눌렀다고 세션이 끊긴다.
+
+예외는 `/me`다. 세션 검증 자체가 목적인 요청이라 401이든 403이든 인증 실패가 확정된 것으로 본다.
+
+### 전역이 아니라 화면이 소유하는 오류
+
+전역 `QueryCache.onError`가 하는 일은 의외로 적다. 관측 이벤트를 만들고, 401 세션 처리를 하고, 끝이다. 400·404·409·422·5xx의 **화면 의미는 각 query 소비자가 처리**한다.
+
+그래서 production query에는 `throwOnError`도 `useSuspenseQuery`도 쓰지 않는다. 초기에 최상위 `QueryErrorResetBoundary`를 달아뒀는데, 이 정책과 맞지 않아 제거했다. 목록 조회 하나가 실패했다고 앱 전체가 fallback으로 덮이면 사용자는 아무것도 할 수 없다.
+
+경계는 이렇게 나뉜다.
+
+- **Query HTTP 오류** → 화면별 inline loading/error/empty + 수동 `refetch()`
+- **401** → QueryCache/MutationCache + 세션 스코프 정책
+- **렌더·청크·예상 밖 JS 오류** → 공통 ErrorBoundary fallback
+
+상세 화면에서는 404("찾을 수 없음")와 5xx("조회 실패 + 다시 시도")를 구분한다. 둘 다 "오류가 발생했습니다"로 뭉뚱그리면 사용자가 재시도할지 목록으로 돌아갈지 판단할 근거가 없다.
+
+## 5. 오류를 수집하되 Query Key는 보내지 않는다
+
+Query Key에는 검색어·필터·식별자가 그대로 들어 있다. **오류 관측에 key를 통째로 보내면 사용자 입력이 수집기로 넘어간다.** 그래서 전송 이벤트에는 식별자를 제거한 정적 operation 이름만 담는다.
+
+보내지 않는 것:
+
+- 전체 Query Key와 variables
+- API response body
+- 일반 JavaScript `error.message` 원문
+- 이메일·토큰·전화번호·사업자번호
+- 현재 URL과 사용자 경로 segment
+
+수집 정책도 기본값을 좁게 잡았다. 네트워크 오류·408·429·5xx·렌더 오류는 수집하고, **401과 예상 가능한 4xx, Abort/취소 오류는 제외**한다. 401은 세션 만료라는 정상 흐름이고, 사용자가 필드를 잘못 입력해서 나는 400은 오류 대시보드를 채울 이유가 없다.
+
+설정이 없거나 범위를 벗어나면 **fail-closed로 reporter 전체를 끈다.** 비활성 상태의 이벤트를 버퍼에 쌓아두거나 나중에 재생하지도 않는다. 관측이 안 되는 것보다 의도치 않게 데이터가 나가는 쪽이 더 나쁘다고 봤다.
+
+## 6. 문서에 남긴 제약과, 그 뒤
+
+이 규칙을 정리하던 시점에 **하나가 미완이었다.** `cancelQueries`는 늦은 응답의 캐시 반영은 막지만, 실제 HTTP 전송까지 중단하지는 못했다. 사내 API SDK의 GET 메서드들이 request options 인자를 받지 않아서 `AbortSignal`을 넘길 자리가 없었기 때문이다.
+
+문서에는 이걸 "완료"로 쓰지 않고 남은 과제로 적었다. 필요한 순서까지 함께.
+
+> SDK가 `options?: { signal?: AbortSignal }` 계약을 먼저 제공해야 한다. 그 버전이 배포된 뒤 `queryFn({ signal }) → feature API → SDK` 순서로 연결한다.
+
+며칠 뒤 SDK 새 버전이 나왔고, **조회 함수 65개 전 구간에 signal을 관통 전달**해서 실제 취소를 붙였다. 화면 이탈이나 필터 재조회 때 이제 요청이 실제로 끊긴다.
+
+여기에 회귀 테스트를 두 종류 붙였다. 하나는 런타임에 실제로 취소되는지 확인하고, 다른 하나는 **signal을 넘기지 않은 query 함수가 새로 생기면 실패하는 구조 검사**다. 65개를 한 번 고치는 건 쉽지만, 66번째가 추가될 때 빠지는 걸 막는 건 사람 리뷰로는 안 된다.
+
+## 정리
+
+돌아보면 이 규칙들은 대부분 **"두 개가 동시에 일어날 때"** 를 다룬다.
+
+- 조회와 쓰기가 겹칠 때 → cancel → invalidate
+- 삭제와 상세 observer가 겹칠 때 → invalidate가 아니라 remove
+- 계정 전환과 남은 캐시가 겹칠 때 → 계정 스코프 제거
+- 로그아웃과 늦은 401이 겹칠 때 → 세션 세대 스코프
+
+React Query가 단일 요청은 잘 처리해주지만, **동시성 경계는 여전히 우리가 정해야 한다.** 그리고 그 경계는 대부분 Query Key 구조 위에서 결정된다. key를 캐시 주소로만 보면 이 문제들이 따로따로 보이는데, 계정 경계이자 갱신 단위로 보기 시작하면 하나의 설계 문제로 묶인다.
+
+신규 query/mutation을 추가할 때 체크하는 항목들도 결국 여기서 나왔다. optional segment를 `null`로 정규화했는가, 삭제 상세는 remove인가, 외부 이벤트라면 external-signal 헬퍼를 썼는가, operation 이름에 식별자가 없는가.

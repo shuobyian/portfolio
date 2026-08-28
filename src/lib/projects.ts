@@ -164,7 +164,10 @@ const projects: Project[] = [
       "테스트 195개 파일·약 1,000개 케이스(Vitest) + 역할별 인증 시나리오 E2E(Playwright). 리렌더 횟수가 계약인 화면은 차트·표를 렌더 카운팅 스텁으로 치환해 상호작용별 렌더 횟수를 고정, memo 무력화 회귀를 테스트로 검출",
       "배포: 정적 산출물에 API 호스트를 굽지 않고 동일 origin /api/v1 상대경로만 사용해 dev·prod가 같은 이미지를 공유. 운영 네임스페이스의 PodSecurity restricted 정책에 맞춰 비루트(UID 101) nginx 이미지로 전환하고, 근거를 실측으로 검증해 초기 판단 오류를 문서에서 정정",
     ],
-    relatedPostSlugs: ["bi-react-query-zustand-architecture"],
+    relatedPostSlugs: [
+      "bi-react-query-zustand-architecture",
+      "bi-query-key-cache-invalidation",
+    ],
   },
   {
     slug: "community-platform",

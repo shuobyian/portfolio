@@ -11,6 +11,10 @@ import {
   BiSessionBootstrapDiagram,
   BiDependencyDirectionDiagram,
 } from "@/components/blog/bi-state-architecture-diagram";
+import {
+  QueryStaleResponseRaceDiagram,
+  SessionScopeGenerationDiagram,
+} from "@/components/blog/bi-query-cache-diagram";
 import { AlsFanInGraphDiagram } from "@/components/blog/als-fanin-architecture-diagram";
 import { EventLoopDiagram } from "@/components/blog/event-loop-diagram";
 import { RenderClosureDiagram } from "@/components/blog/render-closure-diagram";
@@ -40,6 +44,8 @@ const mdxComponents = {
   BiProviderStackDiagram,
   BiSessionBootstrapDiagram,
   BiDependencyDirectionDiagram,
+  QueryStaleResponseRaceDiagram,
+  SessionScopeGenerationDiagram,
   AlsFanInGraphDiagram,
   EventLoopDiagram,
   RenderClosureDiagram,
