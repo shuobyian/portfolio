@@ -6,6 +6,7 @@ import { getAllProjects, getProjectBySlug } from "@/lib/projects";
 import { getPostBySlug } from "@/lib/blog";
 import { PosKioskDeepDive } from "@/components/projects/pos-kiosk-deep-dive";
 import { PharmBridgeRefactorDeepDive } from "@/components/projects/pharm-bridge-refactor-deep-dive";
+import { BiServiceDeepDive } from "@/components/projects/bi-service-deep-dive";
 import type { Metadata } from "next";
 
 function renderHighlight(text: string) {
@@ -162,6 +163,7 @@ export default async function ProjectDetail({
       {project.slug === "pharm-bridge-refactor" && (
         <PharmBridgeRefactorDeepDive />
       )}
+      {project.slug === "bi-service" && <BiServiceDeepDive />}
     </Section>
   );
 }
