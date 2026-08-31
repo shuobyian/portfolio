@@ -24,7 +24,7 @@ const enforcedRules = [
   {
     rule: "차트 라이브러리 직접 import 금지",
     how: "eslint + 단일 진입점",
-    why: "래퍼를 자체 구현으로 갈아끼워도 화면 코드가 그대로다",
+    why: "라이브러리 교체·자체 구현이 화면으로 번지지 않는다",
   },
 ];
 
@@ -582,10 +582,14 @@ export function BiServiceDeepDive() {
           옵션으로 우회할 수 없는 구조적 제약이었다.
         </p>
         <p className="mt-3 leading-relaxed text-muted-foreground">
-          그래서 두 마크가 y·color 스케일을 공유하도록 차트 뷰를 직접 조립한
-          컴포넌트를 만들어 래퍼를 갈아끼웠다. 화면은 같은 이름의 래퍼에 같은
-          props를 넘기고 있었으므로{" "}
-          <strong className="text-foreground">사용처 코드는 한 줄도 바뀌지 않았다.</strong>
+          그래서 라이브러리가 주는 고수준 컴포넌트를 버리고, 두 마크가 y·color
+          스케일을 공유하도록 차트 뷰를 직접 조립한 컴포넌트를 만들었다. 화면에
+          라이브러리 직접 사용을 막아둔 덕분에{" "}
+          <strong className="text-foreground">
+            이 대응은 공유 패키지 안에서 끝났다.
+          </strong>{" "}
+          화면은 여전히 래퍼 하나에 props를 넘길 뿐, 그 안이 선언형 컴포넌트인지
+          명령형 차트 뷰인지 모른다.
         </p>
         <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
           → 이 층이 없었다면 같은 수정을 차트를 쓰는 화면 수만큼 반복해야 했다.
