@@ -2,7 +2,26 @@ const scaleStats = [
   { value: "2", unit: "프로덕트", label: "서비스 앱 · 어드민 콘솔" },
   { value: "5", unit: "축", label: "통합분석 (출고·채널·지역·시장·제품)" },
   { value: "65", unit: "개", label: "취소 신호를 관통시킨 조회 함수" },
-  { value: "~1,000", unit: "케이스", label: "Vitest 195개 파일" },
+  { value: "1,389", unit: "케이스", label: "Vitest 233개 파일 + E2E 31개" },
+];
+
+const csIsolationRules = [
+  {
+    rule: "분석 스크립트 미로드",
+    why: "운영자가 대신 보는 화면의 행동이 고객 사용 지표로 섞이지 않는다",
+  },
+  {
+    rule: "쿠키 세션 복원 생략",
+    why: "같은 브라우저에 남아 있는 본인 세션으로 되살아나지 않는다",
+  },
+  {
+    rule: "토큰 없는 요청 차단",
+    why: "CS 토큰이 실리지 않은 요청이 일반 세션 자격으로 나가는 경로를 끊는다",
+  },
+  {
+    rule: "쓰기 전부 읽기 전용",
+    why: "문의 등록·내 정보 수정·계정 추가를 막고, 직접 URL은 가드가 목록으로 되돌린다",
+  },
 ];
 
 const enforcedRules = [
@@ -482,14 +501,206 @@ function ChartLayerDiagram() {
   );
 }
 
+function CsHandoffDiagram() {
+  const steps = [
+    {
+      y: 150,
+      dir: "right" as const,
+      label: "window.open('/cs')",
+      sub: "새 탭이 CS 탭 표식을 남기고 격리 모드로 뜬다",
+    },
+    {
+      y: 212,
+      dir: "left" as const,
+      label: "READY",
+      sub: "opener에게. targetOrigin을 명시한다 — '*' 금지",
+    },
+    {
+      y: 274,
+      dir: "right" as const,
+      label: "CS 토큰 (1회)",
+      sub: "받는 쪽이 event.origin · event.source를 검증한다",
+    },
+    {
+      y: 336,
+      dir: "left" as const,
+      label: "RESULT { ok, message }",
+      sub: "진입 결과만 회신 — 토큰은 싣지 않는다",
+    },
+  ];
+
+  return (
+    <svg
+      viewBox="0 0 820 410"
+      className="h-auto w-full text-foreground"
+      role="img"
+      aria-label="CS 세션 인계 흐름 — 어드민 창이 서버에서 CS 세션을 받아 서비스 탭을 열고, 서비스가 READY를 보낸 뒤 어드민이 CS 토큰을 한 번만 전달하며, 서비스는 토큰 없는 결과만 회신한다"
+    >
+      <defs>
+        <marker
+          id="bi-cs-arrow"
+          viewBox="0 0 10 10"
+          refX="9"
+          refY="5"
+          markerWidth="6"
+          markerHeight="6"
+          orient="auto-start-reverse"
+        >
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor" />
+        </marker>
+      </defs>
+
+      <text
+        x="410"
+        y="24"
+        textAnchor="middle"
+        className="fill-foreground"
+        fontSize="14"
+        fontWeight="600"
+      >
+        토큰은 창 사이를 딱 한 번 건너간다
+      </text>
+
+      {/* 서버 단계 */}
+      <g className="text-foreground">
+        <rect
+          x="250"
+          y="40"
+          width="320"
+          height="34"
+          rx="8"
+          fill="currentColor"
+          fillOpacity="0.05"
+          stroke="currentColor"
+          strokeOpacity="0.35"
+          strokeWidth="1.5"
+          strokeDasharray="5 4"
+        />
+      </g>
+      <text x="410" y="62" textAnchor="middle" className="fill-muted-foreground" fontSize="11">
+        ① 어드민이 서버에 CS 세션을 만들고 토큰을 받는다
+      </text>
+
+      {/* 두 창 머리 */}
+      {[
+        { x: 60, label: "어드민 창", sub: "계약사 상세 · 계정 목록" },
+        { x: 520, label: "서비스 CS 탭", sub: "읽기 전용 · 격리" },
+      ].map((col) => (
+        <g key={col.label} className="text-accent">
+          <rect
+            x={col.x}
+            y="86"
+            width="240"
+            height="44"
+            rx="9"
+            fill="currentColor"
+            fillOpacity="0.1"
+            stroke="currentColor"
+            strokeWidth="1.5"
+          />
+          <text
+            x={col.x + 120}
+            y="104"
+            textAnchor="middle"
+            className="fill-foreground"
+            fontSize="12"
+            fontWeight="600"
+          >
+            {col.label}
+          </text>
+          <text
+            x={col.x + 120}
+            y="120"
+            textAnchor="middle"
+            className="fill-muted-foreground"
+            fontSize="10"
+          >
+            {col.sub}
+          </text>
+        </g>
+      ))}
+
+      {/* 생명선 */}
+      <g className="text-muted-foreground">
+        <line
+          x1="180"
+          y1="130"
+          x2="180"
+          y2="372"
+          stroke="currentColor"
+          strokeOpacity="0.3"
+          strokeWidth="1.5"
+          strokeDasharray="4 5"
+        />
+        <line
+          x1="640"
+          y1="130"
+          x2="640"
+          y2="372"
+          stroke="currentColor"
+          strokeOpacity="0.3"
+          strokeWidth="1.5"
+          strokeDasharray="4 5"
+        />
+      </g>
+
+      {steps.map((step, i) => {
+        const fromX = step.dir === "right" ? 180 : 640;
+        const toX = step.dir === "right" ? 640 : 180;
+        return (
+          <g key={step.label}>
+            <g className="text-accent">
+              <line
+                x1={fromX}
+                y1={step.y}
+                x2={toX}
+                y2={step.y}
+                stroke="currentColor"
+                strokeWidth="1.75"
+                markerEnd="url(#bi-cs-arrow)"
+              />
+            </g>
+            <text
+              x="410"
+              y={step.y - 8}
+              textAnchor="middle"
+              className="fill-foreground"
+              fontSize="11"
+              fontWeight="600"
+              fontFamily="ui-monospace, monospace"
+            >
+              {`${["②", "③", "④", "⑤"][i]} ${step.label}`}
+            </text>
+            <text
+              x="410"
+              y={step.y + 16}
+              textAnchor="middle"
+              className="fill-muted-foreground"
+              fontSize="10"
+            >
+              {step.sub}
+            </text>
+          </g>
+        );
+      })}
+
+      <text x="410" y="396" textAnchor="middle" className="fill-muted-foreground" fontSize="11">
+        토큰은 SDK 메모리에만 둔다 — CS 탭에서는 인증 스토어를 persist하지 않는다
+      </text>
+    </svg>
+  );
+}
+
 export function BiServiceDeepDive() {
   return (
     <div className="mt-16 border-t border-border pt-12">
       <h2 className="text-2xl font-bold">설계 자세히 보기</h2>
       <p className="mt-2 text-muted-foreground">
         두 프로덕트를 한 저장소에서 굴리기 위해 어떤 경계를 세웠고, 그 경계를
-        말이 아니라 도구로 어떻게 강제했는지 — 그리고 라이브러리 한계에 부딪혔을
-        때 화면 코드를 지키기 위해 어디를 갈아끼웠는지.
+        말이 아니라 도구로 어떻게 강제했는지. 라이브러리 한계에 부딪혔을 때 화면
+        코드를 지키기 위해 어디를 갈아끼웠는지. 그리고 남의 세션으로 들어가는
+        기능과 외부 분석 도구처럼 &ldquo;편의와 데이터 경계가 정면으로
+        부딪히는&rdquo; 요구를 어떤 선으로 나눴는지.
       </p>
 
       <div className="mt-8 grid grid-cols-2 gap-4 md:grid-cols-4">
@@ -623,6 +834,105 @@ export function BiServiceDeepDive() {
             나눠 돌린다. 첫 실패에서 멈추고 그 단계 로그만 보여준다.
           </p>
         </div>
+      </div>
+
+      <div className="mt-8 rounded-lg border border-border p-6">
+        <h3 className="text-sm font-medium uppercase tracking-wide text-accent">
+          6. 운영자가 고객 화면을 그대로 보는 길
+        </h3>
+        <p className="mt-3 leading-relaxed text-muted-foreground">
+          고객센터 문의는 &ldquo;제 화면에 이게 안 나와요&rdquo;로 온다. 운영자가
+          어드민에서 보는 집계와 계약사가 서비스에서 보는 화면은 다르기 때문에,
+          운영자가 그 계약사의 화면을 그대로 열어볼 수 있어야 했다. 문제는 이게{" "}
+          <strong className="text-foreground">
+            남의 세션으로 들어가는 기능
+          </strong>
+          이라는 점이다.
+        </p>
+        <p className="mt-3 leading-relaxed text-muted-foreground">
+          두 앱은 서로 다른 origin에서 돌고 라우팅도 공유하지 않는다. 그래서 토큰을
+          URL이나 저장소에 흘리지 않고 창 사이 메시지로 한 번만 넘기도록 했다.
+        </p>
+        <div className="mt-6">
+          <CsHandoffDiagram />
+        </div>
+        <p className="mt-6 text-sm font-medium text-foreground">
+          열린 탭을 네 가지로 격리했다
+        </p>
+        <div className="mt-3 grid gap-3 md:grid-cols-2">
+          {csIsolationRules.map((item) => (
+            <div
+              key={item.rule}
+              className="rounded-lg border border-border bg-background p-4"
+            >
+              <h4 className="text-sm font-semibold">{item.rule}</h4>
+              <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
+                {item.why}
+              </p>
+            </div>
+          ))}
+        </div>
+        <p className="mt-5 text-sm leading-relaxed text-muted-foreground">
+          → 가장 까다로웠던 건 <strong className="text-foreground">종료</strong>다.
+          CS 탭에서 로그아웃하거나 세션이 만료됐을 때 일반 로그아웃 경로를 타면
+          같은 브라우저에 있는 운영자 본인 세션까지 끊긴다. 그래서 CS 탭의 세션
+          종료는 CS 세션만 지우는 별도 경로로 분리하고, 사용자가 직접 끝낸
+          경우에만 창을 닫는다. 서버가 만료와 &ldquo;다른 CS 로그인에 의한
+          교체&rdquo;를 같은 오류로 돌려주므로 안내 문구에는 두 사유를 함께
+          적었다 — 추측해서 하나로 쓰면 틀린 안내가 된다.
+        </p>
+      </div>
+
+      <div className="mt-8 rounded-lg border border-accent/30 bg-accent/5 p-6">
+        <h3 className="text-sm font-medium uppercase tracking-wide text-accent">
+          7. 분석 도구를 붙이면서 계약사 데이터는 내보내지 않기
+        </h3>
+        <p className="mt-3 leading-relaxed text-muted-foreground">
+          어떤 화면이 실제로 쓰이는지 알아야 다음 개선을 고를 수 있어서 GA4와
+          세션 리플레이 도구를 붙였다. 그런데 이 서비스 화면에는{" "}
+          <strong className="text-foreground">
+            제약사의 판매 실적이 그려져 있다.
+          </strong>{" "}
+          도구를 기본 설정대로 켜면 그게 전부 외부로 올라간다.
+        </p>
+        <div className="mt-5 space-y-3 text-sm leading-relaxed text-muted-foreground">
+          <p>
+            <strong className="text-foreground">
+              마스킹을 대시보드 설정이 아니라 코드로.
+            </strong>{" "}
+            리플레이 도구의 마스킹 수준은 관리 화면에서 누구나 되돌릴 수 있다.
+            그래서 문서 속성으로 전체 마스킹을 강제해 대시보드 설정을 덮도록
+            했다. 또 <code className="text-xs">#root</code>가 아니라{" "}
+            <code className="text-xs">body</code>에 걸었다 — 디자인 시스템의
+            모달·드로어·셀렉트는 루트 밖으로 portal되기 때문에 루트에만 걸면
+            모달 안의 숫자가 그대로 올라간다. 레이아웃·클릭·스크롤은 그대로
+            기록돼서 UX 분석 목적은 유지된다.
+          </p>
+          <p>
+            <strong className="text-foreground">
+              개인정보 제거를 이벤트마다가 아니라 공통 client에.
+            </strong>{" "}
+            이름·이메일·검색어 같은 자유 텍스트를 보내지 않는 것은 규칙으로 두면
+            새 이벤트에서 깨진다. 공통 client가 알려진 개인정보 파라미터를
+            제거하고 모든 이벤트의 주소값을 origin + 경로만 남기도록 정제한다.
+            덕분에 비밀번호 재설정 링크의 토큰 같은 것도 자동으로 빠진다.
+          </p>
+          <p>
+            <strong className="text-foreground">
+              사용자 식별은 인증 스토어 구독 한 곳에서만.
+            </strong>{" "}
+            로그인 버튼마다 식별값을 설정하면 로그아웃·만료·다른 탭 교체 중
+            하나가 반드시 빠진다. 그래서 인증 스토어를 구독해 user가 비는 모든
+            전이에서 식별을 해제하도록 한 곳에 모았다. 인증 경로를 새로 추가해도
+            스토어를 거치면 자동으로 따라온다.
+          </p>
+        </div>
+        <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
+          → 운영 쪽에도 함정이 있었다. 앱이 화면 전환을 직접 추적하므로 도구의
+          자동 추적 옵션을 끄지 않으면 같은 전환이 두 번 집계된다. 코드만
+          맞춰두고 끝낼 수 없어서 관리 화면에서 꺼야 하는 항목까지 저장소 규약에
+          남겼다.
+        </p>
       </div>
     </div>
   );

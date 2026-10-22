@@ -7,6 +7,7 @@ import { getPostBySlug } from "@/lib/blog";
 import { PosKioskDeepDive } from "@/components/projects/pos-kiosk-deep-dive";
 import { PharmBridgeRefactorDeepDive } from "@/components/projects/pharm-bridge-refactor-deep-dive";
 import { BiServiceDeepDive } from "@/components/projects/bi-service-deep-dive";
+import { PreprocessBackofficeDeepDive } from "@/components/projects/preprocess-backoffice-deep-dive";
 import { CommunityPlatformDeepDive } from "@/components/projects/community-platform-deep-dive";
 import { DesignSystemDeepDive } from "@/components/projects/design-system-deep-dive";
 import { PharmBridgeDeepDive } from "@/components/projects/pharm-bridge-deep-dive";
@@ -169,6 +170,9 @@ export default async function ProjectDetail({
         <PharmBridgeRefactorDeepDive />
       )}
       {project.slug === "bi-service" && <BiServiceDeepDive />}
+      {project.slug === "preprocess-backoffice" && (
+        <PreprocessBackofficeDeepDive />
+      )}
       {project.slug === "community-platform" && <CommunityPlatformDeepDive />}
       {project.slug === "design-system" && <DesignSystemDeepDive />}
       {project.slug === "pharm-bridge" && <PharmBridgeDeepDive />}
