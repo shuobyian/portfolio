@@ -148,7 +148,7 @@ const projects: Project[] = [
       "Vitest",
       "Playwright",
     ],
-    period: "2026.04 - 진행중",
+    period: "2026.04 - 2026.08",
     role: "프론트엔드 개발 (아키텍처 설계·구현 주도)",
     company: "알스솔루션",
     highlights: [
@@ -187,7 +187,7 @@ const projects: Project[] = [
       "node:test",
       "Playwright",
     ],
-    period: "2026.09 - 진행중",
+    period: "2026.09 - 2026.10",
     role: "프론트엔드 개발 (설계·구현 주도)",
     company: "알스솔루션",
     highlights: [
