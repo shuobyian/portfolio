@@ -42,7 +42,7 @@ function PilotRiskTimingDiagram() {
         <rect x="70" y="80" width="220" height="52" rx="9" fill="currentColor" fillOpacity="0.05" stroke="currentColor" strokeOpacity="0.4" strokeWidth="1.5" />
       </g>
       <text x="180" y="102" textAnchor="middle" className="fill-foreground" fontSize="11" fontWeight="600">
-        신규 BI 프로젝트 착수
+        신규 PharmScope 프로젝트 착수
       </text>
       <text x="180" y="120" textAnchor="middle" className="fill-muted-foreground" fontSize="10">
         Antd 처음 써보며 진행
@@ -262,8 +262,8 @@ export function BackofficeRefactorDeepDive() {
         </h3>
         <p className="mt-3 leading-relaxed text-muted-foreground">
           차기{" "}
-          <Link href="/projects/bi-service" className="text-accent underline-offset-2 hover:underline">
-            BI 서비스
+          <Link href="/projects/pharmscope" className="text-accent underline-offset-2 hover:underline">
+            PharmScope
           </Link>
           에 Antd 도입이 결정된 상황이었다. 그대로 신규 프로젝트에서 처음 써보면
           라이브러리 부적합이나 사내 정체성 적용 한계 같은 문제가{" "}
@@ -313,7 +313,7 @@ export function BackofficeRefactorDeepDive() {
           사내 정체성이 표현된다&rdquo;는 확인된 사실.
         </p>
         <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-          → 이 자산이 BI 서비스의 화면 초기 셋업에 그대로 쓰였다. 전체 흐름은{" "}
+          → 이 자산이 PharmScope의 화면 초기 셋업에 그대로 쓰였다. 전체 흐름은{" "}
           <Link href="/stories/design-system" className="text-accent underline-offset-2 hover:underline">
             디자인 시스템 스토리
           </Link>
