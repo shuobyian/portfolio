@@ -54,7 +54,7 @@ export default function Home() {
               <span className="size-1.5 rounded-full bg-emerald-500" />
               지금 새로운 기회 탐색 중
             </p>
-            <h1 className="mt-8 text-5xl font-semibold leading-[1.1] tracking-tight sm:text-7xl">
+            <h1 className="mt-8 text-4xl font-semibold leading-[1.15] tracking-tight sm:text-7xl">
               안녕하세요,
               <br />
               저는 <span className="text-accent">장수빈</span>입니다.
