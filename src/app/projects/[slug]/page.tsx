@@ -31,8 +31,27 @@ function renderHighlight(text: string) {
         </Link>
       );
     }
-    return <span key={i}>{part}</span>;
+    return <span key={i}>{renderMetrics(part)}</span>;
   });
+}
+
+// "5건 → 1건", "약 60% 감소" 같은 숫자 변화
+const NUM = String.raw`(?:약\s*)?\d[\d.,]*\s*(?:%|KB|[가-힣]{1,2})?`;
+const METRIC = new RegExp(
+  String.raw`(${NUM}(?:\s[가-힣]{1,3})?\s*→\s*${NUM}|(?:약\s*)?\d[\d.,]*\s*%\s*(?:감소|축소|단축|증가|개선|향상))`,
+);
+
+function renderMetrics(text: string) {
+  // split에 캡처 그룹을 쓰면 홀수 인덱스가 매칭된 숫자 변화
+  return text.split(METRIC).map((part, i) =>
+    i % 2 ? (
+      <strong key={i} className="rounded-sm bg-accent/10 px-1 font-semibold text-accent">
+        {part}
+      </strong>
+    ) : (
+      part
+    ),
+  );
 }
 
 // "의사결정: 본문"처럼 짧은 라벨로 시작하면 카드 제목과 본문으로 나눈다
