@@ -33,7 +33,7 @@ const stageLabels = [
   },
   {
     stage: "고객 공개",
-    detail: "공개 보류·일정을 거쳐 BI 화면의 데이터가 된다",
+    detail: "공개 보류·일정을 거쳐 PharmScope 화면의 데이터가 된다",
     kind: "실제 실행",
   },
 ];
@@ -368,7 +368,7 @@ export function PreprocessBackofficeDeepDive() {
           1. 원래 어떻게 일하고 있었나
         </h3>
         <p className="mt-3 leading-relaxed text-muted-foreground">
-          BI 서비스에 공개될 약품 판매 원천 데이터 중 검증에 실패한 행을
+          PharmScope에 공개될 의약품 유통 원천 데이터 중 검증에 실패한 행을
           &lsquo;반려&rsquo;라고 부른다. 데이터비즈팀은 이 반려 데이터를{" "}
           <strong className="text-foreground">일일 Excel 리포트(15시트)</strong>
           로 받아 검토하고, 보정값을 정해 메일로 회신했다. 그러면 개발·운영

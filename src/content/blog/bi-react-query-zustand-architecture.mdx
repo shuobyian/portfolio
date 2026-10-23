@@ -1,5 +1,5 @@
 ---
-title: "BI 서비스의 상태 관리 구조 — React Query는 서버 상태 게이트웨이, Zustand는 캐시 + 영속화"
+title: "PharmScope의 상태 관리 구조 — React Query는 서버 상태 게이트웨이, Zustand는 캐시 + 영속화"
 description: "als-bi 프로젝트에서 서버 상태(React Query)와 클라이언트 전역 상태(Zustand)를 어떻게 나누고 어디서 연결하는지, 그리고 SessionBootstrap이 풀어주는 쿠키 ↔ store 정합성 문제까지 정리."
 date: "2026-05-27"
 tags: ["React Query", "Zustand", "상태관리", "Architecture"]
@@ -7,7 +7,7 @@ category: "React"
 type: "project"
 ---
 
-> [BI 서비스 신규 구축](/projects/bi-service)
+> [PharmScope 신규 구축](/projects/bi-service)
 
 als-bi를 새로 깔면서 가장 먼저 정한 규칙은 하나다. **서버 상태와 클라이언트 전역 상태를 한 통에 담지 않는다.** 이 글은 그 규칙을 어떤 형태로 구현했고, 두 레이어가 어디서 만나는지를 정리한 것이다.
 

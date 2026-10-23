@@ -773,7 +773,7 @@ export function BiServiceDeepDive() {
           3. 차트를 디자인 시스템 안으로
         </h3>
         <p className="mt-3 leading-relaxed text-muted-foreground">
-          BI 서비스에서 차트는 부속이 아니라 제품 그 자체다. 화면마다 라이브러리를
+          PharmScope에서 차트는 부속이 아니라 제품 그 자체다. 화면마다 라이브러리를
           직접 부르면 팔레트와 축 설정이 화면 수만큼 갈라진다. 그래서 화면은 공유
           래퍼 6종만 쓰고, 래퍼만 단일 동적 진입점을 통해 라이브러리를 로드한다.
         </p>
@@ -891,7 +891,7 @@ export function BiServiceDeepDive() {
           어떤 화면이 실제로 쓰이는지 알아야 다음 개선을 고를 수 있어서 GA4와
           세션 리플레이 도구를 붙였다. 그런데 이 서비스 화면에는{" "}
           <strong className="text-foreground">
-            제약사의 판매 실적이 그려져 있다.
+            제약사의 출고·유통 실적이 그려져 있다.
           </strong>{" "}
           도구를 기본 설정대로 켜면 그게 전부 외부로 올라간다.
         </p>
