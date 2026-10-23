@@ -9,6 +9,8 @@ export interface Project {
   period: string;
   role: string;
   highlights: string[];
+  /** 상세 페이지에서 카드로 강조할 highlights 인덱스. 나머지는 목록으로 표시 */
+  keyHighlights?: number[];
   featured?: boolean;
   company?: string;
   relatedPostSlugs?: string[];
@@ -25,13 +27,14 @@ const projects: Project[] = [
     role: "프론트엔드 개발 (설계·구현 주도)",
     company: "알스솔루션",
     highlights: [
-      "백오피스 도메인 비중이 높은 사내 환경에 맞춰 컴포넌트 풍부도·디자인 커스터마이징 용이성·반응형 그리드 성숙도를 종합 검토하여 Bootstrap 채택",
+      "Bootstrap 채택 근거: 백오피스 도메인 비중이 높은 사내 환경에 맞춰 컴포넌트 풍부도·디자인 커스터마이징 용이성·반응형 그리드 성숙도를 종합 검토하여 Bootstrap 채택",
       "사내 디자인 토큰을 CSS Variables로 추상화하여 Bootstrap 기본 스타일 위에 사내 정체성 레이어를 일관 적용",
-      "색상·타이포·간격·레이아웃을 단일 토큰으로 정의하여 토큰 1회 변경으로 시스템 전반 갱신",
+      "단일 토큰 체계: 색상·타이포·간격·레이아웃을 단일 토큰으로 정의하여 토큰 1회 변경으로 시스템 전반 갱신",
       "컴포넌트를 Monorepo 단위 패키지로 분리하여 UI 자산의 독립 배포·버전 관리 구조 확보",
       "라이트/다크 테마를 토큰 레이어에서 분기. 컴포넌트 코드는 테마 인지 없이 동작하도록 분리",
-      "백오피스 신규 프로젝트의 첫 적용을 통해 토큰·컴포넌트 구조를 운영 환경에서 검증한 뒤 사내 표준 라인업으로 정착",
+      "운영 검증 후 표준 정착: 백오피스 신규 프로젝트의 첫 적용을 통해 토큰·컴포넌트 구조를 운영 환경에서 검증한 뒤 사내 표준 라인업으로 정착",
     ],
+    keyHighlights: [0, 2, 5],
     featured: true,
   },
   {
@@ -46,11 +49,12 @@ const projects: Project[] = [
     highlights: [
       "공지사항·약관·FAQ·회원 관리 등 사내 운영 도메인 전반을 단독으로 초기 설계부터 구현까지 담당",
       "신설 조직의 초기 운영 단계로 별도 운영팀 없이 개발자·기획자가 운영을 겸하는 환경에 맞춰 설계",
-      "자체 Monorepo 디자인 시스템을 첫 적용한 프로젝트. 토큰·컴포넌트 구조를 운영 환경에서 처음 검증하여 사내 표준 정착의 기반 마련",
+      "디자인 시스템 첫 적용: 자체 Monorepo 디자인 시스템을 첫 적용한 프로젝트. 토큰·컴포넌트 구조를 운영 환경에서 처음 검증하여 사내 표준 정착의 기반 마련",
       "기능 단위 컴포넌트 분리로 메뉴 추가 시 기존 화면 영향 없이 확장 가능한 구조 설계",
       "파일 업로드 모듈 구현: AWS S3 업로드/다운로드 처리. 게시글 작성 흐름과 첨부 파일 생성·삭제 라이프사이클을 연동하여 게시글 단위로 파일 일관 관리",
       "이후 2026.02-03에 BI 사전 검증 목적으로 Antd 디자인 시스템으로 마이그레이션 ([사내 백오피스 리팩토링](/projects/backoffice-refactor) 참조)",
     ],
+    keyHighlights: [2, 4],
     relatedPostSlugs: ["admin-als-frontend-deployment"],
   },
   {
@@ -65,10 +69,11 @@ const projects: Project[] = [
     highlights: [
       "약국 대상 약품 입고 관리 프로그램 ‘팜브릿지’의 백엔드 JSP→Spring 전환에 맞춰 프론트엔드 전면 재구성",
       "의사결정: 백엔드 Spring 전환과 동기화된 일정 안에 안정화해야 하는 제약이 가장 컸고, 여기에 SSR 라우팅 제약·운영 인력의 장기 유지보수 가능 기술 폭을 함께 고려하여 Vanilla JS 선택 (React 도입 시 구조 설계·학습 비용으로 전환 일정 내 안정화가 어렵다고 판단)",
-      "HTML/CSS/JavaScript만으로 라우팅 진입점, 상태 컨테이너, 이벤트 위임 처리 모듈을 자체 구현하여 프레임워크 의존도 없이 유지보수 가능한 구조 설계",
+      "프레임워크 없는 자체 구조: HTML/CSS/JavaScript만으로 라우팅 진입점, 상태 컨테이너, 이벤트 위임 처리 모듈을 자체 구현하여 프레임워크 의존도 없이 유지보수 가능한 구조 설계",
       "SSR 환경에 최적화된 자체 디자인 시스템을 별도 설계 — 사내 Monorepo·Antd 라인과 토큰·컴포넌트 모두 분리 운영",
       "이후 2026.02-03에 React Island 패턴으로 부분 전환 ([팜브릿지 서비스 리팩토링](/projects/pharm-bridge-refactor) 참조)",
     ],
+    keyHighlights: [1, 2],
     featured: true,
   },
   {
@@ -82,11 +87,12 @@ const projects: Project[] = [
     company: "알스솔루션",
     highlights: [
       "Jira REST API 기반 데이터로 간트 차트·캘린더 뷰 설계·구현하여 일정 관리 가시성 향상",
-      "드래그앤드롭 일정 편집에 낙관적 업데이트 적용으로 작업 처리 속도 개선",
-      "Changelog 분석으로 과거 시점 조회·고스트 바 비교 기능 구현 (회고/이력 분석 지원)",
+      "낙관적 업데이트: 드래그앤드롭 일정 편집에 낙관적 업데이트 적용으로 작업 처리 속도 개선",
+      "과거 시점 조회: Changelog 분석으로 과거 시점 조회·고스트 바 비교 기능 구현 (회고/이력 분석 지원)",
       "팀/상태 기반 색상 시각화·다중 필터링으로 대규모 프로젝트 탐색 효율 최적화",
-      "Atlassian OAuth 연동 및 URL 상태 관리로 별도 저장 없이 공유 가능한 협업 환경 구축",
+      "URL로 공유하는 협업 환경: Atlassian OAuth 연동 및 URL 상태 관리로 별도 저장 없이 공유 가능한 협업 환경 구축",
     ],
+    keyHighlights: [1, 2, 4],
   },
   {
     slug: "pharm-bridge-refactor",
@@ -108,9 +114,10 @@ const projects: Project[] = [
       "의사결정: React Island 패턴 채택 — SSR이 페이지 셸을 그대로 그리고, 동적 영역만 React 컴포넌트가 마운트되는 SSR/CSR 하이브리드 구조로 설계",
       "React Query 전면 도입으로 API 호출·캐싱·에러 처리 일원화",
       "화면 단위로 묶여 있던 로직을 도메인별 훅·유틸로 분리하고, Context 도입으로 prop drilling 제거",
-      "테스트 인프라(Jest+MSW) 구축으로 React 영역 테스트 커버리지 0% → 약 20% 확보, 회귀 안정성 확보",
+      "테스트 커버리지 0% → 20%: 테스트 인프라(Jest+MSW) 구축으로 React 영역 테스트 커버리지 0% → 약 20% 확보, 회귀 안정성 확보",
       "성능 검증: 리팩토링 전후 번들·에셋 사이즈를 직접 실측해 트레이드오프 정량 확인. SearchWait 페이지 기준 jQuery 등 외부 CDN 의존(약 207 KB)은 제거됐으나 단일 페이지 첫 진입 비용은 gzip 약 111 KB → 150 KB로 증가 — 코드 스플리팅 구조라 사이트 전체·재방문 캐시 관점에서 역전 우위 여지가 있다고 분석",
     ],
+    keyHighlights: [1, 4, 5],
     featured: true,
   },
   {
@@ -124,9 +131,10 @@ const projects: Project[] = [
     company: "알스솔루션",
     highlights: [
       "배경: 사내 차기 신규 프로젝트(BI 서비스)에서 Antd 디자인 시스템 도입을 결정한 상황. 신규 프로젝트에 본격 적용하기 전, 운영 중인 백오피스에서 먼저 마이그레이션을 선행하여 Antd 기반 개발 워크플로우·사내 정체성 디자인 적용 가능성·운영 리스크를 사전 검증",
-      "자체 Monorepo 디자인 시스템에서 Antd 기반 디자인 시스템으로 약 4주간 컴포넌트 약 40종을 무중단 점진 전환, 화면별 회귀 결함 0건",
-      "기존 컴포넌트의 디자인 토큰을 Antd 컴포넌트 props·테마로 매핑하는 변환 가이드를 정의하여 화면별 영향 범위 최소화 (화면당 평균 수정 범위 약 50% 축소)",
+      "40종 무중단 전환: 자체 Monorepo 디자인 시스템에서 Antd 기반 디자인 시스템으로 약 4주간 컴포넌트 약 40종을 무중단 점진 전환, 화면별 회귀 결함 0건",
+      "토큰 → Antd 매핑 가이드: 기존 컴포넌트의 디자인 토큰을 Antd 컴포넌트 props·테마로 매핑하는 변환 가이드를 정의하여 화면별 영향 범위 최소화 (화면당 평균 수정 범위 약 50% 축소)",
     ],
+    keyHighlights: [1, 2],
     featured: true,
   },
   {
@@ -166,6 +174,7 @@ const projects: Project[] = [
       "배포: 정적 산출물에 API 호스트를 굽지 않고 동일 origin 상대경로만 사용해 dev·prod가 같은 이미지를 공유. 운영 네임스페이스 보안 정책에 맞춰 비루트 nginx 이미지로 전환",
       "전처리 결과의 생산 측은 [BI 데이터 전처리 백오피스](/projects/preprocess-backoffice) — 이 서비스의 어드민 '데이터 전처리' 화면과 수집 현황 요약을 공유",
     ],
+    keyHighlights: [4, 5, 6],
     relatedPostSlugs: [
       "bi-react-query-zustand-architecture",
       "bi-query-key-cache-invalidation",
@@ -205,6 +214,7 @@ const projects: Project[] = [
       "검증: node:test 252개 파일·약 1,766개 케이스 + 브라우저 E2E 6 spec(Playwright — 스모크·업무 흐름·초안·신원·셸·화면 설정). 응답을 받지 못한 쓰기 네 흐름은 화면을 그려 실제로 버튼을 누르는 수준까지 검사. `pnpm verify`가 포맷 → 디자인 시스템 빌드 → lint → 타입체크 → 전체 시험 → 앱 빌드 → 운영 번들에 예시 데이터가 섞였는지 검사까지 한 줄로 수행",
       "미검증 범위를 성과로 포장하지 않음: 실제 SSO 세션 검증은 개발 origin의 `redirect_uri` 미허용으로 아직 못 했고, 서버 권한·감사·멱등성과 예약 스케줄러·DAG 실행은 실환경에서 확인하지 않았음을 저장소 문서에 명시",
     ],
+    keyHighlights: [2, 4, 5],
   },
   {
     slug: "community-platform",
@@ -228,13 +238,14 @@ const projects: Project[] = [
     company: "에이치티비욘드",
     highlights: [
       "시간·공간·강좌·숙박·레슨 등 5종 예약 도메인과 PG·관리비 결제, 이용권 관리가 커뮤니티·파트너스 두 프로덕트에 걸쳐 운영되는 환경에서 기능 개발과 아키텍처 개선 병행",
-      "JS→TS 마이그레이션을 핵심 메뉴 4개 영역에서 단계적 진행. 도메인 간 결합이 강한 부분은 인터페이스 우선 정의 후 구현체 이관하여 운영 중단 없이 완료",
-      "서버 상태를 Redux→React Query로 분리. 도메인별 queryKey 컨벤션·invalidation 규칙 문서화 후 팀 전파",
+      "JS → TS 마이그레이션: JS→TS 마이그레이션을 핵심 메뉴 4개 영역에서 단계적 진행. 도메인 간 결합이 강한 부분은 인터페이스 우선 정의 후 구현체 이관하여 운영 중단 없이 완료",
+      "Redux → React Query: 서버 상태를 Redux→React Query로 분리. 도메인별 queryKey 컨벤션·invalidation 규칙 문서화 후 팀 전파",
       "Axios interceptor 공통 에러 처리로 외부 연동(PG/관리비) 실패 메시지를 도메인 단위로 일관화",
-      "팀 내 첫 프론트엔드 테스트 체계(Jest+MSW) 도입 주도. 핵심 결제·예약 플로우부터 적용하여 배포 후 핫픽스 월 평균 5건 → 1건 감소",
+      "핫픽스 월 5건 → 1건: 팀 내 첫 프론트엔드 테스트 체계(Jest+MSW) 도입 주도. 핵심 결제·예약 플로우부터 적용하여 배포 후 핫픽스 월 평균 5건 → 1건 감소",
       "기획·디자인 협업: 예약 창구 중복 검증 결과를 단일 에러가 아닌 충돌 자원 목록 모달로 보여주도록 역제안 → 운영팀이 충돌 자원을 즉시 식별·재배정 가능하도록 개선",
       "기획·디자인 협업: 예약 시간 설정 화면 복잡도가 높아 고객사가 직접 설정에 어려움을 겪던 상황. 정보 그룹 단위 박스 처리·배치 재구성을 역제안하여 진입 장벽 완화",
     ],
+    keyHighlights: [1, 2, 4],
     featured: true,
   },
   {
@@ -257,10 +268,11 @@ const projects: Project[] = [
     highlights: [
       "아파트 단지 내 입주민 대상 카페·매점에서 사용하는 클라우드 기반 POS·주문 키오스크 시스템 신규 개발",
       "React Query·Recoil로 서버 상태와 UI 상태를 분리하여 컴포넌트 간 의존성 감소",
-      "AbortController로 결제 API를 요청 단위 취소 가능하게 구성. 사용자가 결제 도중 화면을 이탈해도 잔여 요청이 후속 화면에 영향 주지 않도록 처리",
+      "결제 요청 취소 처리: AbortController로 결제 API를 요청 단위 취소 가능하게 구성. 사용자가 결제 도중 화면을 이탈해도 잔여 요청이 후속 화면에 영향 주지 않도록 처리",
       "POS(가로 1024×768) · KIOSK(세로 1024×1920) 두 가지 화면 방향·비율을 Tailwind 토큰으로 추상화하여 동일 컴포넌트로 양 환경 대응",
       "트러블슈팅: 한 매장에 메인(직원)+서브(고객) 두 대의 독립 크롬 윈도우가 동시에 떠 결제 상태·주문 내역·세션을 실시간 공유해야 하는 요구. 팀 내 윈도우 간 통신 선례가 없는 상황에서 WebSocket 서버 신설 없이 동일 origin 내에서 해결 가능한 Web API Broadcast Channel을 1차 채널로 채택하고, 메시지 유실에 대비해 localStorage event를 백업 채널로 두는 이중 구조 설계. 수신 측에서 메시지를 받아 React Query invalidate를 호출하는 방식으로 두 화면 동기화 통합",
     ],
+    keyHighlights: [2, 4],
     featured: true,
     relatedPostSlugs: ["post-message-browser-communication"],
   },
@@ -283,11 +295,12 @@ const projects: Project[] = [
     company: "에이치티비욘드",
     highlights: [
       "예약 서비스 UI/UX 개선 및 월 반복 강좌 기능 구현",
-      "옵션 그룹 기반 상품 구조 설계로 다양한 상품 조합 지원",
+      "옵션 그룹 상품 모델: 옵션 그룹 기반 상품 구조 설계로 다양한 상품 조합 지원",
       "Lexical Editor 커스터마이징으로 게시글 편집 기능 고도화",
-      "전역 Modal / Bottom Sheet 구현으로 모바일 네비게이션 및 백버튼 대응 (모바일 네비게이션 관련 버그 약 60% 감소)",
+      "전역 Modal·Bottom Sheet: 전역 Modal / Bottom Sheet 구현으로 모바일 네비게이션 및 백버튼 대응 (모바일 네비게이션 관련 버그 약 60% 감소)",
       "Storybook 기반 디자인 시스템 구축 및 공통 컴포넌트 개발",
     ],
+    keyHighlights: [1, 3],
     relatedPostSlugs: ["global-modal-bottom-sheet", "coupon-code-bottom-sheet"],
   },
   {
@@ -309,13 +322,14 @@ const projects: Project[] = [
     company: "에이치티비욘드",
     highlights: [
       "엣지 배포 환경 전환: blue-byb-pos·blue-byb-kiosk·blue-web-wallpad 3개 프론트 프로덕트의 WebServer를 pm2 serve → nginx 정적 콘텐츠 서비스로 이관. pm2 설정 변경 없이 build 파일 교체만으로 배포가 완결되도록 구조 단순화",
-      "Ansible Semaphore + Jenkins + AWS S3를 잇는 단일 배포 파이프라인 구축 (GITHUB_BUNDLE_CHECK → JENKINS_BUILD → DEPLOY_TO_EDGE 3단계 yaml 정의)",
+      "단일 배포 파이프라인: Ansible Semaphore + Jenkins + AWS S3를 잇는 단일 배포 파이프라인 구축 (GITHUB_BUNDLE_CHECK → JENKINS_BUILD → DEPLOY_TO_EDGE 3단계 yaml 정의)",
       "POS·KIOSK 빌드 통합: REACT_APP_PRODUCT 환경변수 sed 치환으로 한 번의 build step에서 두 프로덕트 산출물을 동시 생성하도록 변경 (이전 2회 빌드 → 1회)",
       "AWS S3 빌드 산출물을 Git Tag 기반 version 단위로 관리 (이전 build_id 기반 → version_tag 기반). devops-bundle에서 단지별 배포 버전을 명시적으로 추적 가능하도록 개선",
       "트러블슈팅: Jenkins build parameter에 version_tag·s3_bucket_name 분리 도입 — origin/develop 같이 슬래시 포함 tag가 s3 폴더명과 미스매치되어 파일을 못 찾는 이슈 해결",
       "nginx 정적 콘텐츠 실행을 위한 build 폴더 권한 자동화 (chmod 755 + /home/htbeyond에 711 — 다른 팀 폴더에 영향을 주지 않으면서 nginx만 통과 가능하도록 최소 권한)",
       "Git Tag 기반 버전 관리 전략 수립 (dev / alpha / prod) — 환경별 배포 흐름 일관화",
     ],
+    keyHighlights: [0, 1, 2],
     relatedPostSlugs: ["edge-deployment-pipeline", "linux-permissions-nginx"],
   },
   {
@@ -329,8 +343,9 @@ const projects: Project[] = [
     highlights: [
       "프론트엔드 및 백엔드 전반을 단독으로 설계·구현",
       "사용자 입력 기반 계산 로직 및 결과 시각화 구현",
-      "실제 게임 유저 대상 서비스 운영, 누적 사용자 약 3.3천 명·재방문율 약 30% 확보",
+      "실사용자 3.3천 명: 실제 게임 유저 대상 서비스 운영, 누적 사용자 약 3.3천 명·재방문율 약 30% 확보",
     ],
+    keyHighlights: [2],
   },
   {
     slug: "byby-quiz",
@@ -343,8 +358,9 @@ const projects: Project[] = [
     highlights: [
       "NestJS·PostgreSQL 기반 실시간 퀴즈 서비스 백엔드 개발",
       "문제 진행 상태 및 점수 집계 로직 구현",
-      "실시간 진행 상태·점수 집계 로직 구현 완료, 동시 참여 약 50명 안정 처리",
+      "동시 참여 50명 처리: 실시간 진행 상태·점수 집계 로직 구현 완료, 동시 참여 약 50명 안정 처리",
     ],
+    keyHighlights: [2],
   },
   {
     slug: "e-voting",
@@ -358,8 +374,9 @@ const projects: Project[] = [
       "학생 자치기구 선거를 위한 웹 기반 전자 투표 시스템 개발",
       "전자 투표 기능 및 투표 이력 조회 기능 구현",
       "데이터 무결성을 고려한 투표 기록 관리",
-      "데이터 무결성 기반 투표 시스템으로 교내 프로그래밍 경진대회 2위 수상",
+      "경진대회 2위: 데이터 무결성 기반 투표 시스템으로 교내 프로그래밍 경진대회 2위 수상",
     ],
+    keyHighlights: [3],
   },
   {
     slug: "student-council",
@@ -373,8 +390,9 @@ const projects: Project[] = [
       "학생회 운영을 위한 내부 관리 웹 애플리케이션 개발",
       "대여 사업 물품 관리 기능 구현",
       "학과 정보 및 공지 사항 관리 화면 개발",
-      "학생회 운영 도메인 전반을 단일 웹 애플리케이션으로 통합, 물품·공지 관리 업무 처리 시간 약 80% 단축",
+      "업무 처리 시간 80% 단축: 학생회 운영 도메인 전반을 단일 웹 애플리케이션으로 통합, 물품·공지 관리 업무 처리 시간 약 80% 단축",
     ],
+    keyHighlights: [3],
   },
 ];
 
