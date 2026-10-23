@@ -56,7 +56,7 @@ export function BlogList({ posts }: { posts: BlogPost[] }) {
   return (
     <>
       {/* Primary type tabs */}
-      <div className="mt-8 inline-flex rounded-lg border border-border p-1">
+      <div className="mt-8 inline-flex rounded-md border border-border p-1">
         {TYPE_TABS.map((tab) => {
           const count =
             tab.value === "all"
@@ -68,7 +68,7 @@ export function BlogList({ posts }: { posts: BlogPost[] }) {
               onClick={() => selectType(tab.value)}
               className={`rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
                 typeFilter === tab.value
-                  ? "bg-accent text-accent-foreground"
+                  ? "border-foreground bg-foreground text-background"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
@@ -82,10 +82,10 @@ export function BlogList({ posts }: { posts: BlogPost[] }) {
       <div className="mt-5 flex flex-wrap gap-2">
         <button
           onClick={() => setSelected(null)}
-          className={`rounded-full px-3 py-1 text-sm transition-colors ${
+          className={`rounded-md border px-3 py-1 text-sm transition-colors ${
             selected === null
-              ? "bg-accent text-accent-foreground"
-              : "bg-muted text-muted-foreground hover:text-foreground"
+              ? "border-foreground bg-foreground text-background"
+              : "border-border text-muted-foreground hover:text-foreground"
           }`}
         >
           전체 ({byType.length})
@@ -98,10 +98,10 @@ export function BlogList({ posts }: { posts: BlogPost[] }) {
               onClick={() =>
                 setSelected(selected === category ? null : category)
               }
-              className={`rounded-full px-3 py-1 text-sm transition-colors ${
+              className={`rounded-md border px-3 py-1 text-sm transition-colors ${
                 selected === category
-                  ? "bg-accent text-accent-foreground"
-                  : "bg-muted text-muted-foreground hover:text-foreground"
+                  ? "border-foreground bg-foreground text-background"
+                  : "border-border text-muted-foreground hover:text-foreground"
               }`}
             >
               {category} ({count})
@@ -116,16 +116,16 @@ export function BlogList({ posts }: { posts: BlogPost[] }) {
           선택한 카테고리에 해당하는 글이 없습니다.
         </p>
       ) : (
-        <div className="mt-10 flex flex-col gap-10">
+        <div className="mt-10 divide-y divide-border border-y border-border">
           {filtered.map((post) => (
             <Link key={post.slug} href={`/blog/${post.slug}`}>
-              <article className="group rounded-lg border border-border p-6 transition-colors hover:border-accent/50">
+              <article className="group py-7">
                 <div className="flex items-center gap-2">
-                  <span className="rounded-full bg-accent/10 px-2 py-0.5 text-xs font-medium text-accent">
+                  <span className="font-mono text-xs text-accent">
                     {post.category}
                   </span>
                 </div>
-                <h3 className="mt-2 text-lg font-semibold transition-colors group-hover:text-accent">
+                <h3 className="mt-2 text-xl font-semibold tracking-tight transition-colors group-hover:text-accent">
                   {post.title}
                 </h3>
                 <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">
@@ -145,7 +145,7 @@ export function BlogList({ posts }: { posts: BlogPost[] }) {
                   {post.tags.map((tag) => (
                     <span
                       key={tag}
-                      className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground"
+                      className="rounded-sm border border-border px-2 py-0.5 font-mono text-xs text-muted-foreground"
                     >
                       {tag}
                     </span>

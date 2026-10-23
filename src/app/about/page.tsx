@@ -35,7 +35,7 @@ export default function AboutPage() {
   return (
     <>
       <Section>
-        <h1 className="text-3xl font-bold">About Me</h1>
+        <h1 className="text-4xl font-semibold tracking-tight">About Me</h1>
         <p className="mt-4 max-w-2xl text-lg text-muted-foreground leading-relaxed">
           예약·결제·POS·KIOSK 등 상태·캐시·동기화 복잡도가 높은 도메인을 5년간
           다뤄온 프론트엔드 개발자입니다. React·TypeScript·React Query 기반의
@@ -50,7 +50,7 @@ export default function AboutPage() {
       </Section>
 
       <Section>
-        <h2 className="text-2xl font-bold">경력</h2>
+        <h2 className="text-2xl font-semibold tracking-tight">경력</h2>
         <p className="mt-1 text-sm text-muted-foreground">총 5년 1개월</p>
         <div className="mt-8 space-y-10">
           {experiences.map((exp) => (
@@ -67,7 +67,7 @@ export default function AboutPage() {
       </Section>
 
       <Section>
-        <h2 className="text-2xl font-bold">학력</h2>
+        <h2 className="text-2xl font-semibold tracking-tight">학력</h2>
         <div className="mt-8 space-y-6">
           {education.map((edu) => (
             <div key={edu.school} className="border-l-2 border-border pl-6">

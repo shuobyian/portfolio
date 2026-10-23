@@ -30,7 +30,7 @@ const contacts = [
 export default function ContactPage() {
   return (
     <Section>
-      <h1 className="text-3xl font-bold">Contact</h1>
+      <h1 className="text-4xl font-semibold tracking-tight">Contact</h1>
       <p className="mt-2 max-w-lg text-muted-foreground">
         함께 일하고 싶으시거나, 궁금한 점이 있으시면 편하게 연락해주세요.
       </p>
@@ -42,7 +42,7 @@ export default function ContactPage() {
             href={contact.href}
             target="_blank"
             rel="noopener noreferrer"
-            className="group flex flex-col items-center gap-3 rounded-lg border border-border p-8 text-center hover:border-accent/50 transition-colors"
+            className="group flex flex-col items-center gap-3 rounded-md border border-border p-8 text-center hover:border-accent/50 transition-colors"
           >
             <contact.icon
               size={24}

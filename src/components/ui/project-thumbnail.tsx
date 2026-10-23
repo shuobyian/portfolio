@@ -38,26 +38,17 @@ const ICON_MAP: Record<string, LucideIcon> = {
   "student-council": GraduationCap,
 };
 
-const COMPANY_GRADIENT: Record<string, string> = {
-  알스솔루션: "from-emerald-500 via-green-600 to-teal-700",
-  에이치티비욘드: "from-sky-500 via-blue-600 to-indigo-700",
-};
-
-const DEFAULT_GRADIENT = "from-slate-500 via-slate-600 to-slate-700";
-
 export function ProjectThumbnail({ project }: { project: Project }) {
   const Icon = ICON_MAP[project.slug] ?? Sparkles;
-  const gradient =
-    (project.company && COMPANY_GRADIENT[project.company]) ?? DEFAULT_GRADIENT;
   const patternId = `grid-${project.slug}`;
 
   return (
     <div
-      className={`relative flex h-full w-full items-center justify-center overflow-hidden bg-gradient-to-br ${gradient} text-white`}
+      className="relative flex h-full w-full items-center justify-center overflow-hidden text-muted-foreground"
     >
       <svg
         aria-hidden="true"
-        className="absolute inset-0 h-full w-full opacity-20"
+        className="absolute inset-0 h-full w-full opacity-40"
         preserveAspectRatio="none"
       >
         <defs>
@@ -70,7 +61,7 @@ export function ProjectThumbnail({ project }: { project: Project }) {
             <path
               d="M 40 0 L 0 0 0 40"
               fill="none"
-              stroke="white"
+              stroke="var(--border)"
               strokeWidth="0.5"
             />
           </pattern>
@@ -78,13 +69,10 @@ export function ProjectThumbnail({ project }: { project: Project }) {
         <rect width="100%" height="100%" fill={`url(#${patternId})`} />
       </svg>
 
-      {/* 발광 효과 */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-white/10" />
-
       <Icon
-        size={64}
-        strokeWidth={1.5}
-        className="relative drop-shadow-xl transition-transform duration-300 group-hover:scale-110"
+        size={48}
+        strokeWidth={1.25}
+        className="relative transition-colors group-hover:text-accent"
         aria-hidden="true"
       />
     </div>

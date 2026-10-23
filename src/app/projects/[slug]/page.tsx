@@ -72,7 +72,7 @@ export default async function ProjectDetail({
       {project.company && (
         <p className="mt-6 text-sm font-medium text-accent">{project.company}</p>
       )}
-      <h1 className={`text-3xl font-bold ${project.company ? "mt-1" : "mt-6"}`}>
+      <h1 className={`text-4xl font-semibold tracking-tight ${project.company ? "mt-1" : "mt-6"}`}>
         {project.title}
       </h1>
       <p className="mt-2 text-muted-foreground">{project.description}</p>
@@ -86,7 +86,7 @@ export default async function ProjectDetail({
         {project.tags.map((tag) => (
           <span
             key={tag}
-            className="rounded-full bg-muted px-3 py-1 text-xs text-muted-foreground"
+            className="rounded-sm border border-border px-2 py-0.5 font-mono text-xs text-muted-foreground"
           >
             {tag}
           </span>
@@ -100,7 +100,7 @@ export default async function ProjectDetail({
               href={project.github}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 rounded-lg border border-border px-4 py-2 text-sm hover:bg-muted transition-colors"
+              className="inline-flex items-center gap-1.5 rounded-md border border-border px-4 py-2 text-sm hover:bg-muted transition-colors"
             >
               <Github size={14} />
               GitHub
@@ -111,7 +111,7 @@ export default async function ProjectDetail({
               href={project.demo}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 rounded-lg bg-accent px-4 py-2 text-sm text-accent-foreground hover:opacity-90 transition-opacity"
+              className="inline-flex items-center gap-1.5 rounded-md bg-foreground px-4 py-2 text-sm text-background hover:opacity-85 transition-opacity"
             >
               <ExternalLink size={14} />
               Live Demo
@@ -143,7 +143,7 @@ export default async function ProjectDetail({
                 <li key={slug}>
                   <Link
                     href={`/blog/${slug}`}
-                    className="group flex items-start gap-3 rounded-lg border border-border p-4 transition-colors hover:border-accent/50"
+                    className="group flex items-start gap-3 rounded-md border border-border p-4 transition-colors hover:border-accent/50"
                   >
                     <BookOpen
                       size={16}
