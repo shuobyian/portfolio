@@ -55,9 +55,9 @@ export default function Home() {
               지금 새로운 기회 탐색 중
             </p>
             <h1 className="mt-8 text-4xl font-semibold leading-[1.15] tracking-tight sm:text-7xl">
-              안녕하세요,
+              <span className="text-accent">장수빈</span>
               <br />
-              저는 <span className="text-accent">장수빈</span>입니다.
+              subeenchang
             </h1>
             <p className="mt-8 max-w-2xl text-lg leading-relaxed text-muted-foreground sm:text-xl">
               예약·결제·POS·KIOSK처럼{" "}
