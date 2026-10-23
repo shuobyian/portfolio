@@ -138,7 +138,7 @@ const projects: Project[] = [
     featured: true,
   },
   {
-    slug: "bi-service",
+    slug: "pharmscope",
     title: "PharmScope 신규 구축",
     description:
       "의약품 출고·유통 데이터를 제약사 운영자·사내 운영자에게 시각화·분석 형태로 제공하는 의약품 유통 데이터 분석 플랫폼. 제약사용 서비스 앱과 사내 어드민 콘솔 두 프로덕트를 pnpm 모노레포 한 저장소에서 공유 패키지 기반으로 구축",
@@ -176,8 +176,8 @@ const projects: Project[] = [
     ],
     keyHighlights: [4, 5, 6],
     relatedPostSlugs: [
-      "bi-react-query-zustand-architecture",
-      "bi-query-key-cache-invalidation",
+      "pharmscope-react-query-zustand-architecture",
+      "pharmscope-query-key-cache-invalidation",
     ],
   },
   {
@@ -200,7 +200,7 @@ const projects: Project[] = [
     role: "프론트엔드 개발 (설계·구현 주도)",
     company: "알스솔루션",
     highlights: [
-      "[PharmScope](/projects/bi-service)의 데이터 공급 측 — 전처리를 끝낸 보정 결과가 고객 공개를 거쳐 PharmScope 화면의 분석 데이터가 된다",
+      "[PharmScope](/projects/pharmscope)의 데이터 공급 측 — 전처리를 끝낸 보정 결과가 고객 공개를 거쳐 PharmScope 화면의 분석 데이터가 된다",
       "문제: PharmScope에 공개될 의약품 유통 원천 데이터 중 검증에 실패한 '반려' 행을 데이터비즈팀이 일일 Excel 리포트(15시트)로 받아 검토·회신하고, 개발·운영 담당자가 그 결과를 DB에 손으로 옮겨 넣고 있었다. 팀이 직접 검수·판정·접수하고 그 결과가 배치·야간 처리·고객 공개까지 이어지는 과정을 한 화면에서 추적하도록 재설계",
       "업무 흐름을 단계로 분리: 현황 확인 → 반려 6개 탭 검수 → 초안 저장/보류 → 서버 미리보기 → 접수 → 실행 대기·보정 배치 → 고객 공개 → 감사 이력. 사람의 판정 · 규칙 저장 · 실제 실행 · 고객 공개를 서로 다른 것으로 다루고 각각 다르게 부름",
       "Excel 손놀림을 그대로 받는 검수 표: 행별 직접 입력, 선택 항목 일괄 채우기, Excel 여러 행 붙여넣기, 행 상세 패널. 열 이름·단위·용어는 팀이 Excel에서 쓰던 말을 그대로 사용",

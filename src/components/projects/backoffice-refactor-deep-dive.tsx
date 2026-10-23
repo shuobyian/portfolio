@@ -262,7 +262,7 @@ export function BackofficeRefactorDeepDive() {
         </h3>
         <p className="mt-3 leading-relaxed text-muted-foreground">
           차기{" "}
-          <Link href="/projects/bi-service" className="text-accent underline-offset-2 hover:underline">
+          <Link href="/projects/pharmscope" className="text-accent underline-offset-2 hover:underline">
             PharmScope
           </Link>
           에 Antd 도입이 결정된 상황이었다. 그대로 신규 프로젝트에서 처음 써보면

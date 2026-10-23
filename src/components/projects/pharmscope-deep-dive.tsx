@@ -691,7 +691,7 @@ function CsHandoffDiagram() {
   );
 }
 
-export function BiServiceDeepDive() {
+export function PharmscopeDeepDive() {
   return (
     <div className="mt-16 border-t border-border pt-12">
       <h2 className="text-2xl font-bold">설계 자세히 보기</h2>

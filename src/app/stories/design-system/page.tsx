@@ -38,7 +38,7 @@ const stages = [
   },
   {
     period: "2026.04 - 2026.08",
-    slug: "bi-service",
+    slug: "pharmscope",
     title: "4. PharmScope 신규 구축",
     subtitle: "검증된 패턴의 본격 적용",
     decision: "Antd 디자인 시스템 본격 적용 + 차트를 디자인 시스템에 편입",
