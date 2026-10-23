@@ -65,6 +65,10 @@ export default async function ProjectDetail({
 
   if (!project) notFound();
 
+  const keySet = new Set(project.keyHighlights);
+  const keyItems = project.highlights.filter((_, i) => keySet.has(i));
+  const restItems = project.highlights.filter((_, i) => !keySet.has(i));
+
   return (
     <Section>
       <Link
@@ -128,29 +132,34 @@ export default async function ProjectDetail({
 
       <div className="mt-12">
         <h2 className="text-xl font-semibold tracking-tight">주요 성과</h2>
-        <ol className="mt-5 grid gap-4 sm:grid-cols-2">
-          {project.highlights.map((item, i) => {
-            const { label, body } = splitHighlight(item);
-            return (
-              <li
-                key={i}
-                className="flex flex-col rounded-md border border-border bg-muted/40 p-5"
-              >
-                <div className="flex items-baseline gap-3">
-                  <span className="font-mono text-xs text-muted-foreground">
-                    {String(i + 1).padStart(2, "0")}
-                  </span>
+        {keyItems.length > 0 && (
+          <ul className="mt-5 grid gap-4 sm:grid-cols-2">
+            {keyItems.map((item, i) => {
+              const { label, body } = splitHighlight(item);
+              return (
+                <li
+                  key={i}
+                  className="flex flex-col rounded-md border border-border bg-muted/40 p-5"
+                >
                   {label && (
                     <h3 className="font-semibold tracking-tight text-accent">{label}</h3>
                   )}
-                </div>
-                <p className="mt-3 text-sm leading-relaxed text-foreground/85">
-                  {renderHighlight(body)}
-                </p>
-              </li>
-            );
-          })}
-        </ol>
+                  <p className={`${label ? "mt-3 " : ""}text-sm leading-relaxed text-foreground/85`}>
+                    {renderHighlight(body)}
+                  </p>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+        <ul className={`${keyItems.length > 0 ? "mt-8" : "mt-4"} space-y-3`}>
+          {restItems.map((item, i) => (
+            <li key={i} className="flex items-start gap-3 text-muted-foreground">
+              <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-accent" />
+              <span>{renderHighlight(item)}</span>
+            </li>
+          ))}
+        </ul>
       </div>
 
       {project.relatedPostSlugs && project.relatedPostSlugs.length > 0 && (

@@ -9,6 +9,8 @@ export interface Project {
   period: string;
   role: string;
   highlights: string[];
+  /** 상세 페이지에서 카드로 강조할 highlights 인덱스. 나머지는 목록으로 표시 */
+  keyHighlights?: number[];
   featured?: boolean;
   company?: string;
   relatedPostSlugs?: string[];
@@ -32,6 +34,7 @@ const projects: Project[] = [
       "라이트/다크 테마를 토큰 레이어에서 분기. 컴포넌트 코드는 테마 인지 없이 동작하도록 분리",
       "백오피스 신규 프로젝트의 첫 적용을 통해 토큰·컴포넌트 구조를 운영 환경에서 검증한 뒤 사내 표준 라인업으로 정착",
     ],
+    keyHighlights: [0, 2, 5],
     featured: true,
   },
   {
@@ -51,6 +54,7 @@ const projects: Project[] = [
       "파일 업로드 모듈 구현: AWS S3 업로드/다운로드 처리. 게시글 작성 흐름과 첨부 파일 생성·삭제 라이프사이클을 연동하여 게시글 단위로 파일 일관 관리",
       "이후 2026.02-03에 BI 사전 검증 목적으로 Antd 디자인 시스템으로 마이그레이션 ([사내 백오피스 리팩토링](/projects/backoffice-refactor) 참조)",
     ],
+    keyHighlights: [2, 4],
     relatedPostSlugs: ["admin-als-frontend-deployment"],
   },
   {
@@ -69,6 +73,7 @@ const projects: Project[] = [
       "SSR 환경에 최적화된 자체 디자인 시스템을 별도 설계 — 사내 Monorepo·Antd 라인과 토큰·컴포넌트 모두 분리 운영",
       "이후 2026.02-03에 React Island 패턴으로 부분 전환 ([팜브릿지 서비스 리팩토링](/projects/pharm-bridge-refactor) 참조)",
     ],
+    keyHighlights: [1, 2],
     featured: true,
   },
   {
@@ -87,6 +92,7 @@ const projects: Project[] = [
       "팀/상태 기반 색상 시각화·다중 필터링으로 대규모 프로젝트 탐색 효율 최적화",
       "Atlassian OAuth 연동 및 URL 상태 관리로 별도 저장 없이 공유 가능한 협업 환경 구축",
     ],
+    keyHighlights: [1, 2, 4],
   },
   {
     slug: "pharm-bridge-refactor",
@@ -111,6 +117,7 @@ const projects: Project[] = [
       "테스트 인프라(Jest+MSW) 구축으로 React 영역 테스트 커버리지 0% → 약 20% 확보, 회귀 안정성 확보",
       "성능 검증: 리팩토링 전후 번들·에셋 사이즈를 직접 실측해 트레이드오프 정량 확인. SearchWait 페이지 기준 jQuery 등 외부 CDN 의존(약 207 KB)은 제거됐으나 단일 페이지 첫 진입 비용은 gzip 약 111 KB → 150 KB로 증가 — 코드 스플리팅 구조라 사이트 전체·재방문 캐시 관점에서 역전 우위 여지가 있다고 분석",
     ],
+    keyHighlights: [1, 4, 5],
     featured: true,
   },
   {
@@ -127,6 +134,7 @@ const projects: Project[] = [
       "자체 Monorepo 디자인 시스템에서 Antd 기반 디자인 시스템으로 약 4주간 컴포넌트 약 40종을 무중단 점진 전환, 화면별 회귀 결함 0건",
       "기존 컴포넌트의 디자인 토큰을 Antd 컴포넌트 props·테마로 매핑하는 변환 가이드를 정의하여 화면별 영향 범위 최소화 (화면당 평균 수정 범위 약 50% 축소)",
     ],
+    keyHighlights: [1, 2],
     featured: true,
   },
   {
@@ -166,6 +174,7 @@ const projects: Project[] = [
       "배포: 정적 산출물에 API 호스트를 굽지 않고 동일 origin 상대경로만 사용해 dev·prod가 같은 이미지를 공유. 운영 네임스페이스 보안 정책에 맞춰 비루트 nginx 이미지로 전환",
       "전처리 결과의 생산 측은 [BI 데이터 전처리 백오피스](/projects/preprocess-backoffice) — 이 서비스의 어드민 '데이터 전처리' 화면과 수집 현황 요약을 공유",
     ],
+    keyHighlights: [4, 5, 6],
     relatedPostSlugs: [
       "bi-react-query-zustand-architecture",
       "bi-query-key-cache-invalidation",
@@ -205,6 +214,7 @@ const projects: Project[] = [
       "검증: node:test 252개 파일·약 1,766개 케이스 + 브라우저 E2E 6 spec(Playwright — 스모크·업무 흐름·초안·신원·셸·화면 설정). 응답을 받지 못한 쓰기 네 흐름은 화면을 그려 실제로 버튼을 누르는 수준까지 검사. `pnpm verify`가 포맷 → 디자인 시스템 빌드 → lint → 타입체크 → 전체 시험 → 앱 빌드 → 운영 번들에 예시 데이터가 섞였는지 검사까지 한 줄로 수행",
       "미검증 범위를 성과로 포장하지 않음: 실제 SSO 세션 검증은 개발 origin의 `redirect_uri` 미허용으로 아직 못 했고, 서버 권한·감사·멱등성과 예약 스케줄러·DAG 실행은 실환경에서 확인하지 않았음을 저장소 문서에 명시",
     ],
+    keyHighlights: [2, 4, 5],
   },
   {
     slug: "community-platform",
@@ -235,6 +245,7 @@ const projects: Project[] = [
       "기획·디자인 협업: 예약 창구 중복 검증 결과를 단일 에러가 아닌 충돌 자원 목록 모달로 보여주도록 역제안 → 운영팀이 충돌 자원을 즉시 식별·재배정 가능하도록 개선",
       "기획·디자인 협업: 예약 시간 설정 화면 복잡도가 높아 고객사가 직접 설정에 어려움을 겪던 상황. 정보 그룹 단위 박스 처리·배치 재구성을 역제안하여 진입 장벽 완화",
     ],
+    keyHighlights: [1, 2, 4],
     featured: true,
   },
   {
@@ -261,6 +272,7 @@ const projects: Project[] = [
       "POS(가로 1024×768) · KIOSK(세로 1024×1920) 두 가지 화면 방향·비율을 Tailwind 토큰으로 추상화하여 동일 컴포넌트로 양 환경 대응",
       "트러블슈팅: 한 매장에 메인(직원)+서브(고객) 두 대의 독립 크롬 윈도우가 동시에 떠 결제 상태·주문 내역·세션을 실시간 공유해야 하는 요구. 팀 내 윈도우 간 통신 선례가 없는 상황에서 WebSocket 서버 신설 없이 동일 origin 내에서 해결 가능한 Web API Broadcast Channel을 1차 채널로 채택하고, 메시지 유실에 대비해 localStorage event를 백업 채널로 두는 이중 구조 설계. 수신 측에서 메시지를 받아 React Query invalidate를 호출하는 방식으로 두 화면 동기화 통합",
     ],
+    keyHighlights: [2, 4],
     featured: true,
     relatedPostSlugs: ["post-message-browser-communication"],
   },
@@ -288,6 +300,7 @@ const projects: Project[] = [
       "전역 Modal / Bottom Sheet 구현으로 모바일 네비게이션 및 백버튼 대응 (모바일 네비게이션 관련 버그 약 60% 감소)",
       "Storybook 기반 디자인 시스템 구축 및 공통 컴포넌트 개발",
     ],
+    keyHighlights: [1, 3],
     relatedPostSlugs: ["global-modal-bottom-sheet", "coupon-code-bottom-sheet"],
   },
   {
@@ -316,6 +329,7 @@ const projects: Project[] = [
       "nginx 정적 콘텐츠 실행을 위한 build 폴더 권한 자동화 (chmod 755 + /home/htbeyond에 711 — 다른 팀 폴더에 영향을 주지 않으면서 nginx만 통과 가능하도록 최소 권한)",
       "Git Tag 기반 버전 관리 전략 수립 (dev / alpha / prod) — 환경별 배포 흐름 일관화",
     ],
+    keyHighlights: [0, 1, 2],
     relatedPostSlugs: ["edge-deployment-pipeline", "linux-permissions-nginx"],
   },
   {
@@ -331,6 +345,7 @@ const projects: Project[] = [
       "사용자 입력 기반 계산 로직 및 결과 시각화 구현",
       "실제 게임 유저 대상 서비스 운영, 누적 사용자 약 3.3천 명·재방문율 약 30% 확보",
     ],
+    keyHighlights: [2],
   },
   {
     slug: "byby-quiz",
@@ -345,6 +360,7 @@ const projects: Project[] = [
       "문제 진행 상태 및 점수 집계 로직 구현",
       "실시간 진행 상태·점수 집계 로직 구현 완료, 동시 참여 약 50명 안정 처리",
     ],
+    keyHighlights: [2],
   },
   {
     slug: "e-voting",
@@ -360,6 +376,7 @@ const projects: Project[] = [
       "데이터 무결성을 고려한 투표 기록 관리",
       "데이터 무결성 기반 투표 시스템으로 교내 프로그래밍 경진대회 2위 수상",
     ],
+    keyHighlights: [3],
   },
   {
     slug: "student-council",
@@ -375,6 +392,7 @@ const projects: Project[] = [
       "학과 정보 및 공지 사항 관리 화면 개발",
       "학생회 운영 도메인 전반을 단일 웹 애플리케이션으로 통합, 물품·공지 관리 업무 처리 시간 약 80% 단축",
     ],
+    keyHighlights: [3],
   },
 ];
 
