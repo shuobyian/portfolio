@@ -37,7 +37,8 @@
   --color-border: var(--border);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
-  --font-sans: var(--font-geist-sans);
+  /* 영문은 Geist, Geist에 없는 한글 글리프는 Pretendard로 넘어간다 */
+  --font-sans: var(--font-geist-sans), "Pretendard Variable", Pretendard, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono);
 }
 
