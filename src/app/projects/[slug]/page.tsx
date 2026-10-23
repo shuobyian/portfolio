@@ -31,8 +31,33 @@ function renderHighlight(text: string) {
         </Link>
       );
     }
-    return <span key={i}>{part}</span>;
+    return <span key={i}>{renderMetrics(part)}</span>;
   });
+}
+
+// "5건 → 1건", "약 60% 감소" 같은 숫자 변화
+const NUM = String.raw`(?:약\s*)?\d[\d.,]*\s*(?:%|KB|[가-힣]{1,2})?`;
+const METRIC = new RegExp(
+  String.raw`(${NUM}(?:\s[가-힣]{1,3})?\s*→\s*${NUM}|(?:약\s*)?\d[\d.,]*\s*%\s*(?:감소|축소|단축|증가|개선|향상))`,
+);
+
+function renderMetrics(text: string) {
+  // split에 캡처 그룹을 쓰면 홀수 인덱스가 매칭된 숫자 변화
+  return text.split(METRIC).map((part, i) =>
+    i % 2 ? (
+      <strong key={i} className="rounded-sm bg-accent/10 px-1 font-semibold text-accent">
+        {part}
+      </strong>
+    ) : (
+      part
+    ),
+  );
+}
+
+// "의사결정: 본문"처럼 짧은 라벨로 시작하면 카드 제목과 본문으로 나눈다
+function splitHighlight(text: string) {
+  const match = text.match(/^([^:\n]{1,30}): ([\s\S]+)$/);
+  return match ? { label: match[1], body: match[2] } : { label: null, body: text };
 }
 
 export function generateStaticParams() {
@@ -58,6 +83,10 @@ export default async function ProjectDetail({
   const project = getProjectBySlug(slug);
 
   if (!project) notFound();
+
+  const keySet = new Set(project.keyHighlights);
+  const keyItems = project.highlights.filter((_, i) => keySet.has(i));
+  const restItems = project.highlights.filter((_, i) => !keySet.has(i));
 
   return (
     <Section>
@@ -121,9 +150,29 @@ export default async function ProjectDetail({
       )}
 
       <div className="mt-12">
-        <h2 className="text-xl font-semibold">주요 성과</h2>
-        <ul className="mt-4 space-y-3">
-          {project.highlights.map((item, i) => (
+        <h2 className="text-xl font-semibold tracking-tight">주요 성과</h2>
+        {keyItems.length > 0 && (
+          <ul className="mt-5 grid gap-4 sm:grid-cols-2">
+            {keyItems.map((item, i) => {
+              const { label, body } = splitHighlight(item);
+              return (
+                <li
+                  key={i}
+                  className="flex flex-col rounded-md border border-border bg-muted/40 p-5"
+                >
+                  {label && (
+                    <h3 className="font-semibold tracking-tight text-accent">{label}</h3>
+                  )}
+                  <p className={`${label ? "mt-3 " : ""}text-sm leading-relaxed text-foreground/85`}>
+                    {renderHighlight(body)}
+                  </p>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+        <ul className={`${keyItems.length > 0 ? "mt-8" : "mt-4"} space-y-3`}>
+          {restItems.map((item, i) => (
             <li key={i} className="flex items-start gap-3 text-muted-foreground">
               <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-accent" />
               <span>{renderHighlight(item)}</span>
