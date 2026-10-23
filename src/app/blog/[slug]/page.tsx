@@ -104,7 +104,7 @@ export default async function BlogPost({
         블로그 목록
       </Link>
 
-      <h1 className="mt-6 text-3xl font-bold">{post.title}</h1>
+      <h1 className="mt-6 text-4xl font-semibold tracking-tight">{post.title}</h1>
 
       <div className="mt-3 flex items-center gap-4 text-sm text-muted-foreground">
         <span className="flex items-center gap-1">
@@ -121,7 +121,7 @@ export default async function BlogPost({
         {post.tags.map((tag) => (
           <span
             key={tag}
-            className="rounded-full bg-muted px-2.5 py-0.5 text-xs text-muted-foreground"
+            className="rounded-sm border border-border px-2 py-0.5 font-mono text-xs text-muted-foreground"
           >
             {tag}
           </span>

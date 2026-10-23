@@ -73,8 +73,8 @@ export default function CommunityPlatformEvolutionStory() {
       </Link>
 
       <div className="mt-6">
-        <p className="text-sm font-medium text-accent">Highlight Story</p>
-        <h1 className="mt-2 text-3xl font-bold sm:text-4xl">
+        <p className="font-mono text-xs uppercase tracking-[0.2em] text-accent">Highlight Story</p>
+        <h1 className="mt-2 text-4xl font-semibold leading-[1.15] tracking-tight sm:text-5xl">
           커뮤니티 + 파트너스 4년의 점진 개선
         </h1>
         <p className="mt-4 max-w-2xl text-lg text-muted-foreground leading-relaxed">
@@ -84,7 +84,7 @@ export default function CommunityPlatformEvolutionStory() {
         </p>
       </div>
 
-      <div className="mt-12 rounded-lg border border-border bg-muted/30 p-6">
+      <div className="mt-12 border-y border-border py-6">
         <p className="mb-2 text-sm font-medium text-accent">
           이 흐름에서 제가 배운 것
         </p>
@@ -100,25 +100,25 @@ export default function CommunityPlatformEvolutionStory() {
         </p>
       </div>
 
-      <div className="mt-16 rounded-lg border border-accent/30 bg-accent/5 p-6">
+      <div className="mt-16 border-l-2 border-accent pl-6">
         <p className="mb-2 text-sm font-medium uppercase tracking-wide text-accent">
           정량 지표
         </p>
         <div className="grid gap-4 sm:grid-cols-3">
           <div>
-            <p className="text-2xl font-bold">500개 단지</p>
+            <p className="text-2xl font-semibold tracking-tight">500개 단지</p>
             <p className="mt-1 text-sm text-muted-foreground">
               플랫폼이 배포된 아파트 단지 수
             </p>
           </div>
           <div>
-            <p className="text-2xl font-bold">MAU 10만</p>
+            <p className="text-2xl font-semibold tracking-tight">MAU 10만</p>
             <p className="mt-1 text-sm text-muted-foreground">
               월 활성 사용자 규모
             </p>
           </div>
           <div>
-            <p className="text-2xl font-bold">5건 → 1건</p>
+            <p className="text-2xl font-semibold tracking-tight">5건 → 1건</p>
             <p className="mt-1 text-sm text-muted-foreground">
               테스트 체계 도입 후 월 평균 핫픽스
             </p>
@@ -134,10 +134,10 @@ export default function CommunityPlatformEvolutionStory() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-50px" }}
               transition={{ duration: 0.4 }}
-              className="rounded-lg border border-border p-6 transition-colors hover:border-accent/50"
+              className="border-t border-border pt-8"
             >
-              <p className="text-sm text-muted-foreground">{stage.period}</p>
-              <h2 className="mt-1 text-2xl font-bold">{stage.title}</h2>
+              <p className="font-mono text-sm text-muted-foreground">{stage.period}</p>
+              <h2 className="mt-1 text-2xl font-semibold tracking-tight">{stage.title}</h2>
               <p className="mt-1 text-sm text-accent">{stage.subtitle}</p>
 
               <div className="mt-6 grid gap-6 md:grid-cols-2">
@@ -181,7 +181,7 @@ export default function CommunityPlatformEvolutionStory() {
                 <div className="mt-2">
                   <ArrowDown size={16} className="text-accent" />
                 </div>
-                <div className="flex-1 rounded-lg border border-dashed border-border px-4 py-3">
+                <div className="flex-1 border-l-2 border-dashed border-border py-1 pl-4">
                   <p className="text-xs font-medium uppercase tracking-wide text-accent">
                     다음 단계로
                   </p>
@@ -195,8 +195,8 @@ export default function CommunityPlatformEvolutionStory() {
         ))}
       </div>
 
-      <div className="mt-16 rounded-lg border border-border bg-muted/30 p-6">
-        <h2 className="text-xl font-bold">덧붙임: 기획·디자인과 함께 만든 사례</h2>
+      <div className="mt-16 border-y border-border py-6">
+        <h2 className="text-xl font-semibold tracking-tight">덧붙임: 기획·디자인과 함께 만든 사례</h2>
         <ul className="mt-4 space-y-3 leading-relaxed text-muted-foreground">
           <li>
             ・ <strong className="text-foreground">예약 창구 중복 모달</strong>{" "}
@@ -216,8 +216,8 @@ export default function CommunityPlatformEvolutionStory() {
         </ul>
       </div>
 
-      <div className="mt-12 rounded-lg border border-accent/30 bg-accent/5 p-6">
-        <h2 className="text-xl font-bold">회고: 다시 한다면</h2>
+      <div className="mt-12 border-l-2 border-accent pl-6">
+        <h2 className="text-xl font-semibold tracking-tight">회고: 다시 한다면</h2>
         <ul className="mt-4 space-y-3 leading-relaxed text-muted-foreground">
           <li>
             ・ 1단계 합류 시점에 두 프로덕트의 도메인 모델을 더 빨리

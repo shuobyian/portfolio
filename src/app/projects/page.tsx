@@ -55,7 +55,7 @@ export default function ProjectsPage() {
 
   return (
     <Section>
-      <h1 className="text-3xl font-bold">Projects</h1>
+      <h1 className="text-4xl font-semibold tracking-tight">Projects</h1>
       <p className="mt-2 text-muted-foreground">
         지금까지 진행한 프로젝트들을 회사별로 정리했습니다.
       </p>
@@ -64,10 +64,10 @@ export default function ProjectsPage() {
       <div className="mt-8 flex flex-wrap gap-2">
         <button
           onClick={() => setFilter(null)}
-          className={`rounded-full px-3 py-1 text-sm transition-colors ${
+          className={`rounded-md border px-3 py-1 text-sm transition-colors ${
             filter === null
-              ? "bg-accent text-accent-foreground"
-              : "bg-muted text-muted-foreground hover:text-foreground"
+              ? "border-foreground bg-foreground text-background"
+              : "border-border text-muted-foreground hover:text-foreground"
           }`}
         >
           전체
@@ -76,10 +76,10 @@ export default function ProjectsPage() {
           <button
             key={tag}
             onClick={() => setFilter(filter === tag ? null : tag)}
-            className={`rounded-full px-3 py-1 text-sm transition-colors ${
+            className={`rounded-md border px-3 py-1 text-sm transition-colors ${
               filter === tag
-                ? "bg-accent text-accent-foreground"
-                : "bg-muted text-muted-foreground hover:text-foreground"
+                ? "border-foreground bg-foreground text-background"
+                : "border-border text-muted-foreground hover:text-foreground"
             }`}
           >
             {tag}
@@ -95,7 +95,7 @@ export default function ProjectsPage() {
           return (
             <div key={company.name}>
               <div className="mb-6 border-l-2 border-accent pl-4">
-                <h2 className="text-2xl font-bold">{company.name}</h2>
+                <h2 className="text-2xl font-semibold tracking-tight">{company.name}</h2>
                 <p className="mt-1 text-sm text-muted-foreground">
                   {company.period} · {company.role}
                 </p>
@@ -112,7 +112,7 @@ export default function ProjectsPage() {
         {personal.length > 0 && (
           <div>
             <div className="mb-6 border-l-2 border-border pl-4">
-              <h2 className="text-2xl font-bold">개인 프로젝트</h2>
+              <h2 className="text-2xl font-semibold tracking-tight">개인 프로젝트</h2>
               <p className="mt-1 text-sm text-muted-foreground">
                 사이드 프로젝트
               </p>

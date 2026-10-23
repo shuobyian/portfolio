@@ -12,7 +12,7 @@ export default function BlogPage() {
 
   return (
     <Section>
-      <h1 className="text-3xl font-bold">Blog</h1>
+      <h1 className="text-4xl font-semibold tracking-tight">Blog</h1>
       <p className="mt-2 text-muted-foreground">
         개발하면서 배운 것들을 주제별로 정리합니다.
       </p>
