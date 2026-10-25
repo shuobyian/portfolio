@@ -773,7 +773,7 @@ export function PharmscopeDeepDive() {
           3. 차트를 디자인 시스템 안으로
         </h3>
         <p className="mt-3 leading-relaxed text-muted-foreground">
-          PharmScope에서 차트는 부속이 아니라 제품 그 자체다. 화면마다 라이브러리를
+          팜스코프에서 차트는 부속이 아니라 제품 그 자체다. 화면마다 라이브러리를
           직접 부르면 팔레트와 축 설정이 화면 수만큼 갈라진다. 그래서 화면은 공유
           래퍼 6종만 쓰고, 래퍼만 단일 동적 진입점을 통해 라이브러리를 로드한다.
         </p>

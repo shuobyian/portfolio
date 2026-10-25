@@ -1,13 +1,13 @@
 ---
-title: "Query Key는 캐시 주소이자 계정 경계다 — PharmScope의 React Query 캐시 규칙"
-description: "Query Key 설계 규칙, mutation 이후 cancel → invalidate 순서, 삭제 시 remove가 필요한 이유, 그리고 계정 전환·늦은 401을 다루는 세션 세대 스코프까지. PharmScope 두 앱이 공유하는 캐시 정책을 정리했다."
+title: "Query Key는 캐시 주소이자 계정 경계다 — 팜스코프의 React Query 캐시 규칙"
+description: "Query Key 설계 규칙, mutation 이후 cancel → invalidate 순서, 삭제 시 remove가 필요한 이유, 그리고 계정 전환·늦은 401을 다루는 세션 세대 스코프까지. 팜스코프 두 앱이 공유하는 캐시 정책을 정리했다."
 date: "2026-08-28"
 tags: ["React Query", "캐시", "Query Key", "Architecture", "세션"]
 category: "React"
 type: "project"
 ---
 
-> [PharmScope 신규 구축](/projects/pharmscope)
+> [팜스코프 신규 구축](/projects/pharmscope)
 
 [앞 글](/blog/pharmscope-react-query-zustand-architecture)에서 서버 상태(React Query)와 클라이언트 전역 상태(Zustand)를 어떻게 나눴는지 정리했다. 이 글은 그 다음 문제다. **서버 상태를 React Query에 맡기기로 했다면, 그 캐시를 언제 어떻게 갱신할 것인가.**
 
