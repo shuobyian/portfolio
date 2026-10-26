@@ -29,7 +29,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ko" suppressHydrationWarning>
+    // 모바일 탭 바 밑으로 Tab 포커스가 숨지 않게, 포커스를 따라 스크롤할 때 아래 탭 바만큼을 가려진 곳으로 친다
+    <html lang="ko" suppressHydrationWarning className="scroll-pb-24 md:scroll-pb-0">
       <head>
         {/* 한글 본문용 Pretendard — 사용한 글자 범위만 내려받는 dynamic subset */}
         <link
