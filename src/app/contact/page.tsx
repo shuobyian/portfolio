@@ -1,5 +1,6 @@
 import { Github, Mail, Phone } from "lucide-react";
 import { Section } from "@/components/ui/section";
+import { Card } from "@/components/ui/card";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -37,21 +38,24 @@ export default function ContactPage() {
 
       <div className="mt-12 grid gap-6 sm:grid-cols-3">
         {contacts.map((contact) => (
+          // hover는 움직이지 않는 링크가 받고 안쪽 카드만 떠오른다
           <a
             key={contact.label}
             href={contact.href}
             target="_blank"
             rel="noopener noreferrer"
-            className="group flex flex-col items-center gap-3 rounded-md border border-border p-8 text-center hover:border-accent/50 transition-colors"
+            className="group block rounded-md"
           >
-            <contact.icon
-              size={24}
-              className="text-muted-foreground group-hover:text-accent transition-colors"
-            />
-            <span className="font-medium">{contact.label}</span>
-            <span className="text-sm text-muted-foreground">
-              {contact.value}
-            </span>
+            <Card overText className="flex h-full flex-col items-center gap-3 border border-border p-8 text-center">
+              <contact.icon
+                size={24}
+                className="text-muted-foreground group-hover:text-accent transition-colors"
+              />
+              <span className="font-medium">{contact.label}</span>
+              <span className="text-sm text-muted-foreground">
+                {contact.value}
+              </span>
+            </Card>
           </a>
         ))}
       </div>

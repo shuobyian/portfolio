@@ -1,7 +1,10 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
-@custom-variant dark (&:where(.dark, .dark *));
+/* glassy도 어두운 바탕 위 밝은 글자라서 dark: 변형을 함께 받는다 */
+@custom-variant dark (&:where(.dark, .dark *, .glassy, .glassy *));
+/* 떠오름·광택 같은 hover 효과는 glassy에서만 준다 */
+@custom-variant glassy (&:where(.glassy, .glassy *));
 
 :root {
   --background: #fbfaf7;
@@ -11,6 +14,10 @@
   --border: #e4dfd5;
   --accent: #6d28d9;
   --accent-foreground: #ffffff;
+  /* 떠 있는 유리 면(liquid-glass) — 진한 버튼이 밑을 지나가도 글자가 4.5:1을 유지하는 불투명도 */
+  --glass: rgb(251 250 247 / 0.9);
+  --glass-highlight: rgb(255 255 255 / 0.9);
+  --glass-shadow: rgb(28 25 23 / 0.08);
 }
 
 .dark {
@@ -21,6 +28,40 @@
   --border: #2e2b27;
   --accent: #a78bfa;
   --accent-foreground: #131210;
+  --glass: rgb(19 18 16 / 0.85);
+  --glass-highlight: rgb(255 255 255 / 0.1);
+  --glass-shadow: rgb(0 0 0 / 0.4);
+}
+
+/*
+ * 아이폰 Liquid Glass를 참고한 테마 — 채도 높은 배경화면 위에 반투명 유리 면을 띄운다.
+ * 면(background·muted·border)은 흰색 반투명이라 겹칠수록 진해지고, 글자색은
+ * 배경화면에서 가장 밝은 지점 + 유리 두 겹 위에서도 4.5:1 이상이 나오도록 골랐다.
+ */
+.glassy {
+  --background: rgb(255 255 255 / 0.05);
+  --foreground: #f5f5f7;
+  --muted: rgb(255 255 255 / 0.07);
+  --muted-foreground: #c8c3dd;
+  --border: rgb(255 255 255 / 0.14);
+  --accent: #d9bdff;
+  --accent-foreground: #1a0b2e;
+  /* 흰 버튼이 밑을 지나가도 글자가 4.5:1을 유지하도록 흰색 대신 바탕색으로 물들인다 */
+  --glass: rgb(7 6 26 / 0.6);
+  --glass-highlight: rgb(255 255 255 / 0.3);
+  --glass-shadow: rgb(0 0 0 / 0.35);
+  /* iOS의 둥근 모서리 — rounded-md·rounded-lg 유틸이 이 변수를 읽는다 */
+  --radius-md: 0.875rem;
+  --radius-lg: 1.25rem;
+}
+
+/* 손쉬운 사용 > 투명도 줄이기와 같은 설정이면 유리 면을 불투명하게 바꾼다 */
+@media (prefers-reduced-transparency: reduce) {
+  .glassy {
+    --background: #15132e;
+    --muted: #1d1a3a;
+    --border: #3a3660;
+  }
 }
 
 @theme inline {
@@ -44,6 +85,49 @@ body {
   overflow-wrap: break-word;
   /* 테마 전환은 body만 부드럽게 — 모든 요소에 transition을 걸면 전환이 버벅인다 */
   transition: background-color 0.3s ease, color 0.15s ease;
+}
+
+.glassy body {
+  background: #07061a;
+}
+
+/* 배경화면 — iOS Safari는 background-attachment: fixed를 무시해서 고정 의사 요소로 깐다 */
+.glassy body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(60% 50% at 10% 5%, rgb(124 58 237 / 0.45), transparent),
+    radial-gradient(55% 45% at 90% 10%, rgb(37 99 235 / 0.4), transparent),
+    radial-gradient(60% 50% at 90% 95%, rgb(219 39 119 / 0.35), transparent),
+    radial-gradient(55% 45% at 5% 90%, rgb(6 182 212 / 0.25), transparent),
+    radial-gradient(45% 35% at 50% 50%, rgb(79 70 229 / 0.18), transparent);
+}
+
+/* --background가 반투명 유리라서, 그 색을 글자색으로 쓰는 곳(반전 버튼, 강조색 원 위 SVG 글자)만 불투명하게 되돌린다 */
+.glassy .text-background {
+  color: #07061a;
+}
+.glassy .fill-background {
+  fill: #07061a;
+}
+
+/* 떠 있는 유리 면 — 뒤를 흐리고 채도를 올린 뒤, 위쪽 테두리에 빛 반사를 얹는다. 색은 테마별 --glass* 변수 */
+@utility liquid-glass {
+  background-color: var(--glass);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  backdrop-filter: blur(24px) saturate(180%);
+  box-shadow:
+    inset 0 1px 0 var(--glass-highlight),
+    inset 0 -1px 0 rgb(255 255 255 / 0.06),
+    0 8px 32px var(--glass-shadow);
+
+  @media (prefers-reduced-transparency: reduce) {
+    background-color: var(--muted);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
 }
 
 /* 블로그 본문(prose) 색을 사이트 토큰에 맞춘다 — 토큰이 테마별로 바뀌므로 invert 값도 같게 둔다 */

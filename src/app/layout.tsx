@@ -29,7 +29,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ko" suppressHydrationWarning>
+    // 모바일 탭 바 밑으로 Tab 포커스가 숨지 않게, 포커스를 따라 스크롤할 때 아래 탭 바만큼을 가려진 곳으로 친다
+    <html lang="ko" suppressHydrationWarning className="scroll-pb-24 md:scroll-pb-0">
       <head>
         {/* 한글 본문용 Pretendard — 사용한 글자 범위만 내려받는 dynamic subset */}
         <link
@@ -42,7 +43,8 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased`}
       >
         <ThemeProvider>
-          <div className="flex min-h-screen flex-col">
+          {/* 모바일에서는 화면 아래 떠 있는 탭 바(높이 64px + 띄운 12px)에 푸터가 가리지 않게 여백을 둔다 */}
+          <div className="flex min-h-screen flex-col pb-24 md:pb-0">
             <Nav />
             <main className="flex-1 pt-20">{children}</main>
             <Footer />
