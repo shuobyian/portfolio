@@ -8,12 +8,13 @@ import { ProjectCard } from "@/components/ui/project-card";
 import { getFeaturedProjects } from "@/lib/projects";
 
 const skills = [
-  { category: "Frontend", items: ["React", "TypeScript", "JavaScript", "HTML/CSS", "Next.js"] },
-  { category: "State / Data", items: ["React Query", "Redux", "Recoil", "Zod"] },
-  { category: "UI / Design System", items: ["Tailwind CSS", "Ant Design", "MUI", "Bootstrap", "Storybook"] },
-  { category: "Test", items: ["Jest", "MSW"] },
-  { category: "Infra / DevOps", items: ["AWS", "Jenkins", "GitHub Actions", "Docker", "Ansible"] },
+  { category: "Frontend", items: ["React", "TypeScript", "JavaScript", "HTML/CSS", "Next.js", "Vite", "pnpm Monorepo"] },
+  { category: "State / Data", items: ["React Query", "Zustand", "Redux", "Recoil", "Zod"] },
+  { category: "UI / Design System", items: ["Tailwind CSS", "Ant Design", "Emotion", "MUI", "Bootstrap", "Storybook"] },
+  { category: "Test", items: ["Vitest", "Playwright", "Jest", "MSW", "node:test"] },
+  { category: "Infra / DevOps", items: ["AWS (S3, Amplify, CodeArtifact)", "Jenkins", "GitHub Actions", "Docker", "Ansible"] },
   { category: "Backend", items: ["Node.js", "NestJS", "PostgreSQL", "MySQL"] },
+  { category: "AI Workflow", items: ["Claude Code", "Cursor"] },
 ];
 
 const stories = [

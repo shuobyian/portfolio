@@ -22,12 +22,13 @@ React·TypeScript 기반 아키텍처 개선, 디자인 시스템 구축, 테스
 
 ## 기술 스택
 
-- **Frontend** — React, TypeScript, JavaScript, Next.js, HTML/CSS
-- **State / Data** — React Query, Redux, Recoil, Zod
-- **UI / Design System** — Tailwind CSS, Ant Design, MUI, Bootstrap, Storybook
-- **Test** — Jest, MSW
-- **Infra / DevOps** — AWS, Jenkins, GitHub Actions, Docker, Ansible
+- **Frontend** — React, TypeScript, JavaScript, HTML/CSS, Next.js, Vite, pnpm Monorepo
+- **State / Data** — React Query, Zustand, Redux, Recoil, Zod
+- **UI / Design System** — Tailwind CSS, Ant Design, Emotion, MUI, Bootstrap, Storybook
+- **Test** — Vitest, Playwright, Jest, MSW, node:test
+- **Infra / DevOps** — AWS (S3, Amplify, CodeArtifact), Jenkins, GitHub Actions, Docker, Ansible
 - **Backend** — Node.js, NestJS, PostgreSQL, MySQL
+- **AI Workflow** — Claude Code, Cursor
 
 ---
 
@@ -44,6 +45,8 @@ React·TypeScript 기반 아키텍처 개선, 디자인 시스템 구축, 테스
 | **WBS 시스템 구축**                   | 프론트엔드 개발   | 2026.01 ~ 02      | Jira REST API, Atlassian OAuth, 낙관적 업데이트      |
 | **팜브릿지 서비스 재구축**            | 프론트엔드 개발   | 2025.07 ~ 12      | Vanilla JS, Spring 전환, 자체 디자인 시스템          |
 | **사내 백오피스 신규 구축**           | 설계·구현 단독    | 2025.05 ~ 06      | React, TypeScript, Monorepo 디자인 시스템, AWS S3    |
+| **PWA·Electron 알림 환경 구축**       | 프론트엔드 개발   | 2025.04           | PWA, Electron, Service Worker, FCM                   |
+| **프론트엔드 표준화 및 CI/CD 정착**   | 프론트엔드 개발   | 2025.03 ~         | 사내 npm 패키지, ESLint, Jenkins, AWS CodeArtifact   |
 | **디자인 시스템 구축**                | 설계·구현 주도    | 2025.03 ~ 04      | Bootstrap, CSS Variables, Monorepo                   |
 
 ### (주)에이치티비욘드 · 2021.08 ~ 2024.12
