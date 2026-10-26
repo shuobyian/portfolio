@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, BookOpen, ExternalLink, Github } from "lucide-react";
 import Link from "next/link";
 import { Section } from "@/components/ui/section";
+import { GlassSheen } from "@/components/ui/glass-sheen";
 import { getAllProjects, getProjectBySlug } from "@/lib/projects";
 import { getPostBySlug } from "@/lib/blog";
 import { PosKioskDeepDive } from "@/components/projects/pos-kiosk-deep-dive";
@@ -156,14 +157,16 @@ export default async function ProjectDetail({
             {keyItems.map((item, i) => {
               const { label, body } = splitHighlight(item);
               return (
+                // 프로젝트 카드처럼 hover하면 떠오르며 강조색으로 빛나고 유리 광택이 생긴다. 광택은 글자 아래에 깐다
                 <li
                   key={i}
-                  className="flex flex-col rounded-md border border-border bg-muted/40 p-5"
+                  className="group relative flex flex-col overflow-hidden rounded-md border border-border bg-muted/40 p-5 transition duration-300 ease-out hover:border-accent/60 hover:shadow-xl hover:shadow-accent/20 motion-safe:hover:-translate-y-1.5"
                 >
+                  <GlassSheen gloss="from-white/10" />
                   {label && (
-                    <h3 className="font-semibold tracking-tight text-accent">{label}</h3>
+                    <h3 className="relative font-semibold tracking-tight text-accent">{label}</h3>
                   )}
-                  <p className={`${label ? "mt-3 " : ""}text-sm leading-relaxed text-foreground/85`}>
+                  <p className={`relative ${label ? "mt-3 " : ""}text-sm leading-relaxed text-foreground/85`}>
                     {renderHighlight(body)}
                   </p>
                 </li>
