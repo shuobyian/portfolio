@@ -9,11 +9,11 @@ import { pillClass } from "@/components/ui/pill";
 import { motion, AnimatePresence } from "framer-motion";
 
 const links = [
-  { href: "/", label: "Home" },
-  { href: "/about", label: "About" },
-  { href: "/projects", label: "Projects" },
-  { href: "/blog", label: "Blog" },
-  { href: "/contact", label: "Contact" },
+  { href: "/", label: "홈" },
+  { href: "/about", label: "소개" },
+  { href: "/projects", label: "프로젝트" },
+  { href: "/blog", label: "블로그" },
+  { href: "/contact", label: "연락처" },
 ];
 
 export function Nav() {
