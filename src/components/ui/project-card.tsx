@@ -8,8 +8,9 @@ import { ProjectThumbnail } from "./project-thumbnail";
 export function ProjectCard({ project }: { project: Project }) {
   return (
     <Link href={`/projects/${project.slug}`}>
-      <article className="group">
-        <div className="relative aspect-video overflow-hidden rounded-md border border-border bg-muted">
+      {/* hover하면 카드가 떠오르고, 썸네일 테두리와 그림자가 강조색으로 빛난다 */}
+      <article className="group transition-transform duration-300 ease-out motion-safe:hover:-translate-y-1.5">
+        <div className="relative aspect-video overflow-hidden rounded-md border border-border bg-muted transition duration-300 group-hover:border-accent/60 group-hover:shadow-xl group-hover:shadow-accent/20">
           {project.thumbnail ? (
             <Image
               src={project.thumbnail}
