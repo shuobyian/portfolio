@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { ListChecks } from "lucide-react";
 import { Section } from "@/components/ui/section";
 import { ProjectCard } from "@/components/ui/project-card";
 import { tagClass } from "@/components/ui/pill";
@@ -72,11 +73,34 @@ export default function ProjectsPage() {
     () => groupTags(Array.from(new Set(projects.flatMap((p) => p.tags)))),
     [projects]
   );
-  const [filter, setFilter] = useState<string | null>(null);
+  // 여러 태그를 고를 수 있고, 고른 태그 중 하나라도 있는 프로젝트를 보여준다. 비어 있으면 전체
+  const [selected, setSelected] = useState<string[]>([]);
+  const has = (tag: string) => selected.includes(tag);
+  const toggleTag = (tag: string) =>
+    setSelected(has(tag) ? selected.filter((t) => t !== tag) : [...selected, tag]);
+  // 분류를 누르면 그 분류의 태그를 모두 고르고, 이미 모두 골라져 있으면 모두 뺀다
+  const toggleGroup = (tags: string[]) =>
+    setSelected(
+      tags.every(has)
+        ? selected.filter((t) => !tags.includes(t))
+        : [...selected, ...tags.filter((t) => !has(t))]
+    );
 
-  const filtered = filter
-    ? projects.filter((p) => p.tags.includes(filter))
+  const filtered = selected.length
+    ? projects.filter((p) => p.tags.some(has))
     : projects;
+
+  // 접힌 필터 버튼에 보일 요약 — 통째로 고른 분류는 분류 이름으로, 나머지는 태그 이름으로 센다
+  const fullGroups = tagGroups.filter((g) => g.tags.every(has));
+  const names = [
+    ...fullGroups.map((g) => g.label),
+    ...selected.filter((t) => !fullGroups.some((g) => g.tags.includes(t))),
+  ];
+  const summary = !names.length
+    ? "전체"
+    : names.length === 1
+      ? names[0]
+      : `${names[0]} 외 ${names.length - 1}개`;
 
   const grouped = useMemo(() => groupByCompany(filtered), [filtered]);
   const personal = grouped["__personal__"] ?? [];
@@ -89,33 +113,50 @@ export default function ProjectsPage() {
       </p>
 
       {/* Tag Filter */}
-      <FilterChips label="태그" current={filter ?? "전체"} className="mt-8">
-        <div className="w-full space-y-3">
+      <FilterChips label="카테고리" current={summary} className="mt-8">
+        {/* 모바일에서는 전체와 분류 버튼만 칩처럼 늘어놓고, 넓은 화면에서는 분류마다 줄을 나눠 왼쪽 열에 분류, 오른쪽에 태그를 둔다 */}
+        <div className="flex w-full flex-wrap gap-2 md:block md:space-y-3">
           <button
-            onClick={() => setFilter(null)}
-            className={tagClass(filter === null)}
+            aria-pressed={!selected.length}
+            onClick={() => setSelected([])}
+            className={tagClass(!selected.length)}
           >
             전체
           </button>
-          {/* 모바일에서는 분류 이름을 칩 위에, 넓은 화면에서는 왼쪽 열에 둔다 */}
-          {tagGroups.map((group) => (
-            <div key={group.label} className="flex flex-col gap-2 sm:flex-row">
-              <span className="shrink-0 text-xs font-medium text-muted-foreground sm:w-32 sm:pt-1.5">
-                {group.label}
-              </span>
-              <div className="flex flex-wrap gap-2">
-                {group.tags.map((tag) => (
+          {tagGroups.map((group) => {
+            const allSelected = fullGroups.includes(group);
+            // 넓은 화면에서 일부 태그만 골라 둔 채 모바일로 바뀌어도 어느 분류에 필터가 걸렸는지 보이게, 일부 선택은 점선 테두리로 표시한다
+            const someSelected = !allSelected && group.tags.some(has);
+            return (
+              <div key={group.label} className="contents md:flex md:gap-2">
+                {/* 분류 이름이 곧 전체 선택 버튼이다. 모바일에서는 태그 칩과 같은 모양이고,
+                    넓은 화면에서는 테두리 없는 작은 알약으로 바꾸고 음수 마진으로 글자를 칩 열에 맞춘다 */}
+                <div className="contents md:block md:w-32 md:shrink-0 md:pt-[3px]">
                   <button
-                    key={tag}
-                    onClick={() => setFilter(filter === tag ? null : tag)}
-                    className={tagClass(filter === tag)}
+                    aria-pressed={someSelected ? "mixed" : allSelected}
+                    title={`${group.label} 태그 ${allSelected ? "모두 빼기" : "모두 고르기"}`}
+                    onClick={() => toggleGroup(group.tags)}
+                    className={`inline-flex items-center gap-1 ${tagClass(allSelected)} ${someSelected ? "border-dashed" : ""} md:-ml-2 md:border-0 md:px-2 md:text-xs md:font-medium`}
                   >
-                    {tag}
+                    <ListChecks size={12} />
+                    {group.label}
                   </button>
-                ))}
+                </div>
+                <div className="hidden flex-wrap gap-2 md:flex">
+                  {group.tags.map((tag) => (
+                    <button
+                      key={tag}
+                      aria-pressed={has(tag)}
+                      onClick={() => toggleTag(tag)}
+                      className={tagClass(has(tag))}
+                    >
+                      {tag}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </FilterChips>
 
