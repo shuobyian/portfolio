@@ -838,7 +838,46 @@ export function PharmscopeDeepDive() {
 
       <div className="mt-8 rounded-lg border border-border p-6">
         <h3 className="text-sm font-medium uppercase tracking-wide text-accent">
-          6. 운영자가 고객 화면을 그대로 보는 길
+          6. 권한과 세션 판단이 어긋나지 않게
+        </h3>
+        <p className="mt-3 leading-relaxed text-muted-foreground">
+          역할은 알스마스터·알스어드민·계약사마스터·계약사일반 4종이다. 같은 권한
+          조건이 화면 곳곳에서 따로 정의되면{" "}
+          <strong className="text-foreground">
+            &ldquo;버튼은 보이는데 누르면 튕기는&rdquo;
+          </strong>{" "}
+          화면이 생긴다. 세션도 마찬가지로, 무엇을 로그아웃으로 볼지가 갈라지면
+          일시 오류에 사용자가 쫓겨나거나 지워야 할 세션이 남는다.
+        </p>
+        <div className="mt-4 space-y-3 text-sm leading-relaxed text-muted-foreground">
+          <p>
+            <strong className="text-foreground">세 지점, 같은 조건.</strong>{" "}
+            ①버튼·메뉴 미렌더 ②라우트 가드 ③페이지 가드가 같은 조건을 보도록
+            맞췄다. 테스트도 책임을 나눴다 — 역할 헬퍼는 단위 테스트, 실제 route
+            object는 통합 테스트, 브라우저 동작은 E2E가 맡는다.
+          </p>
+          <p>
+            <strong className="text-foreground">
+              인증 원본은 서버 쿠키 하나.
+            </strong>{" "}
+            인증 원본은 서버의 HttpOnly 쿠키이고, 클라이언트 상태는 화면 표시용
+            캐시일 뿐이다. 로그아웃은 401/403에서만 일어나고, 네트워크 오류나
+            5xx에서는 재시도 상태를 유지한다.
+          </p>
+          <p>
+            <strong className="text-foreground">
+              늦게 온 401과 남은 흔적.
+            </strong>{" "}
+            늦게 도착한 401은 세션 세대로 어느 세션의 응답인지 분류한다. 세션
+            흔적 정리는 스토어 한 경로로만 내려, 다계정 복원 힌트가 남아 다른
+            계정으로 세션이 되살아나는 경로를 막았다.
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-8 rounded-lg border border-border p-6">
+        <h3 className="text-sm font-medium uppercase tracking-wide text-accent">
+          7. 운영자가 고객 화면을 그대로 보는 길
         </h3>
         <p className="mt-3 leading-relaxed text-muted-foreground">
           고객센터 문의는 &ldquo;제 화면에 이게 안 나와요&rdquo;로 온다. 운영자가
@@ -885,7 +924,7 @@ export function PharmscopeDeepDive() {
 
       <div className="mt-8 rounded-lg border border-accent/30 bg-accent/5 p-6">
         <h3 className="text-sm font-medium uppercase tracking-wide text-accent">
-          7. 분석 도구를 붙이면서 계약사 데이터는 내보내지 않기
+          8. 분석 도구를 붙이면서 계약사 데이터는 내보내지 않기
         </h3>
         <p className="mt-3 leading-relaxed text-muted-foreground">
           어떤 화면이 실제로 쓰이는지 알아야 다음 개선을 고를 수 있어서 GA4와
