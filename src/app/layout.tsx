@@ -42,7 +42,8 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased`}
       >
         <ThemeProvider>
-          <div className="flex min-h-screen flex-col">
+          {/* 모바일에서는 화면 아래 떠 있는 탭 바(높이 64px + 띄운 12px)에 푸터가 가리지 않게 여백을 둔다 */}
+          <div className="flex min-h-screen flex-col pb-24 md:pb-0">
             <Nav />
             <main className="flex-1 pt-20">{children}</main>
             <Footer />
