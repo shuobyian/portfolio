@@ -3,16 +3,16 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { Project } from "@/lib/projects";
-import { GlassSheen } from "./glass-sheen";
+import { Card, cardLift } from "./card";
 import { ProjectThumbnail } from "./project-thumbnail";
 
 export function ProjectCard({ project }: { project: Project }) {
   return (
     // hover는 움직이지 않는 링크가 받는다 — 떠오른 카드가 받으면 아래 가장자리에서 포인터를 벗어났다 돌아오길 반복한다
     <Link href={`/projects/${project.slug}`} className="group block">
-      {/* glassy에서 hover하면 카드가 떠오르고, 썸네일 테두리와 그림자가 강조색으로 빛난다 */}
-      <article className="transition-transform duration-300 ease-out glassy:motion-safe:group-hover:-translate-y-1.5">
-        <div className="relative aspect-video overflow-hidden rounded-md border border-border bg-muted transition duration-300 glassy:group-hover:border-accent/60 glassy:group-hover:shadow-xl glassy:group-hover:shadow-accent/20">
+      {/* glassy에서 hover하면 글까지 함께 떠오르고, 빛나는 유리 카드는 썸네일만이다 */}
+      <article className={cardLift}>
+        <Card lift={false} className="aspect-video border border-border bg-muted">
           {project.thumbnail ? (
             <Image
               src={project.thumbnail}
@@ -23,8 +23,7 @@ export function ProjectCard({ project }: { project: Project }) {
           ) : (
             <ProjectThumbnail project={project} />
           )}
-          <GlassSheen />
-        </div>
+        </Card>
         <div className="pt-4">
           {project.company && (
             <p className="mb-1 text-xs text-muted-foreground">{project.company}</p>

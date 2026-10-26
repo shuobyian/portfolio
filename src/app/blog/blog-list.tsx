@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { Calendar, Clock } from "lucide-react";
 import type { BlogPost, PostType } from "@/lib/blog";
-import { GlassSheen } from "@/components/ui/glass-sheen";
+import { Card } from "@/components/ui/card";
 import { pillClass, tagClass } from "@/components/ui/pill";
 import { FilterChips } from "@/components/ui/filter-chips";
 
@@ -117,43 +117,40 @@ export function BlogList({ posts }: { posts: BlogPost[] }) {
               href={`/blog/${post.slug}`}
               className="group block glassy:-mx-4"
             >
-              {/* 넓어진 만큼 안쪽 여백을 줘서 글 위치는 그대로 둔다. 테두리는 레이아웃을 바꾸지 않게 ring으로 그린다 */}
-              <article className="relative overflow-hidden rounded-md py-7 transition duration-300 ease-out glassy:px-4 glassy:group-hover:bg-muted/40 glassy:group-hover:shadow-xl glassy:group-hover:shadow-accent/20 glassy:group-hover:ring-1 glassy:group-hover:ring-accent/60 glassy:motion-safe:group-hover:-translate-y-1.5">
-                <GlassSheen overText />
-                <div className="relative">
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono text-xs text-accent">
-                      {post.category}
-                    </span>
-                  </div>
-                  <h3 className="mt-2 text-xl font-semibold tracking-tight transition-colors group-hover:text-accent">
-                    {post.title}
-                  </h3>
-                  <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">
-                    {post.description}
-                  </p>
-                  <div className="mt-3 flex items-center gap-4 text-xs text-muted-foreground">
-                    <span className="flex items-center gap-1">
-                      <Calendar size={12} />
-                      {post.date}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Clock size={12} />
-                      {post.readingTime}
-                    </span>
-                  </div>
-                  <div className="mt-3 flex flex-wrap gap-1.5">
-                    {post.tags.map((tag) => (
-                      <span
-                        key={tag}
-                        className="rounded-sm border border-border px-2 py-0.5 font-mono text-xs text-muted-foreground"
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
+              {/* 넓어진 만큼 안쪽 여백을 줘서 글 위치는 그대로 둔다. 평소엔 목록이라 배경은 hover할 때만 깐다 */}
+              <Card as="article" overText className="py-7 glassy:px-4 glassy:group-hover:bg-muted/40">
+                <div className="flex items-center gap-2">
+                  <span className="font-mono text-xs text-accent">
+                    {post.category}
+                  </span>
                 </div>
-              </article>
+                <h3 className="mt-2 text-xl font-semibold tracking-tight transition-colors group-hover:text-accent">
+                  {post.title}
+                </h3>
+                <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">
+                  {post.description}
+                </p>
+                <div className="mt-3 flex items-center gap-4 text-xs text-muted-foreground">
+                  <span className="flex items-center gap-1">
+                    <Calendar size={12} />
+                    {post.date}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Clock size={12} />
+                    {post.readingTime}
+                  </span>
+                </div>
+                <div className="mt-3 flex flex-wrap gap-1.5">
+                  {post.tags.map((tag) => (
+                    <span
+                      key={tag}
+                      className="rounded-sm border border-border px-2 py-0.5 font-mono text-xs text-muted-foreground"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              </Card>
             </Link>
           ))}
         </div>

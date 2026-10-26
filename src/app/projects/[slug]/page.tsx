@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, BookOpen, ExternalLink, Github } from "lucide-react";
 import Link from "next/link";
 import { Section } from "@/components/ui/section";
-import { GlassSheen } from "@/components/ui/glass-sheen";
+import { Card } from "@/components/ui/card";
 import { getAllProjects, getProjectBySlug } from "@/lib/projects";
 import { getPostBySlug } from "@/lib/blog";
 import { PosKioskDeepDive } from "@/components/projects/pos-kiosk-deep-dive";
@@ -157,18 +157,16 @@ export default async function ProjectDetail({
             {keyItems.map((item, i) => {
               const { label, body } = splitHighlight(item);
               return (
-                // glassy에서 hover하면 프로젝트 카드처럼 떠오르며 강조색으로 빛나고 유리 광택이 생긴다. 광택은 글자 아래에 깐다.
                 // hover는 움직이지 않는 li가 받고 안쪽 카드만 떠오른다
                 <li key={i} className="group">
-                  <div className="relative flex h-full flex-col overflow-hidden rounded-md border border-border bg-muted/40 p-5 transition duration-300 ease-out glassy:group-hover:border-accent/60 glassy:group-hover:shadow-xl glassy:group-hover:shadow-accent/20 glassy:motion-safe:group-hover:-translate-y-1.5">
-                    <GlassSheen overText />
+                  <Card overText className="h-full border border-border bg-muted/40 p-5">
                     {label && (
-                      <h3 className="relative font-semibold tracking-tight text-accent">{label}</h3>
+                      <h3 className="font-semibold tracking-tight text-accent">{label}</h3>
                     )}
-                    <p className={`relative ${label ? "mt-3 " : ""}text-sm leading-relaxed text-foreground/85`}>
+                    <p className={`${label ? "mt-3 " : ""}text-sm leading-relaxed text-foreground/85`}>
                       {renderHighlight(body)}
                     </p>
-                  </div>
+                  </Card>
                 </li>
               );
             })}
@@ -193,22 +191,22 @@ export default async function ProjectDetail({
               if (!post) return null;
               return (
                 <li key={slug}>
-                  <Link
-                    href={`/blog/${slug}`}
-                    className="group flex items-start gap-3 rounded-md border border-border p-4 transition-colors hover:border-accent/50"
-                  >
-                    <BookOpen
-                      size={16}
-                      className="mt-1 flex-shrink-0 text-accent"
-                    />
-                    <div className="min-w-0">
-                      <p className="font-medium transition-colors group-hover:text-accent">
-                        {post.title}
-                      </p>
-                      <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
-                        {post.description}
-                      </p>
-                    </div>
+                  {/* hover는 움직이지 않는 링크가 받고 안쪽 카드만 떠오른다 */}
+                  <Link href={`/blog/${slug}`} className="group block rounded-md">
+                    <Card overText className="flex items-start gap-3 border border-border p-4">
+                      <BookOpen
+                        size={16}
+                        className="mt-1 flex-shrink-0 text-accent"
+                      />
+                      <div className="min-w-0">
+                        <p className="font-medium transition-colors group-hover:text-accent">
+                          {post.title}
+                        </p>
+                        <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
+                          {post.description}
+                        </p>
+                      </div>
+                    </Card>
                   </Link>
                 </li>
               );
