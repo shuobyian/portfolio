@@ -20,7 +20,8 @@ export function Nav() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <header className="fixed inset-x-0 top-0 z-50 border-b border-border bg-background/90 backdrop-blur-sm">
+    // glassy에서는 화면 끝에 붙은 띠 대신 iOS 탭 바처럼 떠 있는 유리 캡슐이 된다
+    <header className="fixed inset-x-0 top-0 z-50 border-b border-border bg-background/90 backdrop-blur-sm glassy:inset-x-3 glassy:top-3 glassy:mx-auto glassy:max-w-5xl glassy:rounded-[2rem] glassy:border glassy:liquid-glass">
       <div className="mx-auto max-w-5xl px-6">
         <nav className="flex h-16 items-center justify-between gap-2">
           <Link
@@ -39,10 +40,11 @@ export function Nav() {
                   key={link.href}
                   href={link.href}
                   aria-current={active ? "page" : undefined}
-                  className={`text-sm underline-offset-[6px] transition-colors ${
+                  // glassy: 음수 마진으로 자리를 그대로 둔 채 선택 항목에 유리 알약을 깐다
+                  className={`text-sm underline-offset-[6px] transition-colors glassy:-mx-2.5 glassy:rounded-full glassy:px-2.5 glassy:py-1.5 ${
                     active
-                      ? "text-foreground underline decoration-accent decoration-2"
-                      : "text-muted-foreground hover:text-foreground"
+                      ? "text-foreground underline decoration-accent decoration-2 glassy:bg-white/15 glassy:no-underline"
+                      : "text-muted-foreground hover:text-foreground glassy:hover:bg-white/10"
                   }`}
                 >
                   {link.label}
