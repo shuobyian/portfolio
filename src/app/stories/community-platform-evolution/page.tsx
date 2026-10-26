@@ -75,11 +75,11 @@ export default function CommunityPlatformEvolutionStory() {
       <div className="mt-6">
         <p className="font-mono text-xs uppercase tracking-[0.2em] text-accent">Highlight Story</p>
         <h1 className="mt-2 text-4xl font-semibold leading-[1.15] tracking-tight sm:text-5xl">
-          커뮤니티 + 파트너스 4년의 점진 개선
+          커뮤니티 + 파트너스 3년 5개월의 점진 개선
         </h1>
         <p className="mt-4 max-w-2xl text-lg text-muted-foreground leading-relaxed">
           전국 500개 단지·MAU 10만 규모의 커뮤니티 플랫폼을 커뮤니티와 파트너스
-          두 프로덕트에 걸쳐 4년 가까이 운영하며, 어떤 점진적 개선들을
+          두 프로덕트에 걸쳐 3년 5개월 동안 운영하며, 어떤 점진적 개선들을
           누적했는지 정리해봤습니다.
         </p>
       </div>
@@ -95,7 +95,7 @@ export default function CommunityPlatformEvolutionStory() {
           </strong>
           를 골라 실행한 누적이었습니다. 두 프로덕트의 모든 부채를 다 갚을
           수는 없지만, 각 시점에 ‘다음 분기를 더 살게 만드는 결정 하나’를
-          고르는 — 그 ‘우선순위 선정’이 4년 동안 가장 많이 한 일이었다고
+          고르는 — 그 ‘우선순위 선정’이 3년 5개월 동안 가장 많이 한 일이었다고
           생각합니다.
         </p>
       </div>
@@ -229,7 +229,7 @@ export default function CommunityPlatformEvolutionStory() {
             빨리 볼 수 있었을 것 같습니다.
           </li>
           <li>
-            ・ 4년 동안 두 프로덕트에서 누적된 변화는 이벤트성 결정이 아니라,
+            ・ 3년 5개월 동안 두 프로덕트에서 누적된 변화는 이벤트성 결정이 아니라,
             분기마다 미루지 않은 작은 결정의 합이었다는 점을 가장 크게
             배웠습니다.
           </li>

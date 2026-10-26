@@ -18,6 +18,44 @@ export interface Project {
 
 const projects: Project[] = [
   {
+    slug: "frontend-standardization",
+    title: "프론트엔드 표준화 및 CI/CD 정착",
+    description:
+      "신설 조직의 멀티 프로젝트 환경에서 개발 컨벤션·빌드·배포 흐름을 단일 표준으로 정착시킨 기반 작업. 공통 API·ESLint 설정을 사내 npm 패키지로 분리하고, Jenkins CI/CD에 AWS CodeArtifact 인증을 자동 연동",
+    tags: ["Monorepo", "사내 npm 패키지", "ESLint", "Jenkins", "AWS CodeArtifact"],
+    period: "2025.03 - 재직중",
+    role: "프론트엔드 개발",
+    company: "알스솔루션",
+    highlights: [
+      "공통 패키지 분리: 공통 API·ESLint 설정을 사내 표준 npm 패키지로 분리해 사내 전 프론트엔드 프로젝트의 개발 컨벤션·빌드 환경을 일원화. 입사 3개월 만에 프론트엔드 표준을 0→1로 정착",
+      "앱끼리는 서로 의존하지 않고 부트스트랩(@als/fe-kit)·API 계약(@als/als-api)·린트(@als/eslint-config-als) 3개 공유 라이브러리로만 단방향 결합하는 구조",
+      "CI/CD 단일 파이프라인: Jenkins 기반 CI/CD에 AWS CodeArtifact 인증 자동화를 연동해 멀티 프로젝트 빌드·배포를 하나의 파이프라인으로 표준화. 신규 프로젝트 빌드·배포 소요 시간 약 60% 단축",
+      "온보딩 시간 단축: Jenkins 스크립트를 Git 저장소로 이관하고 환경 설정을 문서화해 신규 합류자 개발 환경 셋업 시간을 약 1일 → 1시간 이내로 단축",
+      "공유 라이브러리의 정확버전 핀·툴체인 메이저 drift 리스크를 정리하고, 버전 일괄 관리 도구(als-deps)와 CI drift 감시 잡으로 재발을 차단",
+      "프로젝트 특성에 맞춰 디자인 시스템 4종을 별도 설계·운영 ([디자인 시스템 구축](/projects/design-system)부터 시작)",
+    ],
+    keyHighlights: [0, 2, 3],
+    relatedPostSlugs: ["als-multirepo-fanin-architecture"],
+  },
+  {
+    slug: "pwa-notification",
+    title: "PWA·Electron 알림 환경 구축",
+    description:
+      "웹(PWA)과 데스크톱(Electron) 양쪽에서 푸시 알림을 받을 수 있도록 FCM 기반 Push 서버를 구축하고, 환경마다 다른 알림 권한 모델을 단일 인터페이스로 추상화한 작업",
+    tags: ["PWA", "Electron", "Vite", "Service Worker", "FCM"],
+    period: "2025.04",
+    role: "프론트엔드 개발",
+    company: "알스솔루션",
+    highlights: [
+      "FCM Push 서버 구축: Firebase Cloud Messaging과 VAPID 키(공개 키는 PWA, 비공개 키는 서버)로 웹 푸시 발송 경로를 구성하고, 클라이언트가 발급받은 FCM 토큰을 서버에 저장해 발송 대상으로 관리",
+      "권한 모델 추상화: PWA와 Electron의 환경별 알림 권한 모델 차이를 단일 인터페이스로 추상화",
+      "Vite 환경 PWA 구성: vite-plugin-pwa의 registerSW로 서비스 워커를 등록하고 manifest·업데이트 전략(autoUpdate / prompt)을 빌드에 통합",
+      "포그라운드 메시지는 앱의 onMessage로, 백그라운드 메시지는 별도 서비스 워커(firebase-messaging-sw.js)의 onBackgroundMessage로 나눠 수신",
+    ],
+    keyHighlights: [0, 1],
+    relatedPostSlugs: ["pwa-vite-service-worker", "pwa-push-notification-fcm"],
+  },
+  {
     slug: "design-system",
     title: "디자인 시스템 구축",
     description:
@@ -164,15 +202,17 @@ const projects: Project[] = [
       "라이브러리의 이중 축 컴포넌트가 자식별 y 스케일을 독립 강제해 라인이 소실되는 문제를, 두 마크가 스케일을 공유하도록 차트 뷰를 직접 조립한 컴포넌트로 해결 — 래퍼 층 덕분에 대응이 공유 패키지 안에서 끝나, 명령형 차트 뷰로 내려간 사실이 화면으로 번지지 않음",
       "아키텍처 규약을 문서가 아니라 도구로 강제: 단방향 import·feature 간 직접 참조 금지는 lint 에러로, SDK 호출을 데이터 레이어로 제한하는 경계는 테스트로 고정",
       "동시성·세션 경계 설계: 조회 함수 65개에 취소 신호를 관통 전달해 실제 HTTP 취소 적용, 세션 세대로 늦게 도착한 401을 분류. 세션 흔적 정리는 스토어 한 경로로만 내려 다계정 복원 힌트가 남아 다른 계정으로 세션이 되살아나는 경로를 차단",
+      "인증 계약 설계: 인증 원본은 서버 HttpOnly 쿠키로 두고 클라이언트 상태는 표시용 캐시로 한정. 401/403만 로그아웃으로 처리하고 네트워크 오류·5xx는 재시도 상태를 유지",
       "권한 설계: 알스마스터·알스어드민·계약사마스터·계약사일반 4종 역할에 대해 ①버튼·메뉴 미렌더 ②라우트 가드 ③페이지 가드 세 지점의 조건을 일치시켜 \"버튼은 보이는데 누르면 튕기는\" 불일치를 제거. 역할 헬퍼 단위 테스트 · 실제 route object 통합 테스트 · 브라우저 E2E를 각각 다른 책임으로 분리",
       "CS 고객 화면 보기: 어드민이 계약사 화면을 그대로 보는 세션을 창 간 postMessage로 인계. 양쪽 모두 상대 origin을 명시(`'*'` 금지)하고 `event.origin`·`event.source`를 검증하며, 토큰은 메모리에만 두고 결과는 토큰 없는 응답으로 회신. CS 탭은 분석 스크립트 미로드 · 쿠키 세션 복원 생략 · 토큰 없는 요청 차단 · 읽기 전용 가드로 격리하고, 세션 종료도 일반 로그아웃과 분리해 같은 브라우저의 본인 세션을 끊지 않도록 설계",
       "분석 도구(GA4 · Microsoft Clarity)를 계약사 데이터 유출 없이 도입: 개인정보 parameter 제거와 `page_location` 정제를 공통 client에 두어 deep link 토큰까지 자동 차단, 사용자 식별은 인증 스토어 구독 한 곳으로 모아 모든 로그아웃·만료 경로에서 자동 해제. Clarity 마스킹은 대시보드 설정이 아니라 `<body>` 속성으로 코드에서 강제 — Antd Modal·Drawer가 `#root` 밖으로 portal되기 때문",
       "실시간 알림센터: SSE 스트림으로 보정 반영 알림을 수신하고 토스트·데스크톱 알림·인박스를 공유 패키지 모듈로 통합",
+      "라우트 코드 스플리팅에서 React.lazy가 한 번 실패한 로드를 확정 저장해 다시 시도해도 복구되지 않는 문제를 세대 기반 재시도 래퍼로 해소",
       "테스트 233개 파일·1,389개 케이스(Vitest) + 역할별 인증 E2E 31개(Playwright, 8 spec). 리렌더 횟수가 계약인 화면은 렌더 카운팅 스텁으로 memo 무력화 회귀를 검출",
       "배포: 정적 산출물에 API 호스트를 굽지 않고 동일 origin 상대경로만 사용해 dev·prod가 같은 이미지를 공유. 운영 네임스페이스 보안 정책에 맞춰 비루트 nginx 이미지로 전환",
       "전처리 결과의 생산 측은 [팜스코프 데이터 전처리 백오피스](/projects/preprocess-backoffice) — 이 서비스의 어드민 '데이터 전처리' 화면과 수집 현황 요약을 공유",
     ],
-    keyHighlights: [4, 5, 6],
+    keyHighlights: [4, 5, 7],
     relatedPostSlugs: [
       "pharmscope-react-query-zustand-architecture",
       "pharmscope-query-key-cache-invalidation",

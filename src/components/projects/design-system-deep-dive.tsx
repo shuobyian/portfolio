@@ -340,7 +340,7 @@ export function DesignSystemDeepDive() {
       <p className="mt-2 text-muted-foreground">
         신설 조직이라 참고할 사내 자산이 없었다. 무엇을 기준으로 베이스를 골랐고,
         사내 정체성을 어느 층에 올렸으며, 왜 컴포넌트를 패키지 단위로 쪼갰는지 —
-        이후 사내 디자인 시스템 3종의 출발점이 된 결정들.
+        사내 디자인 시스템 4종 가운데 첫 번째를 만들며 내린 결정들.
       </p>
 
       <div className="mt-8">
@@ -427,7 +427,7 @@ export function DesignSystemDeepDive() {
           라인업으로 정착시켰다.
         </p>
         <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-          → 이 프로젝트가 이후 사내 디자인 시스템 3종의 출발점이 됐다. 전체
+          → 이 프로젝트가 사내 디자인 시스템 4종 가운데 첫 번째다. 전체
           흐름은{" "}
           <Link
             href="/stories/design-system"

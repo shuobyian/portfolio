@@ -11,10 +11,10 @@
 
 ■ 핵심 기술 스택
 
-· Frontend : React, TypeScript, JavaScript, HTML, CSS
-· State/Data : React Query, Redux, Recoil, Zod
-· UI/Design : Tailwind CSS, Ant Design, MUI, Bootstrap, Storybook
-· Test : Jest, MSW
+· Frontend : React, TypeScript, JavaScript, HTML, CSS, Vite, pnpm Monorepo
+· State/Data : React Query, Zustand, Redux, Recoil, Zod
+· UI/Design : Tailwind CSS, Ant Design, Emotion, MUI, Bootstrap, Storybook
+· Test : Vitest, Playwright, Jest, MSW, node:test
 · Infra/DevOps : AWS(S3, Amplify, CodeArtifact), Jenkins, GitHub Actions, Docker, Ansible
 · Backend : Node.js, NestJS, PostgreSQL, MySQL
 · AI Workflow : Claude Code, Cursor — 설계·리팩토링·리뷰 보조로 활용, 결과는 코드 리뷰 관점에서 검증·선별 적용

@@ -8,12 +8,13 @@ import { ProjectCard } from "@/components/ui/project-card";
 import { getFeaturedProjects } from "@/lib/projects";
 
 const skills = [
-  { category: "Frontend", items: ["React", "TypeScript", "JavaScript", "HTML/CSS", "Next.js"] },
-  { category: "State / Data", items: ["React Query", "Redux", "Recoil", "Zod"] },
-  { category: "UI / Design System", items: ["Tailwind CSS", "Ant Design", "MUI", "Bootstrap", "Storybook"] },
-  { category: "Test", items: ["Jest", "MSW"] },
-  { category: "Infra / DevOps", items: ["AWS", "Jenkins", "GitHub Actions", "Docker", "Ansible"] },
+  { category: "Frontend", items: ["React", "TypeScript", "JavaScript", "HTML/CSS", "Next.js", "Vite", "pnpm Monorepo"] },
+  { category: "State / Data", items: ["React Query", "Zustand", "Redux", "Recoil", "Zod"] },
+  { category: "UI / Design System", items: ["Tailwind CSS", "Ant Design", "Emotion", "MUI", "Bootstrap", "Storybook"] },
+  { category: "Test", items: ["Vitest", "Playwright", "Jest", "MSW", "node:test"] },
+  { category: "Infra / DevOps", items: ["AWS (S3, Amplify, CodeArtifact)", "Jenkins", "GitHub Actions", "Docker", "Ansible"] },
   { category: "Backend", items: ["Node.js", "NestJS", "PostgreSQL", "MySQL"] },
+  { category: "AI Workflow", items: ["Claude Code", "Cursor"] },
 ];
 
 const stories = [
@@ -21,19 +22,19 @@ const stories = [
     slug: "design-system",
     title: "디자인 시스템의 4단 진화",
     summary:
-      "신설 조직의 시스템을 0→1로 만든 뒤, 4개 프로젝트에 걸쳐 어떻게 진화시켰는지에 대한 약 1년의 흐름.",
+      "신설 조직의 시스템을 0→1로 만든 뒤, 4개 프로젝트에 걸쳐 어떻게 진화시켰는지에 대한 약 1년 반의 흐름.",
   },
   {
     slug: "pharm-bridge-evolution",
     title: "팜브릿지: Vanilla → React Island",
     summary:
-      "한 프로젝트가 ‘그 시점의 최선’으로 만들어진 뒤, 운영하며 마주친 한계를 같은 제약 안에서 진화시킨 8개월.",
+      "한 프로젝트가 ‘그 시점의 최선’으로 만들어진 뒤, 운영하며 마주친 한계를 같은 제약 안에서 진화시킨 9개월.",
   },
   {
     slug: "community-platform-evolution",
-    title: "커뮤니티 + 파트너스 4년의 점진 개선",
+    title: "커뮤니티 + 파트너스 3년 5개월의 점진 개선",
     summary:
-      "전국 500개 단지·MAU 10만 규모의 커뮤니티와 파트너스 두 프로덕트를 4년간 운영하며 누적한 점진적 개선의 기록.",
+      "전국 500개 단지·MAU 10만 규모의 커뮤니티와 파트너스 두 프로덕트를 3년 5개월간 운영하며 누적한 점진적 개선의 기록.",
   },
 ];
 

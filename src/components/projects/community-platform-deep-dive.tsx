@@ -1,5 +1,5 @@
 const scaleStats = [
-  { value: "3년 4개월", unit: "", label: "재직 기간 중 가장 오래 맡은 제품" },
+  { value: "3년 5개월", unit: "", label: "재직 기간 중 가장 오래 맡은 제품" },
   { value: "500", unit: "개 단지", label: "MAU 10만 규모" },
   { value: "5", unit: "종", label: "예약 도메인 (시간·공간·강좌·숙박·레슨)" },
   { value: "2", unit: "프로덕트", label: "커뮤니티 운영툴 · 파트너스" },
@@ -424,7 +424,7 @@ export function CommunityPlatformDeepDive() {
     <div className="mt-16 border-t border-border pt-12">
       <h2 className="text-2xl font-bold">운영하며 바꾼 것들</h2>
       <p className="mt-2 text-muted-foreground">
-        3년 4개월간 굴러가는 제품 위에서 진행한 작업이라, 모든 변경의 전제가
+        3년 5개월간 굴러가는 제품 위에서 진행한 작업이라, 모든 변경의 전제가
         &ldquo;멈추지 않는다&rdquo;였다. 상태 소유자를 나누고, 타입을 입히고,
         테스트를 처음 들이고, 화면 설계를 역제안하기까지 — 각각을 어떤 순서로
         했는지.

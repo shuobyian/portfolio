@@ -248,8 +248,8 @@ export function PharmBridgeRefactorDeepDive() {
               <strong className="text-foreground">유지보수성</strong> — 이번
               전환의 본래 동기. Vanilla JS에서 화면 단위로 결합돼 있던 상태·이벤트를
               도메인별 훅·유틸로 분리하고 React Query로 API·캐싱·에러 처리를
-              일원화, 테스트 인프라(Jest+MSW)까지 확보해 변경 시 영향 범위를
-              좁힘.
+              일원화, 테스트 인프라(Jest+MSW)를 구축해 React 영역 테스트
+              커버리지를 0% → 약 20%로 올려 변경 시 영향 범위를 좁힘.
             </span>
           </li>
         </ul>
