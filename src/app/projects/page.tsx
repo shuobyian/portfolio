@@ -36,6 +36,14 @@ function groupByCompany(projects: Project[]): Record<string, Project[]> {
   return byCompany;
 }
 
+// 테두리 있는 알약 — 선택하면 내비 메뉴처럼 배경이 깔리고, hover하면 빛 반사·그림자를 달고 떠오른다
+const tagClass = (selected: boolean) =>
+  `rounded-full border px-3 py-1 text-sm transition duration-200 ease-out motion-safe:active:scale-95 ${
+    selected
+      ? "border-foreground/30 bg-foreground/15 text-foreground"
+      : "border-border text-muted-foreground hover:border-foreground/30 hover:bg-foreground/15 hover:text-foreground hover:shadow-[inset_0_1px_0_var(--glass-highlight),0_4px_14px_var(--glass-shadow)] motion-safe:hover:scale-105"
+  }`;
+
 export default function ProjectsPage() {
   const projects = getAllProjects();
   const allTags = useMemo(
@@ -62,11 +70,7 @@ export default function ProjectsPage() {
       <div className="mt-8 flex flex-wrap gap-2">
         <button
           onClick={() => setFilter(null)}
-          className={`rounded-md border px-3 py-1 text-sm transition-colors ${
-            filter === null
-              ? "border-foreground bg-foreground text-background"
-              : "border-border text-muted-foreground hover:text-foreground"
-          }`}
+          className={tagClass(filter === null)}
         >
           전체
         </button>
@@ -74,11 +78,7 @@ export default function ProjectsPage() {
           <button
             key={tag}
             onClick={() => setFilter(filter === tag ? null : tag)}
-            className={`rounded-md border px-3 py-1 text-sm transition-colors ${
-              filter === tag
-                ? "border-foreground bg-foreground text-background"
-                : "border-border text-muted-foreground hover:text-foreground"
-            }`}
+            className={tagClass(filter === tag)}
           >
             {tag}
           </button>
