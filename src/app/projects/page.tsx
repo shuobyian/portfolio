@@ -4,6 +4,7 @@ import { useState, useMemo } from "react";
 import { Section } from "@/components/ui/section";
 import { ProjectCard } from "@/components/ui/project-card";
 import { tagClass } from "@/components/ui/pill";
+import { FilterChips } from "@/components/ui/filter-chips";
 import {
   getAllProjects,
   parsePeriodStart,
@@ -60,7 +61,7 @@ export default function ProjectsPage() {
       </p>
 
       {/* Tag Filter */}
-      <div className="mt-8 flex flex-wrap gap-2">
+      <FilterChips label="태그" current={filter ?? "전체"} className="mt-8">
         <button
           onClick={() => setFilter(null)}
           className={tagClass(filter === null)}
@@ -76,7 +77,7 @@ export default function ProjectsPage() {
             {tag}
           </button>
         ))}
-      </div>
+      </FilterChips>
 
       {/* Company Sections */}
       <div className="mt-12 space-y-16">

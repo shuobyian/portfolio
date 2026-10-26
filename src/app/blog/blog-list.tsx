@@ -6,6 +6,7 @@ import { Calendar, Clock } from "lucide-react";
 import type { BlogPost, PostType } from "@/lib/blog";
 import { GlassSheen } from "@/components/ui/glass-sheen";
 import { pillClass, tagClass } from "@/components/ui/pill";
+import { FilterChips } from "@/components/ui/filter-chips";
 
 const CATEGORY_ORDER = [
   "React",
@@ -77,7 +78,7 @@ export function BlogList({ posts }: { posts: BlogPost[] }) {
       </div>
 
       {/* Category badges (scoped to selected type) */}
-      <div className="mt-5 flex flex-wrap gap-2">
+      <FilterChips label="카테고리" current={selected ?? "전체"} className="mt-5">
         <button
           onClick={() => setSelected(null)}
           className={tagClass(selected === null)}
@@ -98,7 +99,7 @@ export function BlogList({ posts }: { posts: BlogPost[] }) {
             </button>
           );
         })}
-      </div>
+      </FilterChips>
 
       {/* Posts list (time-sorted) */}
       {filtered.length === 0 ? (
