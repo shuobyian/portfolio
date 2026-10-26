@@ -8,10 +8,11 @@ import { ProjectThumbnail } from "./project-thumbnail";
 
 export function ProjectCard({ project }: { project: Project }) {
   return (
-    <Link href={`/projects/${project.slug}`}>
-      {/* hover하면 카드가 떠오르고, 썸네일 테두리와 그림자가 강조색으로 빛난다 */}
-      <article className="group transition-transform duration-300 ease-out motion-safe:hover:-translate-y-1.5">
-        <div className="relative aspect-video overflow-hidden rounded-md border border-border bg-muted transition duration-300 group-hover:border-accent/60 group-hover:shadow-xl group-hover:shadow-accent/20">
+    // hover는 움직이지 않는 링크가 받는다 — 떠오른 카드가 받으면 아래 가장자리에서 포인터를 벗어났다 돌아오길 반복한다
+    <Link href={`/projects/${project.slug}`} className="group block">
+      {/* glassy에서 hover하면 카드가 떠오르고, 썸네일 테두리와 그림자가 강조색으로 빛난다 */}
+      <article className="transition-transform duration-300 ease-out glassy:motion-safe:group-hover:-translate-y-1.5">
+        <div className="relative aspect-video overflow-hidden rounded-md border border-border bg-muted transition duration-300 glassy:group-hover:border-accent/60 glassy:group-hover:shadow-xl glassy:group-hover:shadow-accent/20">
           {project.thumbnail ? (
             <Image
               src={project.thumbnail}

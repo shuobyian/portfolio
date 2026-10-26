@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
 import { useState } from "react";
 import { ThemeToggle } from "./theme-toggle";
+import { pillClass } from "@/components/ui/pill";
 import { motion, AnimatePresence } from "framer-motion";
 
 const links = [
@@ -40,13 +41,8 @@ export function Nav() {
                   key={link.href}
                   href={link.href}
                   aria-current={active ? "page" : undefined}
-                  // 음수 마진으로 자리를 그대로 둔 채 선택 항목에 알약을 깐다.
-                  // hover하면 알약이 빛 반사와 그림자를 달고 살짝 떠오르고, 누르면 들어간다.
-                  className={`-mx-2.5 rounded-full px-2.5 py-1.5 text-sm transition duration-200 ease-out motion-safe:active:scale-95 ${
-                    active
-                      ? "bg-foreground/15 text-foreground"
-                      : "text-muted-foreground hover:bg-foreground/15 hover:text-foreground hover:shadow-[inset_0_1px_0_var(--glass-highlight),0_4px_14px_var(--glass-shadow)] motion-safe:hover:scale-105"
-                  }`}
+                  // 음수 마진으로 자리를 그대로 둔 채 선택 항목에 알약을 깐다
+                  className={`-mx-2.5 rounded-full px-2.5 py-1.5 text-sm ${pillClass(active)}`}
                 >
                   {link.label}
                 </Link>

@@ -52,7 +52,7 @@ export function ProjectThumbnail({ project }: { project: Project }) {
     >
       <svg
         aria-hidden="true"
-        className="absolute inset-0 h-full w-full opacity-40 transition-opacity duration-300 group-hover:opacity-100"
+        className="absolute inset-0 h-full w-full opacity-40 transition-opacity duration-300 glassy:group-hover:opacity-100"
         preserveAspectRatio="none"
       >
         <defs>
@@ -76,7 +76,7 @@ export function ProjectThumbnail({ project }: { project: Project }) {
       <Icon
         size={48}
         strokeWidth={1.25}
-        className="relative transition duration-300 ease-out group-hover:text-accent motion-safe:group-hover:-rotate-6 motion-safe:group-hover:scale-110"
+        className="relative transition duration-300 ease-out group-hover:text-accent glassy:motion-safe:group-hover:-rotate-6 glassy:motion-safe:group-hover:scale-110"
         aria-hidden="true"
       />
     </div>

@@ -157,18 +157,18 @@ export default async function ProjectDetail({
             {keyItems.map((item, i) => {
               const { label, body } = splitHighlight(item);
               return (
-                // 프로젝트 카드처럼 hover하면 떠오르며 강조색으로 빛나고 유리 광택이 생긴다. 광택은 글자 아래에 깐다
-                <li
-                  key={i}
-                  className="group relative flex flex-col overflow-hidden rounded-md border border-border bg-muted/40 p-5 transition duration-300 ease-out hover:border-accent/60 hover:shadow-xl hover:shadow-accent/20 motion-safe:hover:-translate-y-1.5"
-                >
-                  <GlassSheen gloss="from-white/10" />
-                  {label && (
-                    <h3 className="relative font-semibold tracking-tight text-accent">{label}</h3>
-                  )}
-                  <p className={`relative ${label ? "mt-3 " : ""}text-sm leading-relaxed text-foreground/85`}>
-                    {renderHighlight(body)}
-                  </p>
+                // glassy에서 hover하면 프로젝트 카드처럼 떠오르며 강조색으로 빛나고 유리 광택이 생긴다. 광택은 글자 아래에 깐다.
+                // hover는 움직이지 않는 li가 받고 안쪽 카드만 떠오른다
+                <li key={i} className="group">
+                  <div className="relative flex h-full flex-col overflow-hidden rounded-md border border-border bg-muted/40 p-5 transition duration-300 ease-out glassy:group-hover:border-accent/60 glassy:group-hover:shadow-xl glassy:group-hover:shadow-accent/20 glassy:motion-safe:group-hover:-translate-y-1.5">
+                    <GlassSheen overText />
+                    {label && (
+                      <h3 className="relative font-semibold tracking-tight text-accent">{label}</h3>
+                    )}
+                    <p className={`relative ${label ? "mt-3 " : ""}text-sm leading-relaxed text-foreground/85`}>
+                      {renderHighlight(body)}
+                    </p>
+                  </div>
                 </li>
               );
             })}

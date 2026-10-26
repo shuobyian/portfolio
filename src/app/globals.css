@@ -3,6 +3,8 @@
 
 /* glassy도 어두운 바탕 위 밝은 글자라서 dark: 변형을 함께 받는다 */
 @custom-variant dark (&:where(.dark, .dark *, .glassy, .glassy *));
+/* 떠오름·광택 같은 hover 효과는 glassy에서만 준다 */
+@custom-variant glassy (&:where(.glassy, .glassy *));
 
 :root {
   --background: #fbfaf7;
