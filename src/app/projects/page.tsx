@@ -3,7 +3,11 @@
 import { useState, useMemo } from "react";
 import { Section } from "@/components/ui/section";
 import { ProjectCard } from "@/components/ui/project-card";
-import { getAllProjects, type Project } from "@/lib/projects";
+import {
+  getAllProjects,
+  parsePeriodStart,
+  type Project,
+} from "@/lib/projects";
 
 const COMPANIES = [
   {
@@ -17,12 +21,6 @@ const COMPANIES = [
     role: "프론트엔드 개발",
   },
 ] as const;
-
-function parsePeriodStart(period: string): number {
-  const m = period.match(/(\d{4})\.(\d{2})/);
-  if (!m) return 0;
-  return parseInt(m[1]) * 100 + parseInt(m[2]);
-}
 
 function groupByCompany(projects: Project[]): Record<string, Project[]> {
   const byCompany: Record<string, Project[]> = {};

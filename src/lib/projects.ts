@@ -118,7 +118,6 @@ const projects: Project[] = [
       "성능 검증: 리팩토링 전후 번들·에셋 사이즈를 직접 실측해 트레이드오프 정량 확인. SearchWait 페이지 기준 jQuery 등 외부 CDN 의존(약 207 KB)은 제거됐으나 단일 페이지 첫 진입 비용은 gzip 약 111 KB → 150 KB로 증가 — 코드 스플리팅 구조라 사이트 전체·재방문 캐시 관점에서 역전 우위 여지가 있다고 분석",
     ],
     keyHighlights: [1, 4, 5],
-    featured: true,
   },
   {
     slug: "backoffice-refactor",
@@ -135,7 +134,6 @@ const projects: Project[] = [
       "토큰 → Antd 매핑 가이드: 기존 컴포넌트의 디자인 토큰을 Antd 컴포넌트 props·테마로 매핑하는 변환 가이드를 정의하여 화면별 영향 범위 최소화 (화면당 평균 수정 범위 약 50% 축소)",
     ],
     keyHighlights: [1, 2],
-    featured: true,
   },
   {
     slug: "pharmscope",
@@ -179,6 +177,7 @@ const projects: Project[] = [
       "pharmscope-react-query-zustand-architecture",
       "pharmscope-query-key-cache-invalidation",
     ],
+    featured: true,
   },
   {
     slug: "preprocess-backoffice",
@@ -215,6 +214,7 @@ const projects: Project[] = [
       "미검증 범위를 성과로 포장하지 않음: 실제 SSO 세션 검증은 개발 origin의 `redirect_uri` 미허용으로 아직 못 했고, 서버 권한·감사·멱등성과 예약 스케줄러·DAG 실행은 실환경에서 확인하지 않았음을 저장소 문서에 명시",
     ],
     keyHighlights: [2, 4, 5],
+    featured: true,
   },
   {
     slug: "community-platform",
@@ -400,8 +400,17 @@ export function getAllProjects(): Project[] {
   return projects;
 }
 
+export function parsePeriodStart(period: string): number {
+  const m = period.match(/(\d{4})\.(\d{2})/);
+  if (!m) return 0;
+  return parseInt(m[1]) * 100 + parseInt(m[2]);
+}
+
+/** 시작 시점 기준 최신순 */
 export function getFeaturedProjects(): Project[] {
-  return projects.filter((p) => p.featured);
+  return projects
+    .filter((p) => p.featured)
+    .sort((a, b) => parsePeriodStart(b.period) - parsePeriodStart(a.period));
 }
 
 export function getProjectBySlug(slug: string): Project | undefined {
