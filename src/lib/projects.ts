@@ -400,8 +400,17 @@ export function getAllProjects(): Project[] {
   return projects;
 }
 
+export function parsePeriodStart(period: string): number {
+  const m = period.match(/(\d{4})\.(\d{2})/);
+  if (!m) return 0;
+  return parseInt(m[1]) * 100 + parseInt(m[2]);
+}
+
+/** 시작 시점 기준 최신순 */
 export function getFeaturedProjects(): Project[] {
-  return projects.filter((p) => p.featured);
+  return projects
+    .filter((p) => p.featured)
+    .sort((a, b) => parsePeriodStart(b.period) - parsePeriodStart(a.period));
 }
 
 export function getProjectBySlug(slug: string): Project | undefined {
