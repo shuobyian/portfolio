@@ -54,10 +54,9 @@ export default function Home() {
               <span className="size-1.5 rounded-full bg-emerald-500" />
               지금 새로운 기회 탐색 중
             </p>
-            <h1 className="mt-8 text-4xl font-semibold leading-[1.15] tracking-tight sm:text-7xl">
-              안녕하세요,
-              <br />
-              저는 <span className="text-accent">장수빈</span>입니다.
+            <h1 className="mt-8 flex flex-wrap items-baseline gap-x-4 font-semibold leading-[1.15] tracking-tight">
+              <span className="text-3xl text-accent sm:text-5xl">장수빈</span>
+              <span className="text-xl sm:text-3xl">subeenchang</span>
             </h1>
             <p className="mt-8 max-w-2xl text-lg leading-relaxed text-muted-foreground sm:text-xl">
               예약·결제·POS·KIOSK처럼{" "}
