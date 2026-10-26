@@ -18,6 +18,44 @@ export interface Project {
 
 const projects: Project[] = [
   {
+    slug: "frontend-standardization",
+    title: "프론트엔드 표준화 및 CI/CD 정착",
+    description:
+      "신설 조직의 멀티 프로젝트 환경에서 개발 컨벤션·빌드·배포 흐름을 단일 표준으로 정착시킨 기반 작업. 공통 API·ESLint 설정을 사내 npm 패키지로 분리하고, Jenkins CI/CD에 AWS CodeArtifact 인증을 자동 연동",
+    tags: ["Monorepo", "사내 npm 패키지", "ESLint", "Jenkins", "AWS CodeArtifact"],
+    period: "2025.03 - 재직중",
+    role: "프론트엔드 개발",
+    company: "알스솔루션",
+    highlights: [
+      "공통 패키지 분리: 공통 API·ESLint 설정을 사내 표준 npm 패키지로 분리해 사내 전 프론트엔드 프로젝트의 개발 컨벤션·빌드 환경을 일원화. 입사 3개월 만에 프론트엔드 표준을 0→1로 정착",
+      "앱끼리는 서로 의존하지 않고 부트스트랩(@als/fe-kit)·API 계약(@als/als-api)·린트(@als/eslint-config-als) 3개 공유 라이브러리로만 단방향 결합하는 구조",
+      "CI/CD 단일 파이프라인: Jenkins 기반 CI/CD에 AWS CodeArtifact 인증 자동화를 연동해 멀티 프로젝트 빌드·배포를 하나의 파이프라인으로 표준화. 신규 프로젝트 빌드·배포 소요 시간 약 60% 단축",
+      "온보딩 시간 단축: Jenkins 스크립트를 Git 저장소로 이관하고 환경 설정을 문서화해 신규 합류자 개발 환경 셋업 시간을 약 1일 → 1시간 이내로 단축",
+      "공유 라이브러리의 정확버전 핀·툴체인 메이저 drift 리스크를 정리하고, 버전 일괄 관리 도구(als-deps)와 CI drift 감시 잡으로 재발을 차단",
+      "프로젝트 특성에 맞춰 디자인 시스템 4종을 별도 설계·운영 ([디자인 시스템 구축](/projects/design-system)부터 시작)",
+    ],
+    keyHighlights: [0, 2, 3],
+    relatedPostSlugs: ["als-multirepo-fanin-architecture"],
+  },
+  {
+    slug: "pwa-notification",
+    title: "PWA·Electron 알림 환경 구축",
+    description:
+      "웹(PWA)과 데스크톱(Electron) 양쪽에서 푸시 알림을 받을 수 있도록 FCM 기반 Push 서버를 구축하고, 환경마다 다른 알림 권한 모델을 단일 인터페이스로 추상화한 작업",
+    tags: ["PWA", "Electron", "Vite", "Service Worker", "FCM"],
+    period: "2025.04",
+    role: "프론트엔드 개발",
+    company: "알스솔루션",
+    highlights: [
+      "FCM Push 서버 구축: Firebase Cloud Messaging과 VAPID 키(공개 키는 PWA, 비공개 키는 서버)로 웹 푸시 발송 경로를 구성하고, 클라이언트가 발급받은 FCM 토큰을 서버에 저장해 발송 대상으로 관리",
+      "권한 모델 추상화: PWA와 Electron의 환경별 알림 권한 모델 차이를 단일 인터페이스로 추상화",
+      "Vite 환경 PWA 구성: vite-plugin-pwa의 registerSW로 서비스 워커를 등록하고 manifest·업데이트 전략(autoUpdate / prompt)을 빌드에 통합",
+      "포그라운드 메시지는 앱의 onMessage로, 백그라운드 메시지는 별도 서비스 워커(firebase-messaging-sw.js)의 onBackgroundMessage로 나눠 수신",
+    ],
+    keyHighlights: [0, 1],
+    relatedPostSlugs: ["pwa-vite-service-worker", "pwa-push-notification-fcm"],
+  },
+  {
     slug: "design-system",
     title: "디자인 시스템 구축",
     description:

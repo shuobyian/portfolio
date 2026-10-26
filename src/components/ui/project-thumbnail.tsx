@@ -15,11 +15,15 @@ import {
   HelpCircle,
   Vote,
   GraduationCap,
+  Boxes,
+  Bell,
   type LucideIcon,
 } from "lucide-react";
 import type { Project } from "@/lib/projects";
 
 const ICON_MAP: Record<string, LucideIcon> = {
+  "frontend-standardization": Boxes,
+  "pwa-notification": Bell,
   "design-system": Palette,
   backoffice: LayoutDashboard,
   "pharm-bridge": Pill,
