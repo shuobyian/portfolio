@@ -24,6 +24,34 @@ const COMPANIES = [
   },
 ] as const;
 
+// 태그 필터를 묶어 보여줄 분류. 여기 없는 태그는 "기타"로 모인다
+const TAG_GROUPS = [
+  { label: "언어·프레임워크", tags: ["React", "React 19", "Vue.js", "TypeScript", "JavaScript", "HTML", "CSS"] },
+  { label: "상태·통신", tags: ["React Query", "Redux", "Recoil", "Zustand", "Axios", "SSE", "Broadcast Channel API", "localStorage"] },
+  {
+    label: "UI·디자인 시스템",
+    tags: ["Ant Design", "MUI", "Bootstrap", "Tailwind CSS", "Emotion", "CSS Variables", "Storybook", "Lexical", "AntV G2", "Monorepo Design System", "자체 디자인 시스템"],
+  },
+  { label: "렌더링·플랫폼", tags: ["SSR/CSR Hybrid", "React Island Pattern", "PWA", "Service Worker", "Electron"] },
+  { label: "테스트", tags: ["Vitest", "Jest", "Playwright", "MSW", "node:test"] },
+  { label: "빌드·패키지", tags: ["Vite", "Monorepo", "pnpm Monorepo", "사내 npm 패키지", "ESLint"] },
+  {
+    label: "배포·인프라",
+    tags: ["Jenkins", "Docker", "nginx", "AWS S3", "AWS CodeArtifact", "Ansible Semaphore", "Git Tag", "YAML", "Linux"],
+  },
+  { label: "백엔드·DB", tags: ["Node.js", "NestJS", "PostgreSQL", "MySQL"] },
+  { label: "연동·분석", tags: ["Atlassian OAuth", "Jira REST API", "FCM", "GA4 · Clarity", "Google Analytics"] },
+];
+
+function groupTags(tags: string[]) {
+  const present = new Set(tags);
+  const known = new Set(TAG_GROUPS.flatMap((g) => g.tags));
+  return [
+    ...TAG_GROUPS.map((g) => ({ label: g.label, tags: g.tags.filter((t) => present.has(t)) })),
+    { label: "기타", tags: tags.filter((t) => !known.has(t)) },
+  ].filter((g) => g.tags.length > 0);
+}
+
 function groupByCompany(projects: Project[]): Record<string, Project[]> {
   const byCompany: Record<string, Project[]> = {};
   for (const p of projects) {
@@ -40,8 +68,8 @@ function groupByCompany(projects: Project[]): Record<string, Project[]> {
 
 export default function ProjectsPage() {
   const projects = getAllProjects();
-  const allTags = useMemo(
-    () => Array.from(new Set(projects.flatMap((p) => p.tags))),
+  const tagGroups = useMemo(
+    () => groupTags(Array.from(new Set(projects.flatMap((p) => p.tags)))),
     [projects]
   );
   const [filter, setFilter] = useState<string | null>(null);
@@ -62,21 +90,33 @@ export default function ProjectsPage() {
 
       {/* Tag Filter */}
       <FilterChips label="태그" current={filter ?? "전체"} className="mt-8">
-        <button
-          onClick={() => setFilter(null)}
-          className={tagClass(filter === null)}
-        >
-          전체
-        </button>
-        {allTags.map((tag) => (
+        <div className="w-full space-y-3">
           <button
-            key={tag}
-            onClick={() => setFilter(filter === tag ? null : tag)}
-            className={tagClass(filter === tag)}
+            onClick={() => setFilter(null)}
+            className={tagClass(filter === null)}
           >
-            {tag}
+            전체
           </button>
-        ))}
+          {/* 모바일에서는 분류 이름을 칩 위에, 넓은 화면에서는 왼쪽 열에 둔다 */}
+          {tagGroups.map((group) => (
+            <div key={group.label} className="flex flex-col gap-2 sm:flex-row">
+              <span className="shrink-0 text-xs font-medium text-muted-foreground sm:w-32 sm:pt-1.5">
+                {group.label}
+              </span>
+              <div className="flex flex-wrap gap-2">
+                {group.tags.map((tag) => (
+                  <button
+                    key={tag}
+                    onClick={() => setFilter(filter === tag ? null : tag)}
+                    className={tagClass(filter === tag)}
+                  >
+                    {tag}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
       </FilterChips>
 
       {/* Company Sections */}
