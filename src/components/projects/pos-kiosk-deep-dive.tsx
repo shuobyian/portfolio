@@ -31,34 +31,44 @@ const optionsConsidered = [
   },
 ];
 
-const codeSnippet = `// 1. 도메인별 BroadcastChannel 분리 (메시지 라우팅 단순화)
-const paymentChannel = new BroadcastChannel("payment");
-const orderChannel = new BroadcastChannel("order");
+const codeSnippet = `// 1. 데이터 종류별 BroadcastChannel 분리 (메시지 라우팅 단순화)
+const productChannel = new BroadcastChannel(PRODUCT_LIST_KEY);
+const paymentChannel = new BroadcastChannel(PAYMENT_KEY);
+const paymentModalChannel = new BroadcastChannel(PAYMENT_MODAL_KEY);
 
-// 2. 메인 모니터: 결제 완료 시 메시지 발송
-function onPaymentCompleted(orderId: string) {
-  const message = { type: "payment-completed", orderId, ts: Date.now() };
-
-  // 1차: BroadcastChannel
-  paymentChannel.postMessage(message);
-
-  // 2차(백업): localStorage event 트리거
-  // (BroadcastChannel 메시지 유실 가능성 대비)
-  localStorage.setItem("__sync__", JSON.stringify(message));
+// 2. 메인 모니터: 상품 목록이 바뀔 때마다 스냅샷 저장 + 발송
+function syncProductList(next: SelectedProduct[]) {
+  localStorage.setItem(PRODUCT_LIST_KEY, JSON.stringify(next));
+  productChannel.postMessage(next);
 }
 
-// 3. 서브 모니터: 두 채널 모두 수신 → React Query invalidate
-paymentChannel.onmessage = (e) => handle(e.data);
+// 결제가 끝나면 결과를 보내고 목록·스냅샷을 비운다
+function onPaymentFinished(result: PaymentResult) {
+  paymentChannel.postMessage(result);
+  productChannel.postMessage([]);
+  localStorage.removeItem(PRODUCT_LIST_KEY);
+}
 
-window.addEventListener("storage", (e) => {
-  if (e.key !== "__sync__" || !e.newValue) return;
-  handle(JSON.parse(e.newValue));
-});
+// 3. 서브 모니터: 채널별 리스너 + 마운트 시 스냅샷 복원
+function usePostMessageListener() {
+  const [productList, setProductList] = useState<SelectedProduct[]>([]);
+  const [paymentResult, setPaymentResult] = useState<PaymentResult>();
+  const [isModalOpen, setIsModalOpen] = useState(true);
 
-function handle(msg: SyncMessage) {
-  if (msg.type === "payment-completed") {
-    queryClient.invalidateQueries({ queryKey: ["order", msg.orderId] });
-  }
+  useEffect(() => {
+    productChannel.onmessage = (e) => setProductList(e.data);
+    paymentChannel.onmessage = (e) => {
+      setIsModalOpen(true);
+      setPaymentResult(e.data);
+    };
+    paymentModalChannel.onmessage = (e) => setIsModalOpen(e.data);
+
+    // 나중에 열렸거나 새로고침된 창은 이전 메시지를 받지 못하므로 복원
+    const snapshot = localStorage.getItem(PRODUCT_LIST_KEY);
+    setProductList(JSON.parse(snapshot ?? "[]"));
+  }, []);
+
+  return { productList, paymentResult, isModalOpen };
 }`;
 
 function CommunicationDiagram() {
@@ -190,7 +200,7 @@ function CommunicationDiagram() {
         className="fill-muted-foreground"
         fontSize="12"
       >
-        ② localStorage event (백업)
+        ② localStorage 스냅샷 (복원용)
       </text>
 
       <line
@@ -226,7 +236,7 @@ function CommunicationDiagram() {
         fontSize="14"
         fontWeight="600"
       >
-        React Query
+        서브 모니터 화면 상태
       </text>
       <text
         x="400"
@@ -235,7 +245,7 @@ function CommunicationDiagram() {
         className="fill-muted-foreground"
         fontSize="11"
       >
-        invalidate → refetch → 화면 자동 갱신
+        상품 목록 · 결제 모달 · 결제 결과
       </text>
 
       <text
@@ -245,7 +255,7 @@ function CommunicationDiagram() {
         className="fill-muted-foreground"
         fontSize="11"
       >
-        결제 완료 → 메시지 발송
+        상품 변경·결제 결과 → 메시지 발송
       </text>
       <text
         x="640"
@@ -254,7 +264,7 @@ function CommunicationDiagram() {
         className="fill-muted-foreground"
         fontSize="11"
       >
-        메시지 수신 → invalidate 호출
+        메시지 수신 → 화면 상태 갱신
       </text>
     </svg>
   );
@@ -267,7 +277,7 @@ export function PosKioskDeepDive() {
       <p className="mt-2 text-muted-foreground">
         독립된 두 크롬 윈도우 사이의 실시간 동기화를 어떻게 풀었는지 — 검토한
         옵션 4가지의 비교, 채택 근거, 통신 구조 다이어그램과 코드, 그리고
-        안정성 보강을 위해 추가한 백업 채널까지.
+        늦게 열린 창을 위해 더한 스냅샷 복원까지.
       </p>
 
       <div className="mt-8 rounded-lg border border-border bg-muted/30 p-6">
@@ -276,7 +286,7 @@ export function PosKioskDeepDive() {
         </h3>
         <p className="mt-3 leading-relaxed">
           한 매장에 메인(직원용) + 서브(고객용) 두 대의 모니터가 동시에 떠 있고,
-          결제 진행 상태·주문 내역·세션을 실시간으로 공유해야 함. 두 모니터는
+          선택한 상품 목록·결제 진행 상태·결제 결과를 실시간으로 공유해야 함. 두 모니터는
           각각 독립된 크롬 윈도우로 실행되며, 별도 WebSocket 인프라는 신설하지
           않는다는 제약.
         </p>
@@ -331,12 +341,13 @@ export function PosKioskDeepDive() {
 
       <div className="mt-8 rounded-lg border border-border p-6">
         <h3 className="text-sm font-medium uppercase tracking-wide text-accent">
-          3. 채택: BroadcastChannel + 도메인별 채널 분리
+          3. 채택: BroadcastChannel + 데이터별 채널 분리
         </h3>
         <p className="mt-3 leading-relaxed text-muted-foreground">
           비동기 메시지 전달 + 동일 origin 내 다중 컨텍스트 통신을 단일 API로
-          해결할 수 있는 BroadcastChannel을 채택. 채널을
-          도메인별(주문/결제/세션)로 분리하여 메시지 라우팅 로직 단순화.
+          해결할 수 있는 BroadcastChannel을 채택. 채널을 데이터별(상품 목록/결제
+          결과/결제 모달)로 분리해 수신 측이 메시지 타입을 분기할 필요 없이
+          채널마다 받은 값을 바로 화면 상태에 반영.
         </p>
         <div className="mt-6">
           <CommunicationDiagram />
@@ -356,16 +367,17 @@ export function PosKioskDeepDive() {
 
       <div className="mt-8 rounded-lg border border-accent/30 bg-accent/5 p-6">
         <h3 className="text-sm font-medium uppercase tracking-wide text-accent">
-          4. 안정성 보강: 백업 채널 추가
+          4. 보완: 늦게 열린 창을 위한 스냅샷 복원
         </h3>
         <p className="mt-3 leading-relaxed text-muted-foreground">
-          개발 단계에서 BroadcastChannel만으로는 메시지 안정성에 부족함을 확인 —
-          브라우저 정책·탭 비활성화 등으로 메시지가 유실될 수 있음. 1차 검토에서
-          ‘데이터 매개체’ 용도로 기각했던 localStorage를{" "}
-          <strong className="text-foreground">‘메시지 알림 트리거’</strong>로
-          용도를 바꿔 백업 채널로 추가. 수신 측은 어느 채널이든 메시지가
-          도착하면 React Query invalidate를 호출하여 결국 화면이 갱신되는 단일
-          흐름으로 통합.
+          BroadcastChannel은 메시지를 보관하지 않는다. 서브 모니터가 메인보다
+          늦게 켜지거나 새로고침되면, 그 전에 보낸 상품 목록은 받을 방법이 없어
+          고객 화면이 빈 채로 남는다. 1차 검토에서 ‘데이터 매개체’ 용도로
+          기각했던 localStorage를{" "}
+          <strong className="text-foreground">‘마지막 상태 스냅샷’</strong>으로
+          용도를 바꿔, 메인 모니터가 상품 목록을 보낼 때마다 함께 저장하고 서브
+          모니터는 마운트할 때 한 번 읽어 복원. 결제가 끝나면 스냅샷도 지워 이전
+          주문이 다음 고객 화면에 남지 않게 처리.
         </p>
         <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
           → 동일 API라도 ‘무엇을 위해 쓰는가’의 정의가 바뀌면 재검토 가치가

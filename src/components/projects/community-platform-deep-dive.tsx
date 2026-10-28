@@ -18,7 +18,7 @@ function StateOwnershipDiagram() {
       viewBox="0 0 820 400"
       className="h-auto w-full text-foreground"
       role="img"
-      aria-label="상태 소유자 분리 전후 비교 — 이전에는 서버에서 받아온 데이터와 UI 상태가 하나의 Redux store에 함께 있어 stale 데이터가 노출됐고, 이후에는 서버 상태를 React Query가, UI 상태를 Redux와 Recoil이 나눠 소유한다"
+      aria-label="상태 소유자 분리 전후 비교 — 이전에는 서버에서 받아온 데이터와 UI 상태가 하나의 Redux store에 함께 있어 stale 데이터가 노출됐고, 이후에는 서버 상태를 React Query가, UI 상태를 Redux가 나눠 소유한다"
     >
       <defs>
         <marker
@@ -257,7 +257,7 @@ function StateOwnershipDiagram() {
         />
       </g>
       <text x="691" y="164" textAnchor="middle" className="fill-foreground" fontSize="12" fontWeight="600">
-        Redux · Recoil
+        Redux
       </text>
       <text x="691" y="184" textAnchor="middle" className="fill-muted-foreground" fontSize="10">
         UI 상태
@@ -298,10 +298,10 @@ function StateOwnershipDiagram() {
 
 function TypeMigrationOrderDiagram() {
   const steps = [
-    { n: "1", title: "인터페이스 정의", sub: "도메인 경계의 타입만 먼저" },
-    { n: "2", title: "호출부에 적용", sub: "구현체는 아직 JS" },
-    { n: "3", title: "구현체 이관", sub: "한 번에 한 파일" },
-    { n: "4", title: "운영 배포", sub: "중단 없음" },
+    { n: "1", title: "공통 컴포넌트", sub: "모든 화면이 의존" },
+    { n: "2", title: "API · enum · 타입", sub: "도메인 경계를 먼저" },
+    { n: "3", title: "화면 이관", sub: "채널 → 판매 → 예약" },
+    { n: "4", title: "라우터 · 로그인", sub: "진입점은 마지막" },
   ];
 
   return (
@@ -309,7 +309,7 @@ function TypeMigrationOrderDiagram() {
       viewBox="0 0 820 300"
       className="h-auto w-full text-foreground"
       role="img"
-      aria-label="JS에서 TS로 무중단 이관하는 순서 — 인터페이스를 먼저 정의하고 호출부에 적용한 뒤 구현체를 파일 단위로 이관해 운영 중단 없이 배포한다"
+      aria-label="JS에서 TS로 이관한 순서 — 공통 컴포넌트와 API·enum·타입 레이어를 먼저 옮기고, 채널·판매·예약 화면을 거쳐 라우터·로그인을 마지막에 옮겨 JS/JSX 파일 145개를 4개로 줄였다"
     >
       <defs>
         <marker
@@ -333,7 +333,7 @@ function TypeMigrationOrderDiagram() {
         fontSize="14"
         fontWeight="600"
       >
-        결합이 강한 영역일수록 타입이 먼저다
+        의존받는 쪽부터 타입을 입힌다
       </text>
 
       {steps.map((step, i) => {
@@ -406,14 +406,14 @@ function TypeMigrationOrderDiagram() {
         />
       </g>
       <text x="410" y="212" textAnchor="middle" className="fill-foreground" fontSize="11" fontWeight="600">
-        순서를 뒤집으면 (구현체 먼저) 그것에 의존하는 화면이 같은 커밋에서 함께 깨진다
+        순서를 뒤집으면 (화면 먼저) 아직 타입이 없는 API·공통 컴포넌트를 any로 감싸야 한다
       </text>
       <text x="410" y="233" textAnchor="middle" className="fill-muted-foreground" fontSize="10">
-        타입이 먼저 서 있으면 구현체 이관은 한 파일씩 나눠서, 언제 멈춰도 배포 가능한 상태로 진행된다
+        의존받는 레이어가 먼저 서 있으면 화면 이관은 이미 정의된 타입을 가져다 쓰는 일이 된다
       </text>
 
       <text x="410" y="282" textAnchor="middle" className="fill-muted-foreground" fontSize="11">
-        핵심 메뉴 4개 영역 · 운영 중단 0회 · 타입 관련 런타임 에러 약 70% 감소
+        JS/JSX 파일 145개 → 4개 · 타입 관련 런타임 에러 약 70% 감소
       </text>
     </svg>
   );
@@ -466,10 +466,12 @@ export function CommunityPlatformDeepDive() {
           <StateOwnershipDiagram />
         </div>
         <p className="mt-5 text-sm leading-relaxed text-muted-foreground">
-          분리 자체보다 오래 걸린 건 그다음이었다. 도메인별 queryKey 컨벤션과
-          invalidation 규칙을 문서로 정리해 팀에 전파했다. 규칙이 없으면 같은
-          문제가 React Query 안에서 다시 생긴다 — 라이브러리는 캐시를 제공할 뿐
-          갱신 시점을 대신 정해주지 않는다.
+          분리 자체보다 중요한 건 그다음이었다. 운영툴에 React Query를 처음
+          들이면서 도메인별 QUERY_KEY 상수 컨벤션을 함께 만들었고, 이후 인증·시설·단지
+          같은 다른 도메인도 같은 패턴으로 확장됐다. 규칙이 없으면 같은 문제가
+          React Query 안에서 다시 생긴다 — 라이브러리는 캐시를 제공할 뿐 갱신
+          시점을 대신 정해주지 않는다. 매장관리 영역은 Redux slice와 MVVM 계층을
+          걷어내고 React Query로 옮겨 202개 파일에서 약 4천 줄을 덜어냈다.
         </p>
       </div>
 
@@ -478,15 +480,20 @@ export function CommunityPlatformDeepDive() {
           2. 멈추지 않고 타입을 입힌다
         </h3>
         <p className="mt-3 leading-relaxed text-muted-foreground">
-          파트너스 핵심 메뉴 4개 영역을 JS에서 TS로 옮기는 작업이었다. 운영
-          중이라 &ldquo;전부 바꾸고 한 번에 배포&rdquo;는 선택지가 아니었고,
-          도메인 간 결합이 강한 구간일수록 파일 하나를 건드리면 연쇄로 깨졌다.
-          그래서 순서를 뒤집었다 —{" "}
-          <strong className="text-foreground">인터페이스를 먼저 세운다.</strong>
+          컨시어지 운영툴(현 파트너스)을 JS에서 TS로 옮기는 작업이었다. 도메인
+          간 결합이 강해서 화면부터 바꾸면 아직 타입이 없는 API와 공통 컴포넌트를
+          매번 any로 감싸야 했다. 그래서 순서를 정했다 —{" "}
+          <strong className="text-foreground">의존받는 쪽을 먼저 세운다.</strong>
         </p>
         <div className="mt-6">
           <TypeMigrationOrderDiagram />
         </div>
+        <p className="mt-5 text-sm leading-relaxed text-muted-foreground">
+          같은 운영툴의 MUI → Ant Design 전환은 반대로 예약·판매·채널·로그인
+          4개 메뉴 단위 PR로 나눴다. 화면 라이브러리 교체는 메뉴끼리 서로 의존하지
+          않아서, 운영 중인 화면을 메뉴별로 검증하며 바꾸고 마지막 단계에서 MUI
+          패키지를 걷어냈다.
+        </p>
       </div>
 
       <div className="mt-8">
@@ -494,14 +501,16 @@ export function CommunityPlatformDeepDive() {
           3. 팀의 첫 테스트 체계
         </h3>
         <p className="mt-3 leading-relaxed text-muted-foreground">
-          팀에 프론트엔드 테스트가 한 줄도 없던 상태에서 Jest + MSW 도입을
-          주도했다. 커버리지를 목표로 잡는 대신{" "}
+          운영툴에 프론트엔드 테스트가 한 줄도 없던 상태에서 Jest + MSW 환경을
+          처음 구성했다. 커버리지를 목표로 잡는 대신{" "}
           <strong className="text-foreground">
-            깨지면 가장 아픈 곳부터
+            따라 쓸 수 있는 본보기부터
           </strong>{" "}
-          — 결제와 예약 플로우에 먼저 적용했다. 테스트가 없던 팀에서 전면 도입을
-          선언하면 대개 아무도 쓰지 않게 되고, 효용이 즉시 보이는 지점에서
-          시작해야 다음 사람이 따라 쓴다.
+          — 매장 옵션 CRUD 화면으로 목 API와 테스트 구조를 먼저 세우고 예약
+          화면으로 넓혔다. antd Select처럼 테스트하기 까다로운 컴포넌트용 유틸도
+          함께 만들었다. 테스트가 없던 팀에서 전면 도입을 선언하면 대개 아무도
+          쓰지 않게 되고, 바로 복사해 쓸 수 있는 예시가 있어야 다음 사람이 따라
+          쓴다.
         </p>
         <div className="mt-5 grid gap-4 md:grid-cols-2">
           {outcomes.map((o) => (
