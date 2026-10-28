@@ -16,7 +16,7 @@
 · UI/Design : Tailwind CSS, Ant Design, Emotion, MUI, Bootstrap, Storybook
 · Test : Vitest, Playwright, Jest, MSW, node:test
 · Infra/DevOps : AWS(S3, Amplify, CodeArtifact), Jenkins, GitHub Actions, Docker, Ansible
-· Backend : Node.js, NestJS, PostgreSQL, MySQL
+· Backend : Node.js, NestJS, Django, PostgreSQL, MySQL
 · AI Workflow : Claude Code, Cursor — 설계·리팩토링·리뷰 보조로 활용, 결과는 코드 리뷰 관점에서 검증·선별 적용
 
 ════════════════════════════════════════
@@ -237,88 +237,108 @@ Vanilla JS 화면의 유지보수 비용 누적 문제를, SSR 라우팅 제약�
 ▣ 커뮤니티 서비스 운영툴 / 파트너스 플랫폼 (2021.08 - 2024.12)
 
 [개요]
-5종 예약 도메인과 PG·관리비 결제, 이용권 관리가 커뮤니티·파트너스 두 프로덕트에 걸쳐 운영되는 환경에서 기능 개발과 아키텍처 개선을 병행 수행.
+5종 예약 도메인과 PG·관리비 결제, 횟수제 이용권 관리가 커뮤니티 운영툴·파트너스 두 프로덕트에 걸쳐 운영되는 환경에서 기능 개발과 아키텍처 개선을 병행 수행.
 
 [주요 역할]
-· 파트너스 핵심 메뉴 4개 영역에서 JS→TS 마이그레이션 단계적 진행 (도메인 결합이 강한 부분은 인터페이스 우선 정의 후 구현체 이관)
-· 커뮤니티 서버 상태를 Redux→React Query로 분리 (캐시 정책과 클라이언트 상태가 한 store에 섞여 stale 데이터 노출 이슈 누적이 배경). 도메인별 queryKey 컨벤션·invalidation 규칙 문서화 후 팀 전파
-· Axios interceptor 공통 에러 처리로 외부 연동(PG/관리비) 실패 메시지를 도메인 단위로 일관화
-· 팀 내 첫 프론트엔드 테스트 체계(Jest+MSW) 도입 주도
-· 기획·디자인 협업 : 예약 창구 충돌 검증 시 충돌 자원 목록을 함께 노출하는 경고 모달을 역제안·반영 / 예약 시간 설정 화면을 정보 그룹 박스·배치 재구성으로 시각적 구분 강화하는 디자인 역제안·반영
+· 컨시어지 운영툴(현 파트너스) JS→TS 마이그레이션 : 공통 컴포넌트·API·enum·타입 레이어를 먼저 옮긴 뒤 채널·판매·예약 화면 순으로 전환
+· 같은 운영툴의 MUI→Ant Design 전환을 예약·판매·채널·로그인 4개 메뉴 단위 PR로 나눠 진행하고 마지막에 MUI 패키지 제거
+· 운영툴에 React Query 첫 도입 및 도메인별 QUERY_KEY 상수 컨벤션 정착 (캐시 정책과 클라이언트 상태가 한 store에 섞여 stale 데이터 노출 이슈 누적이 배경). 매장관리 영역 Redux slice·MVVM 계층 제거
+· 운영툴에 Jest+MSW 테스트 환경을 처음 구성하고 매장 옵션 CRUD에서 예약 화면으로 확장, antd 컴포넌트용 테스트 유틸 작성
+· 파트너스 Axios interceptor에서 응답 경로(커뮤니티·결제)별로 에러를 나누고 에러 코드를 운영자용 안내 문구로 매핑
+· 파트너스 초기 구조 설계 (레이어 경로·파일 네이밍 ESLint 규칙, REST 경로와 같은 API 폴더 구조), CRA→Vite·generouted 파일 기반 라우팅 전환
+· 기획·디자인 협업 : 예약 창구 충돌 검증 시 충돌 자원 목록을 함께 노출하는 경고 모달을 역제안·반영 / 예약 시간 설정 화면을 요일·운영 시간·슬롯 단위·예약 가능 시간표 4개 정보 그룹 박스로 재구성하는 디자인 역제안·반영
 
 [성과]
-· 운영 중단 없이 핵심 4개 영역 JS→TS 마이그레이션 완료
-· 테스트 인프라(Jest+MSW) 구축 후 핵심 결제·예약 플로우 적용으로 배포 후 핫픽스 월 평균 5건 → 1건으로 약 80% 감소
-· JS→TS 전환으로 타입 관련 런타임 에러 약 70% 감소
-· Redux→React Query 분리로 stale 데이터 노출 이슈 약 90% 감소
+· JS→TS 전환으로 JS/JSX 파일 145개 → 4개, 타입 관련 런타임 에러 약 70% 감소
+· 테스트 인프라(Jest+MSW) 구축 후 배포 후 핫픽스 월 평균 5건 → 1건으로 약 80% 감소
+· Redux→React Query 분리로 stale 데이터 노출 이슈 약 90% 감소, 매장관리 영역 코드 약 4천 줄 순감
 · 충돌 자원 노출 모달 도입으로 운영팀이 충돌 자원을 즉시 식별·재배정 가능, 창구 생성 포기 사례 약 90% 감소
 · 예약 시간 설정 화면 재구성으로 고객사 설정 작업 진입 장벽 완화
 
-기술 스택 : React, TypeScript, React Query, Redux, Recoil, Axios, Jest, MSW, Ant Design, MUI
+기술 스택 : React, TypeScript, React Query, Redux, Axios, Ant Design, Jest, MSW, Vite, Lexical
 
 ────────────────────────────────────────
 
-▣ POS / 주문 키오스크 시스템 (2023.03 - 2023.04)
+▣ POS / 주문 키오스크 시스템 (2023.03 - 2024.11)
 
 [개요]
-아파트 단지 내 입주민 대상 카페·매점에서 사용하는 클라우드 기반 POS·주문 키오스크 시스템 신규 개발.
+아파트 단지 내 입주민 대상 카페·매점에서 사용하는 POS를 신규 개발(2023.03)하고, 같은 코드베이스에 주문 키오스크를 추가(2023.12)해 운영·확장.
 
 [주요 역할]
-· React Query·Recoil로 서버 상태와 UI 상태를 분리하여 컴포넌트 간 의존성 감소
-· AbortController로 결제 API를 요청 단위 취소 가능하게 구성 (결제 도중 화면 이탈 시 잔여 요청이 후속 화면에 영향 주지 않도록 처리)
-· POS(가로 1024×768)·KIOSK(세로 1024×1920) 두 화면 방향·비율을 Tailwind 토큰으로 추상화하여 동일 컴포넌트로 양 환경 대응
-· 트러블슈팅 : 한 매장에 메인(직원)+서브(고객) 두 대의 독립 크롬 윈도우가 결제 상태·주문 내역·세션을 실시간 공유해야 하는 요구를, WebSocket 서버 신설 없이 Broadcast Channel API를 1차 채널 + localStorage event를 백업 채널로 두는 이중 구조로 설계. 수신 측이 React Query invalidate를 호출해 두 화면 동기화
+· React Query로 서버 데이터를, Recoil로 결제·주문·영수증 같은 화면 상태를 나눠 관리하여 컴포넌트 간 의존성 감소
+· AbortController로 결제 API를 요청 단위 취소 가능하게 구성 (결제 수단 태그 모달을 닫으면 진행 중인 요청을 abort하고 결제 중지 처리)
+· 공통 Tailwind preset 위에 POS·KIOSK 설정을 분리하고 KIOSK는 간격·글자 크기 스케일을 재정의해, 동일 컴포넌트로 POS(가로 1024×768)·KIOSK(세로 1024×1920) 양 환경 대응
+· 카드리더기·영수증 프린터·안면인식기 연동, 엣지·IoT 서버 health check와 장비 에러 코드 체계 구축
+· CRA→Vite 마이그레이션, React Query v3→v5 업그레이드, generouted 파일 기반 라우팅 도입
+· 트러블슈팅 : 한 매장에 메인(직원)+서브(고객) 두 대의 독립 크롬 윈도우가 상품 목록·결제 진행 상태·결제 결과를 실시간 공유해야 하는 요구를, WebSocket 서버 신설 없이 데이터별 BroadcastChannel로 해결. 서브 창이 늦게 열리거나 새로고침돼도 비지 않도록 송신 시 localStorage에 스냅샷을 저장하고 마운트 시 복원
 
 [성과]
 · WebSocket 서버 신설 없이 다중 윈도우 실시간 동기화 구현 (팀 내 윈도우 간 통신 선례 없는 상황)
-· 이중 채널 동기화로 두 윈도우 간 상태 실시간 반영으로 안정성 확보
+· 스냅샷 복원으로 서브 모니터 재시작·새로고침 시에도 고객 화면 상태 유지
 · 동일 컴포넌트로 POS·KIOSK 2개 환경 동시 대응, 화면 대응 코드 중복 약 50% 절감
 
-기술 스택 : React, TypeScript, React Query, Recoil, Tailwind CSS, Broadcast Channel API, localStorage
+기술 스택 : React, TypeScript, React Query, Recoil, Tailwind CSS, BroadcastChannel API, localStorage, MSW, Vite
 
 ────────────────────────────────────────
 
-▣ 바이비 2.0 서비스 (2023.02 - 2023.10)
+▣ 바이비 2.0 서비스 (2023.06 - 2024.11)
 
 [개요]
-예약 서비스 UI/UX 개선 및 월 반복 강좌 기능 구현.
+입주민용 커뮤니티 앱(웹뷰)의 예약·상품 구매·스마트아파트 기능 개발과 장기 유지보수.
 
 [주요 역할]
-· 예약 서비스 UI/UX 개선 및 월 반복 강좌 기능 구현
-· 옵션 그룹 기반 상품 구조 설계
-· Lexical Editor 커스터마이징으로 게시글 편집 기능 고도화
-· 전역 Modal/Bottom Sheet 구현으로 모바일 네비게이션·백버튼 대응
-· Storybook 기반 디자인 시스템 구축 및 공통 컴포넌트 개발
+· 고정 기간·구독 예약, 강좌 월별 반복 회차·재수강·정원·수강 횟수 제한 등 예약 시나리오 확장
+· 단일·조합 옵션을 담는 옵션 그룹 기반 상품 구조 모델링 및 상품 상세·장바구니·구매 금액 계산 구현
+· 바텀시트 상태를 전역으로 올리고 안드로이드 백버튼을 바텀시트 → 모달 → 뒤로가기 순으로 처리, 작성 중 이탈 방지 모달 적용
+· 방문 차량 등록(홈넷 연동)·앱카드 분실 신고(네이티브 연동)·엘리베이터 호출 등 스마트아파트 기능 구현
+· 라우트 전반 React.lazy 적용, 뒤로가기 스크롤 유지 등 탐색 UX 개선
+· 모노레포 공통 UI 패키지에 Select·Radio·Toggle·Input 계열 컴포넌트를 Storybook 문서와 함께 작성
 
 [성과]
 · 옵션 그룹 기반 상품 구조로 다양한 상품 조합 지원
-· Storybook 디자인 시스템 구축으로 공통 컴포넌트 재사용 기반 마련
 · 전역 Modal/Bottom Sheet 도입으로 모바일 네비게이션 관련 버그 약 60% 감소
 
-기술 스택 : React, TypeScript, React Query, Recoil, Tailwind CSS, Storybook, Lexical
+기술 스택 : React, TypeScript, React Query, Recoil, Tailwind CSS, Vite, Storybook
 
 ────────────────────────────────────────
 
 ▣ 프론트엔드 인프라 및 배포 환경 개선 (2024.02 - 2024.04)
 
 [개요]
-3개 프론트 프로덕트의 WebServer 이관 및 단일 배포 파이프라인 구축으로 배포 흐름 표준화.
+엣지(현장) 서버의 프론트 WebServer를 nginx로 이관하고, 배포 파이프라인을 Git Tag 버전 기반으로 개편해 배포 흐름 표준화.
 
 [주요 역할]
-· blue-byb-pos·blue-byb-kiosk·blue-web-wallpad 3개 프로덕트의 WebServer를 pm2 serve → nginx 정적 콘텐츠 서비스로 이관 (build 파일 교체만으로 배포 완결되도록 구조 단순화)
-· Ansible Semaphore + Jenkins + AWS S3를 잇는 단일 배포 파이프라인 구축 (GITHUB_BUNDLE_CHECK → JENKINS_BUILD → DEPLOY_TO_EDGE 3단계 yaml)
-· POS·KIOSK 빌드 통합 : REACT_APP_PRODUCT 환경변수 sed 치환으로 한 번의 build step에서 두 프로덕트 산출물 동시 생성
-· AWS S3 빌드 산출물을 Git Tag version 단위로 관리 (build_id 기반 → version_tag 기반)
-· 트러블슈팅 : 슬래시 포함 tag와 s3 폴더명 미스매치 이슈를 build parameter에 version_tag·s3_bucket_name 분리 도입으로 해결
-· nginx 정적 콘텐츠 실행을 위한 build 폴더 권한 자동화 (chmod 755 + /home/htbeyond 711 최소 권한)
+· POS·KIOSK(blue-byb-pos)·월패드(blue-web-wallpad) 3개 화면의 WebServer를 pm2 serve → nginx 정적 콘텐츠 서비스로 이관 (build 파일 교체만으로 배포 완결되도록 구조 단순화)
+· Ansible Semaphore + Jenkins + AWS S3를 잇는 기존 배포 플레이북(GITHUB_BUNDLE_CHECK → JENKINS_BUILD → DEPLOY_TO_EDGE)을 버전 기반으로 개편
+· POS·KIOSK 빌드 통합 : REACT_APP_PRODUCT 환경변수 sed 치환과 산출물 폴더 분리로 한 번의 build step에서 두 프로덕트 산출물 동시 생성
+· AWS S3 빌드 산출물을 Git Tag version 단위로 관리 (build_id 기반 → version 기반), 단지별 bundle.yaml 버전으로 배포
+· 트러블슈팅 : 슬래시 포함 tag와 S3 경로 미스매치 이슈를 Jenkins 파라미터의 태그용·S3 경로용 버전명 분리로 해결, Jinja 문자열 안 변수 미치환 버그는 변수 설정을 두 단계로 나눠 해결
+· nginx 정적 콘텐츠 실행을 위한 build 폴더 권한 설정 자동화
 
 [성과]
 · POS·KIOSK 빌드 통합으로 2회 빌드 → 1회로 단축
-· nginx 전환·파이프라인 단일화로 배포 1회 소요 시간 약 90% 단축
+· nginx 전환·파이프라인 개편으로 배포 1회 소요 시간 약 90% 단축
 · Git Tag 기반 버전 관리로 단지별 배포 버전 명시적 추적 가능, 배포 추적·롤백 대응 시간 약 60% 단축
-· 환경별(dev/alpha/prod) 배포 흐름 일관화
+· 환경별(dev/alpha/release) 배포 흐름 일관화
 
 기술 스택 : Jenkins, Ansible Semaphore, AWS S3, nginx, Git Tag, YAML, Linux
+
+────────────────────────────────────────
+
+▣ 바이비 Quiz (2022.12 - 2023.01)
+
+[개요]
+NestJS·PostgreSQL 기반 진행형 퀴즈 서비스 백엔드에서 문제 진행 상태와 리포트 모듈 담당.
+
+[주요 역할]
+· 문제별 진행 상태(INITIALIZED → INPROGRESS → RESULT → DONE) 관리, 진행 중인 문제가 있으면 다른 문제 시작을 막아 진행 순서 보장
+· 객관식·주관식(복수 정답) 채점과 중복 제출 거절, 정답 시 참여자 점수 누적
+· 문제별 보기 선택 수를 세는 리포트 API
+
+[성과]
+· 폴링 기반 진행 구조에서 동시 참여 약 50명 안정 처리
+
+기술 스택 : NestJS, TypeORM, PostgreSQL
 
 ════════════════════════════════════════
 
@@ -358,23 +378,13 @@ Vanilla JS 화면의 유지보수 비용 누적 문제를, SSR 라우팅 제약�
 
 ────────────────────────────────────────
 
-▣ 놀러와마이홈 게임 계산기 홈페이지 (2020.08) | 기타
+▣ 놀러와마이홈 게임 계산기 홈페이지 (2020.08 - 2026.10) | 기타
 
-[개요] 게임 「놀러와마이홈」의 재화·재료 계산을 돕는 웹 서비스 개발.
-[주요 역할] 프론트엔드·백엔드 전반 단독 설계·구현 / 사용자 입력 기반 계산 로직 및 결과 시각화 / 배포 및 프로세스 관리
+[개요] 게임 「놀러와마이홈」의 제작 물품 재료·비용 계산 웹 서비스를 단독 개발·운영하고, 2026.10 API·DB 호환을 유지한 채 전면 리뉴얼.
+[주요 역할] 레시피 재귀 전개·재료 합산·비용 계산 로직 / NestJS→Django REST Framework 무중단 전환(레거시 대비 3,000개 시나리오 회귀 검증) / CRA→Vite 전환·자체 UI 교체·첫 화면 JS 501KB→362KB / 배포·운영
 [성과] 실제 게임 유저 대상 서비스 운영, 누적 사용자 약 3.3천 명·재방문율 약 30% 확보
 
-기술 스택 : React, Node.js, PostgreSQL, Docker, PM2, Google Analytics
-
-────────────────────────────────────────
-
-▣ 바이비 Quiz (2022.12) | 기타
-
-[개요] NestJS·PostgreSQL 기반 실시간 퀴즈 서비스 백엔드 개발.
-[주요 역할] 실시간 퀴즈 백엔드 개발 / 문제 진행 상태 및 점수 집계 로직 구현
-[성과] 실시간 진행 상태·점수 집계 로직 구현 완료, 동시 참여 약 50명 안정 처리
-
-기술 스택 : NestJS, PostgreSQL
+기술 스택 : React, TypeScript, Vite, React Query, NestJS, Django, PostgreSQL, Docker, Google Analytics
 
 ════════════════════════════════════════
 
