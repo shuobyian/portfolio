@@ -35,7 +35,7 @@ const projects: Project[] = [
       "프로젝트 특성에 맞춰 디자인 시스템 4종을 별도 설계·운영 ([디자인 시스템 구축](/projects/design-system)부터 시작)",
     ],
     keyHighlights: [0, 2, 3],
-    relatedPostSlugs: ["als-multirepo-fanin-architecture"],
+    relatedPostSlugs: ["als-multirepo-fanin-architecture", "als-frontend-structure"],
   },
   {
     slug: "pwa-notification",

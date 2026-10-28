@@ -16,6 +16,7 @@ import {
   SessionScopeGenerationDiagram,
 } from "@/components/blog/bi-query-cache-diagram";
 import { AlsFanInGraphDiagram } from "@/components/blog/als-fanin-architecture-diagram";
+import { AlsFrontendStructureDiagram } from "@/components/blog/als-frontend-structure-diagram";
 import { EventLoopDiagram } from "@/components/blog/event-loop-diagram";
 import { RenderClosureDiagram } from "@/components/blog/render-closure-diagram";
 import { ClosureDefinitionDiagram } from "@/components/blog/closure-definition-diagram";
@@ -47,6 +48,7 @@ const mdxComponents = {
   QueryStaleResponseRaceDiagram,
   SessionScopeGenerationDiagram,
   AlsFanInGraphDiagram,
+  AlsFrontendStructureDiagram,
   EventLoopDiagram,
   RenderClosureDiagram,
   ClosureDefinitionDiagram,

@@ -1,0 +1,54 @@
+---
+title: "알스솔루션 프론트엔드 구조도 — als-web 모노레포와 공유 패키지"
+description: "서비스 앱 3개와 내부 패키지 3개를 담은 als-web 모노레포, 그리고 그 바깥에서 공유하는 API SDK·ESLint 설정·부트스트랩 CLI의 관계를 한 장으로 정리."
+date: "2026-10-29"
+tags: ["Architecture", "Monorepo", "pnpm Workspace", "Design System"]
+category: "아키텍처"
+type: "project"
+---
+
+## 한 줄 요약
+
+**프론트엔드는 `als-web` 모노레포 하나와 별도 저장소 넷으로 이뤄진다.** 서비스 앱 3개와 내부 패키지 3개는 모노레포에 모였고, API SDK·ESLint 설정·부트스트랩 CLI·간트 뷰어는 각자 저장소로 남았다. 모노레포 안은 다시 **백오피스 계열**과 **pharmscope 계열**로 갈리며, 두 계열은 서로 import하지 않는다.
+
+## 구조도
+
+<AlsFrontendStructureDiagram />
+
+화살표는 의존하는 쪽에서 의존받는 쪽으로 향한다. 실선은 `dependencies`, 점선은 `devDependencies`나 CLI 도구다.
+
+## 읽는 법
+
+- **두 계열은 섞이지 않는다.** `backoffice`는 Emotion 기반 자체 `design-system`을 쓰고, `pharmscope`·`pharmscope-admin`은 antd 위에 얹은 `pharmscope-core`와 UI 없는 `core`를 쓴다. 계열 경계는 모노레포 루트의 ESLint 설정 두 개(`eslint.backoffice-boundaries.mjs`, `eslint.als-api-boundaries.mjs`)로 검사한다.
+- **API SDK도 계열별로 나눠 쓴다.** `als-api` 한 패키지에 서버 두 개의 SDK 트리가 들어 있다. pharmscope 계열은 Bearer 토큰을 쓰는 `alpha` 트리를, 백오피스는 세션 쿠키와 CSRF를 쓰는 `backoffice` 트리를 쓴다.
+- **내부 패키지는 `workspace:*`로 묶는다.** 모노레포 안 의존은 버전 번호 대신 워크스페이스 링크라서, 패키지를 고치면 앱에 바로 반영된다.
+- **공유 패키지는 사설 레지스트리에서 받는다.** `als-api`와 `eslint-config-als`는 AWS CodeArtifact의 `@als` 스코프로 배포한다. 설치에 토큰이 필요한데, 토큰을 발급하는 `als-fe-kit`까지 레지스트리에 두면 설치 도구를 설치하려고 다시 토큰이 필요한 순환이 생긴다. 그래서 `als-fe-kit`만 git 태그로 배포하고, 각 저장소의 `env-install` 스크립트가 그 안의 `ca-env`로 토큰을 받는다.
+- **버전 drift는 CI가 감시한다.** `als-fe-kit`의 `als-deps`가 저장소마다 `@als` 의존 버전을 비교하고, 이를 Jenkins 잡으로 돌린다.
+- **간트 뷰어는 린트만 공유한다.** `als-gantt-chart`는 Jira 간트 뷰어 단독 앱이라 API SDK는 쓰지 않고 `eslint-config-als`만 개발 의존성으로 받는다.
+
+## 이전 구조와의 관계
+
+[멀티레포 fan-in 분석](/blog/als-multirepo-fanin-architecture) 때는 서비스 앱이 `alpha-als`·`admin-als` 같은 개별 저장소에 있었다. 이후 pharmscope 앱과 공유 UI 패키지를 `alpha-als`에서 커밋 이력째 `als-web`으로 옮겼다. 앱이 서로 의존하지 않고 공유 패키지(API·린트·부트스트랩)로만 결합한다는 방향은 그대로다.
+
+관련 프로젝트: [팜스코프 데이터 전처리 백오피스](/projects/preprocess-backoffice) · [팜스코프 신규 구축](/projects/pharmscope) · [프론트엔드 표준화 및 CI/CD 정착](/projects/frontend-standardization)
+
+## 폴더 구조
+
+```text
+als-web/
+├── apps/
+│   ├── backoffice/          검수 백오피스 · Emotion · TanStack Query
+│   ├── pharmscope/          제약사 서비스 · antd · zustand
+│   └── pharmscope-admin/    서비스 관리자 · antd · zustand
+├── packages/
+│   ├── design-system/       공통 컴포넌트 35종 · 백오피스 전용
+│   ├── pharmscope-core/     pharmscope 두 앱의 공통 UI·상태
+│   └── core/                UI 없는 유틸·훅
+├── e2e/                     Playwright 시나리오
+└── eslint.*-boundaries.mjs  계열 경계 규칙
+
+als-api/                     alpha · backoffice API SDK
+eslint-config-als/           공용 ESLint Flat Config
+als-fe-kit/                  ca-env · als-deps CLI
+als-gantt-chart/             Jira 간트 뷰어
+```
