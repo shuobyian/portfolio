@@ -38,24 +38,6 @@ const projects: Project[] = [
     relatedPostSlugs: ["als-multirepo-fanin-architecture", "als-frontend-structure"],
   },
   {
-    slug: "pwa-notification",
-    title: "PWA·Electron 알림 환경 구축",
-    description:
-      "웹(PWA)과 데스크톱(Electron) 양쪽에서 푸시 알림을 받을 수 있도록 FCM 기반 Push 서버를 구축하고, 환경마다 다른 알림 권한 모델을 단일 인터페이스로 추상화한 작업",
-    tags: ["PWA", "Electron", "Vite", "Service Worker", "FCM"],
-    period: "2025.04",
-    role: "프론트엔드 개발",
-    company: "알스솔루션",
-    highlights: [
-      "FCM Push 서버 구축: Firebase Cloud Messaging과 VAPID 키(공개 키는 PWA, 비공개 키는 서버)로 웹 푸시 발송 경로를 구성하고, 클라이언트가 발급받은 FCM 토큰을 서버에 저장해 발송 대상으로 관리",
-      "권한 모델 추상화: PWA와 Electron의 환경별 알림 권한 모델 차이를 단일 인터페이스로 추상화",
-      "Vite 환경 PWA 구성: vite-plugin-pwa의 registerSW로 서비스 워커를 등록하고 manifest·업데이트 전략(autoUpdate / prompt)을 빌드에 통합",
-      "포그라운드 메시지는 앱의 onMessage로, 백그라운드 메시지는 별도 서비스 워커(firebase-messaging-sw.js)의 onBackgroundMessage로 나눠 수신",
-    ],
-    keyHighlights: [0, 1],
-    relatedPostSlugs: ["pwa-vite-service-worker", "pwa-push-notification-fcm"],
-  },
-  {
     slug: "design-system",
     title: "디자인 시스템 구축",
     description:

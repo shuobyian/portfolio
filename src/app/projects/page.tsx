@@ -33,7 +33,7 @@ const TAG_GROUPS = [
     label: "UI·디자인 시스템",
     tags: ["Ant Design", "MUI", "Bootstrap", "Tailwind CSS", "Emotion", "CSS Variables", "Storybook", "Lexical", "AntV G2", "Monorepo Design System", "자체 디자인 시스템"],
   },
-  { label: "렌더링·플랫폼", tags: ["SSR/CSR Hybrid", "React Island Pattern", "PWA", "Service Worker", "Electron"] },
+  { label: "렌더링·플랫폼", tags: ["SSR/CSR Hybrid", "React Island Pattern"] },
   { label: "테스트", tags: ["Vitest", "Jest", "Playwright", "MSW", "node:test"] },
   { label: "빌드·패키지", tags: ["Vite", "Monorepo", "pnpm Monorepo", "사내 npm 패키지", "ESLint"] },
   {
