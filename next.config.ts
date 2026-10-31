@@ -7,6 +7,8 @@ const nextConfig: NextConfig = {
   // BI 서비스 → 팜스코프 이름 변경 전 URL을 새 주소로 보낸다.
   async redirects() {
     return [
+      // 사내 백오피스 리팩토링은 신규 구축 프로젝트로 합쳐졌다.
+      { source: "/projects/backoffice-refactor", destination: "/projects/backoffice", permanent: true },
       { source: "/projects/bi-service", destination: "/projects/pharmscope", permanent: true },
       {
         source: "/blog/bi-react-query-zustand-architecture",

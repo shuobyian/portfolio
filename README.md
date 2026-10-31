@@ -41,10 +41,9 @@ React·TypeScript 기반 아키텍처 개선, 디자인 시스템 구축, 테스
 | **팜스코프 데이터 전처리 백오피스**   | 설계·구현 주도    | 2026.09 ~ 10      | React 19, Emotion 디자인 시스템, pnpm Monorepo       |
 | **팜스코프 신규 구축**                | 아키텍처·구현 주도 | 2026.04 ~ 08     | Ant Design, AntV G2, React Query, Zustand, SSE       |
 | **팜브릿지 서비스 리팩토링**          | 프론트엔드 개발   | 2026.02 ~ 03      | React Island, SSR/CSR 하이브리드, React Query        |
-| **사내 백오피스 리팩토링**            | 프론트엔드 개발   | 2026.02 ~ 03      | 자체 디자인 시스템 → Ant Design 점진 전환            |
 | **WBS 시스템 구축**                   | 프론트엔드 개발   | 2026.01 ~ 02      | Jira REST API, Atlassian OAuth, 낙관적 업데이트      |
 | **팜브릿지 서비스 재구축**            | 프론트엔드 개발   | 2025.07 ~ 12      | Vanilla JS, Spring 전환, 자체 디자인 시스템          |
-| **사내 백오피스 신규 구축**           | 설계·구현 단독    | 2025.05 ~ 06      | React, TypeScript, Monorepo 디자인 시스템, AWS S3    |
+| **사내 백오피스 구축 및 Antd 마이그레이션** | 설계·구현 단독 | 2025.05 ~ 2026.03 | Monorepo 디자인 시스템 → Ant Design 점진 전환, AWS S3 |
 | **프론트엔드 표준화 및 CI/CD 정착**   | 프론트엔드 개발   | 2025.03 ~         | 사내 npm 패키지, ESLint, Jenkins, AWS CodeArtifact   |
 | **디자인 시스템 구축**                | 설계·구현 주도    | 2025.03 ~ 04      | Bootstrap, CSS Variables, Monorepo                   |
 
