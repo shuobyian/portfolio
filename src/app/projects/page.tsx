@@ -140,7 +140,7 @@ export default function ProjectsPage() {
       ) : (
       <>
       {/* Tag Filter */}
-      <FilterChips label="카테고리" current={summary} className="mt-6">
+      <FilterChips label="카테고리" current={summary} collapsible className="mt-6">
         {/* 모바일에서는 전체와 분류 버튼만 칩처럼 늘어놓고, 넓은 화면에서는 분류마다 줄을 나눠 왼쪽 열에 분류, 오른쪽에 태그를 둔다 */}
         <div className="flex w-full flex-wrap gap-2 md:block md:space-y-3">
           <button
