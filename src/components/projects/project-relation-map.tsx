@@ -39,7 +39,7 @@ const NODES: Record<string, { x: number; y: number; label: string }> = {
 const CLUSTERS = [
   { x: 20, y: 44, w: 360, h: 380, label: "에이치티비욘드 · 2021–2024" },
   { x: 400, y: 44, w: 600, h: 500, label: "알스솔루션 · 2025–" },
-  { x: 20, y: 564, w: 980, h: 86, label: "개인 프로젝트", personal: true },
+  { x: 20, y: 564, w: 980, h: 86, label: "개인 프로젝트" },
 ];
 
 // 유형마다 색과 선 모양을 함께 바꿔 색을 구분하기 어려워도 읽히게 한다
@@ -75,14 +75,12 @@ type Props = {
   highlightFeatured?: boolean;
   // 처음부터 골라 둘 노드. 설명 패널이 빈 채로 시작하지 않게 할 때 쓴다
   defaultSelected?: string;
-  // 축약해 보여준다 — 관계가 없는 노드와 개인 프로젝트 구역, 유형 토글, 관계 설명 문장을 뺀다
+  // 축약해 보여준다 — 노드의 기간, 유형 토글, 관계 설명 문장을 뺀다
   compact?: boolean;
 };
 
 export function ProjectRelationMap({ highlightFeatured = false, defaultSelected, compact = false }: Props) {
   const edges = getAllRelations();
-  const connected = new Set(edges.flatMap((e) => [e.from, e.to]));
-  const clusters = compact ? CLUSTERS.filter((c) => !("personal" in c)) : CLUSTERS;
   const [hidden, setHidden] = useState<RelationType[]>([]);
   // 고른 노드는 클릭·탭으로 고정되고, 마우스를 올린 노드는 고정된 노드보다 먼저 보인다
   const [selected, setSelected] = useState<string | null>(defaultSelected ?? null);
@@ -141,7 +139,7 @@ export function ProjectRelationMap({ highlightFeatured = false, defaultSelected,
       {/* 좁은 화면에서는 도면을 줄이지 않고 이 상자 안에서만 가로로 넘긴다 */}
       <div className="mt-6 overflow-x-auto rounded-lg border border-border bg-muted/30">
         <svg
-          viewBox={compact ? "0 0 1020 556" : "0 0 1020 664"}
+          viewBox="0 0 1020 664"
           className="h-auto w-full min-w-[720px] text-foreground"
           role="group"
           aria-label="프로젝트 관계도 — 노드를 누르면 연결된 프로젝트와 관계 설명이 아래에 나온다"
@@ -171,7 +169,7 @@ export function ProjectRelationMap({ highlightFeatured = false, defaultSelected,
             ))}
           </defs>
 
-          {clusters.map((c) => (
+          {CLUSTERS.map((c) => (
             <g key={c.label} className="text-muted-foreground">
               <rect
                 x={c.x}
@@ -218,7 +216,7 @@ export function ProjectRelationMap({ highlightFeatured = false, defaultSelected,
 
           {getAllProjects().map((p) => {
             const node = NODES[p.slug];
-            if (!node || (compact && !connected.has(p.slug))) return null;
+            if (!node) return null;
             const isActive = active === p.slug;
             const isFeatured = highlightFeatured && p.featured;
             const dim = active && !isActive && !linked.has(p.slug);
@@ -252,7 +250,7 @@ export function ProjectRelationMap({ highlightFeatured = false, defaultSelected,
                 />
                 <text
                   x={node.x}
-                  y={node.y - 3}
+                  y={compact ? node.y + 5 : node.y - 3}
                   textAnchor="middle"
                   fontSize="14"
                   fontWeight="600"
@@ -260,15 +258,17 @@ export function ProjectRelationMap({ highlightFeatured = false, defaultSelected,
                 >
                   {node.label}
                 </text>
-                <text
-                  x={node.x}
-                  y={node.y + 14}
-                  textAnchor="middle"
-                  fontSize="10.5"
-                  className={isActive ? "fill-accent-foreground" : "fill-muted-foreground"}
-                >
-                  {p.period}
-                </text>
+                {!compact && (
+                  <text
+                    x={node.x}
+                    y={node.y + 14}
+                    textAnchor="middle"
+                    fontSize="10.5"
+                    className={isActive ? "fill-accent-foreground" : "fill-muted-foreground"}
+                  >
+                    {p.period}
+                  </text>
+                )}
               </g>
             );
           })}
