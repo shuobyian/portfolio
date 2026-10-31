@@ -2,6 +2,7 @@
 
 import { useState, type KeyboardEvent } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ArrowRight } from "lucide-react";
 import { tagClass } from "@/components/ui/pill";
 import {
@@ -70,11 +71,20 @@ function EdgeSwatch({ type }: { type: RelationType }) {
   );
 }
 
-export function ProjectRelationMap() {
+type Props = {
+  // 주요(featured) 프로젝트 노드에 강조 테두리를 둔다
+  highlightFeatured?: boolean;
+  // 처음부터 골라 둘 노드. 설명 패널이 빈 채로 시작하지 않게 할 때 쓴다
+  defaultSelected?: string;
+  // 축약해 보여준다 — 노드의 기간, 유형 토글, 아래 설명 패널을 빼고 노드를 누르면 프로젝트로 바로 간다
+  compact?: boolean;
+};
+
+export function ProjectRelationMap({ highlightFeatured = false, defaultSelected, compact = false }: Props) {
   const edges = getAllRelations();
   const [hidden, setHidden] = useState<RelationType[]>([]);
   // 고른 노드는 클릭·탭으로 고정되고, 마우스를 올린 노드는 고정된 노드보다 먼저 보인다
-  const [selected, setSelected] = useState<string | null>(null);
+  const [selected, setSelected] = useState<string | null>(defaultSelected ?? null);
   const [hovered, setHovered] = useState<string | null>(null);
   const active = hovered ?? selected;
 
@@ -88,7 +98,9 @@ export function ProjectRelationMap() {
 
   const toggleType = (type: RelationType) =>
     setHidden(hidden.includes(type) ? hidden.filter((t) => t !== type) : [...hidden, type]);
-  const select = (slug: string) => setSelected(selected === slug ? null : slug);
+  const router = useRouter();
+  const select = (slug: string) =>
+    compact ? router.push(`/projects/${slug}`) : setSelected(selected === slug ? null : slug);
   const onKey = (slug: string) => (e: KeyboardEvent) => {
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
@@ -99,7 +111,13 @@ export function ProjectRelationMap() {
   return (
     <div>
       <div className="flex flex-wrap gap-2">
-        {TYPES.map((type) => (
+        {compact && TYPES.map((type) => (
+          <span key={type} className="inline-flex items-center gap-2 px-1 text-sm text-muted-foreground">
+            <EdgeSwatch type={type} />
+            {RELATION_TYPES[type].label}
+          </span>
+        ))}
+        {!compact && TYPES.map((type) => (
           <button
             key={type}
             aria-pressed={!hidden.includes(type)}
@@ -111,6 +129,14 @@ export function ProjectRelationMap() {
             {RELATION_TYPES[type].label}
           </button>
         ))}
+        {highlightFeatured && (
+          <span className="inline-flex items-center gap-2 px-1 text-sm text-muted-foreground">
+            <svg width="22" height="14" aria-hidden>
+              <rect x="1" y="1" width="20" height="12" rx="3" className="fill-background stroke-accent" strokeWidth="2" />
+            </svg>
+            주요 프로젝트
+          </span>
+        )}
       </div>
 
       {/* 좁은 화면에서는 도면을 줄이지 않고 이 상자 안에서만 가로로 넘긴다 */}
@@ -119,7 +145,11 @@ export function ProjectRelationMap() {
           viewBox="0 0 1020 664"
           className="h-auto w-full min-w-[720px] text-foreground"
           role="group"
-          aria-label="프로젝트 관계도 — 노드를 누르면 연결된 프로젝트와 관계 설명이 아래에 나온다"
+          aria-label={
+            compact
+              ? "프로젝트 관계도 — 노드를 누르면 그 프로젝트로 이동한다"
+              : "프로젝트 관계도 — 노드를 누르면 연결된 프로젝트와 관계 설명이 아래에 나온다"
+          }
           onClick={(e) => e.target === e.currentTarget && setSelected(null)}
         >
           <defs>
@@ -195,14 +225,15 @@ export function ProjectRelationMap() {
             const node = NODES[p.slug];
             if (!node) return null;
             const isActive = active === p.slug;
+            const isFeatured = highlightFeatured && p.featured;
             const dim = active && !isActive && !linked.has(p.slug);
             return (
               <g
                 key={p.slug}
                 role="button"
                 tabIndex={0}
-                aria-pressed={selected === p.slug}
-                aria-label={`${p.title} — 관계 보기`}
+                aria-pressed={compact ? undefined : selected === p.slug}
+                aria-label={`${p.title} — ${compact ? "프로젝트 보기" : "관계 보기"}`}
                 onClick={() => select(p.slug)}
                 onKeyDown={onKey(p.slug)}
                 onMouseEnter={() => setHovered(p.slug)}
@@ -215,12 +246,18 @@ export function ProjectRelationMap() {
                   width={NODE_W}
                   height={NODE_H}
                   rx="10"
-                  className={isActive ? "fill-accent stroke-accent" : "fill-background stroke-border"}
-                  strokeWidth={isActive ? 2 : 1.5}
+                  className={
+                    isActive
+                      ? "fill-accent stroke-accent"
+                      : isFeatured
+                        ? "fill-background stroke-accent"
+                        : "fill-background stroke-border"
+                  }
+                  strokeWidth={isActive || isFeatured ? 2 : 1.5}
                 />
                 <text
                   x={node.x}
-                  y={node.y - 3}
+                  y={compact ? node.y + 5 : node.y - 3}
                   textAnchor="middle"
                   fontSize="14"
                   fontWeight="600"
@@ -228,71 +265,75 @@ export function ProjectRelationMap() {
                 >
                   {node.label}
                 </text>
-                <text
-                  x={node.x}
-                  y={node.y + 14}
-                  textAnchor="middle"
-                  fontSize="10.5"
-                  className={isActive ? "fill-accent-foreground" : "fill-muted-foreground"}
-                >
-                  {p.period}
-                </text>
+                {!compact && (
+                  <text
+                    x={node.x}
+                    y={node.y + 14}
+                    textAnchor="middle"
+                    fontSize="10.5"
+                    className={isActive ? "fill-accent-foreground" : "fill-muted-foreground"}
+                  >
+                    {p.period}
+                  </text>
+                )}
               </g>
             );
           })}
         </svg>
       </div>
 
-      <div className="mt-6 min-h-40 rounded-lg border border-border p-5" aria-live="polite">
-        {activeProject ? (
-          <>
-            <div className="flex flex-wrap items-baseline justify-between gap-2">
-              <h3 className="text-lg font-semibold tracking-tight">{activeProject.title}</h3>
-              <Link
-                href={`/projects/${activeProject.slug}`}
-                className="inline-flex items-center gap-1 text-sm text-accent underline-offset-2 hover:underline"
-              >
-                프로젝트 보기 <ArrowRight size={14} />
-              </Link>
-            </div>
-            {activeEdges.length > 0 ? (
-              <ul className="mt-4 space-y-3">
-                {activeEdges.map((e) => {
-                  const otherSlug = e.from === active ? e.to : e.from;
-                  const other = getProjectBySlug(otherSlug);
-                  const arrow = e.type === "ecosystem" ? "↔" : e.from === active ? "→" : "←";
-                  return (
-                    <li key={`${e.from}-${e.to}`} className="flex flex-wrap items-start gap-x-3 gap-y-1 text-sm">
-                      <span className="inline-flex w-28 shrink-0 items-center gap-2 text-muted-foreground">
-                        <EdgeSwatch type={e.type} />
-                        {RELATION_TYPES[e.type].label}
-                      </span>
-                      <span className="min-w-0 flex-1">
-                        <span className="text-muted-foreground">{arrow} </span>
-                        <Link
-                          href={`/projects/${otherSlug}`}
-                          className="font-medium underline-offset-2 hover:text-accent hover:underline"
-                        >
-                          {other?.title}
-                        </Link>
-                        <span className="mt-0.5 block text-muted-foreground">{e.note}</span>
-                      </span>
-                    </li>
-                  );
-                })}
-              </ul>
-            ) : (
-              <p className="mt-3 text-sm text-muted-foreground">
-                다른 프로젝트와 직접 이어진 관계가 없는 독립 프로젝트입니다.
-              </p>
-            )}
-          </>
-        ) : (
-          <p className="text-sm text-muted-foreground">
-            프로젝트를 누르면 이어진 프로젝트와 관계 설명이 여기에 나옵니다. 위 범례를 눌러 관계 유형을 숨기거나 다시 보일 수 있습니다.
-          </p>
-        )}
-      </div>
+      {!compact && (
+        <div className="mt-6 min-h-40 rounded-lg border border-border p-5" aria-live="polite">
+          {activeProject ? (
+            <>
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <h3 className="text-lg font-semibold tracking-tight">{activeProject.title}</h3>
+                <Link
+                  href={`/projects/${activeProject.slug}`}
+                  className="inline-flex items-center gap-1 text-sm text-accent underline-offset-2 hover:underline"
+                >
+                  프로젝트 보기 <ArrowRight size={14} />
+                </Link>
+              </div>
+              {activeEdges.length > 0 ? (
+                <ul className="mt-4 space-y-3">
+                  {activeEdges.map((e) => {
+                    const otherSlug = e.from === active ? e.to : e.from;
+                    const other = getProjectBySlug(otherSlug);
+                    const arrow = e.type === "ecosystem" ? "↔" : e.from === active ? "→" : "←";
+                    return (
+                      <li key={`${e.from}-${e.to}`} className="flex flex-wrap items-start gap-x-3 gap-y-1 text-sm">
+                        <span className="inline-flex w-28 shrink-0 items-center gap-2 text-muted-foreground">
+                          <EdgeSwatch type={e.type} />
+                          {RELATION_TYPES[e.type].label}
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span className="text-muted-foreground">{arrow} </span>
+                          <Link
+                            href={`/projects/${otherSlug}`}
+                            className="font-medium underline-offset-2 hover:text-accent hover:underline"
+                          >
+                            {other?.title}
+                          </Link>
+                          <span className="mt-0.5 block text-muted-foreground">{e.note}</span>
+                        </span>
+                      </li>
+                    );
+                  })}
+                </ul>
+              ) : (
+                <p className="mt-3 text-sm text-muted-foreground">
+                  다른 프로젝트와 직접 이어진 관계가 없는 독립 프로젝트입니다.
+                </p>
+              )}
+            </>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              프로젝트를 누르면 이어진 프로젝트와 관계 설명이 여기에 나옵니다. 위 범례를 눌러 관계 유형을 숨기거나 다시 보일 수 있습니다.
+            </p>
+          )}
+        </div>
+      )}
     </div>
   );
 }

@@ -5,6 +5,7 @@ import { ArrowRight, Download } from "lucide-react";
 import Link from "next/link";
 import { Section } from "@/components/ui/section";
 import { ProjectCard } from "@/components/ui/project-card";
+import { ProjectRelationMap } from "@/components/projects/project-relation-map";
 import { getFeaturedProjects } from "@/lib/projects";
 
 const skills = [
@@ -136,6 +137,40 @@ export default function Home() {
             <ProjectCard key={project.slug} project={project} />
           ))}
         </div>
+      </Section>
+
+      {/* Project Relations */}
+      <Section>
+        <div className="flex items-end justify-between gap-4">
+          <SectionHeading label="Connections" title="프로젝트 관계도" />
+          <Link
+            href="/projects?view=map"
+            className="hidden shrink-0 text-sm text-muted-foreground underline decoration-border underline-offset-4 transition-colors hover:text-foreground hover:decoration-foreground sm:inline"
+          >
+            전체 관계도 보기
+          </Link>
+        </div>
+        <p className="mt-3 max-w-2xl leading-relaxed text-muted-foreground">
+          한 프로젝트에서 만든 기반과 경험이 다음 프로젝트로 어떻게 이어졌는지
+          보여줍니다. 프로젝트를 누르면 그 프로젝트로 이동하고, 관계마다의 설명은 전체
+          관계도에서 볼 수 있습니다.
+        </p>
+        {/* 좁은 화면에서는 가로로 넘겨야 하는 도면 대신 프로젝트 페이지의 관계도로 안내한다 */}
+        <div className="mt-10 hidden sm:block">
+          <ProjectRelationMap compact highlightFeatured />
+        </div>
+        <Link
+          href="/projects?view=map"
+          className="group mt-8 flex items-center justify-between gap-4 rounded-lg border border-border p-5 transition-colors hover:border-foreground/40 sm:hidden"
+        >
+          <span className="leading-relaxed">
+            <span className="block font-medium">관계도 열어 보기</span>
+            <span className="mt-1 block text-sm text-muted-foreground">
+              프로젝트들이 선행·기반·데이터 흐름·경험 전이로 이어진 모습
+            </span>
+          </span>
+          <ArrowRight size={18} className="shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+        </Link>
       </Section>
 
       {/* Skills */}
