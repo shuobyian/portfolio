@@ -226,7 +226,7 @@ export default async function ProjectDetail({
       {project.slug === "community-platform" && <CommunityPlatformDeepDive />}
       {project.slug === "design-system" && <DesignSystemDeepDive />}
       {project.slug === "pharm-bridge" && <PharmBridgeDeepDive />}
-      {project.slug === "backoffice-refactor" && <BackofficeRefactorDeepDive />}
+      {project.slug === "backoffice" && <BackofficeRefactorDeepDive />}
       {project.slug === "wbs" && <WbsDeepDive />}
     </Section>
   );

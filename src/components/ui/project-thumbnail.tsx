@@ -27,7 +27,6 @@ const ICON_MAP: Record<string, LucideIcon> = {
   "pharm-bridge": Pill,
   wbs: GanttChart,
   "pharm-bridge-refactor": RefreshCw,
-  "backoffice-refactor": RefreshCw,
   "pharmscope": BarChart3,
   "preprocess-backoffice": FileSpreadsheet,
   "community-platform": Users,

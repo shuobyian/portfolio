@@ -19,7 +19,7 @@ const stages = [
   {
     period: "2025.05 - 06",
     slug: "backoffice",
-    title: "2. 사내 백오피스 신규 구축",
+    title: "2. 사내 백오피스 구축",
     subtitle: "디자인 시스템의 첫 검증 환경",
     decision: "Monorepo 디자인 시스템을 운영 환경에 처음 적용",
     why: "공지·약관·FAQ·회원·파일 업로드 등 운영 도메인의 다양한 화면 패턴(폼·테이블·검색·첨부)에 토큰·컴포넌트 구조가 어떻게 동작하는지 직접 확인해봤습니다.",
@@ -28,8 +28,8 @@ const stages = [
   },
   {
     period: "2026.02 - 03",
-    slug: "backoffice-refactor",
-    title: "3. 사내 백오피스 리팩토링",
+    slug: "backoffice",
+    title: "3. 사내 백오피스 Antd 마이그레이션",
     subtitle: "팜스코프의 사전 검증 파일럿",
     decision: "자체 Monorepo → Antd 디자인 시스템 점진적 교체",
     why: "신규 팜스코프 프로젝트에 Antd를 바로 적용하면 라이브러리 부적합·디자인 정체성 적용 한계 같은 리스크가 운영 단계에서 발견될 수 있다고 봤습니다. 그래서 운영 중인 백오피스에서 먼저 마이그레이션을 진행해 Antd 기반 워크플로우·디자인 적용 가능성·운영 리스크를 사전에 확인했습니다.",
@@ -42,7 +42,7 @@ const stages = [
     title: "4. 팜스코프 신규 구축",
     subtitle: "검증된 패턴의 본격 적용",
     decision: "Antd 디자인 시스템 본격 적용 + 차트를 디자인 시스템에 편입",
-    why: "직전 사내 백오피스 리팩토링에서 검증해둔 토큰 매핑·컴포넌트 사용 패턴을 그대로 가져왔습니다. 차트도 시각적 일관성을 위해 같은 계열(Antd Charts/AntV G2)을 골랐지만, 라이브러리를 화면에서 직접 쓰게 두지 않고 shared 래퍼 6종만 공개하는 층을 뒀습니다. 팔레트·높이·다크모드가 토큰 레이어에 모이고, 라이브러리 한계로 래퍼를 자체 구현으로 갈아끼울 때도 화면 코드는 그대로였습니다.",
+    why: "직전 사내 백오피스 Antd 마이그레이션에서 검증해둔 토큰 매핑·컴포넌트 사용 패턴을 그대로 가져왔습니다. 차트도 시각적 일관성을 위해 같은 계열(Antd Charts/AntV G2)을 골랐지만, 라이브러리를 화면에서 직접 쓰게 두지 않고 shared 래퍼 6종만 공개하는 층을 뒀습니다. 팔레트·높이·다크모드가 토큰 레이어에 모이고, 라이브러리 한계로 래퍼를 자체 구현으로 갈아끼울 때도 화면 코드는 그대로였습니다.",
     nextHook: null,
   },
 ];
@@ -85,7 +85,7 @@ export default function DesignSystemStory() {
 
       <div className="mt-16 space-y-10">
         {stages.map((stage) => (
-          <div key={stage.slug}>
+          <div key={stage.title}>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}

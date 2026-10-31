@@ -421,7 +421,7 @@ export function DesignSystemDeepDive() {
             href="/projects/backoffice"
             className="text-accent underline-offset-2 hover:underline"
           >
-            사내 백오피스 신규 구축
+            사내 백오피스 구축 및 Antd 마이그레이션
           </Link>
           에 첫 적용해 실제 운영 화면에서 토큰·컴포넌트 구조를 검증한 뒤 표준
           라인업으로 정착시켰다.
