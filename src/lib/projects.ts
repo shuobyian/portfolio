@@ -297,6 +297,7 @@ const projects: Project[] = [
     ],
     keyHighlights: [1, 3, 5],
     featured: true,
+    relatedPostSlugs: ["aws-amplify-v4-to-v6"],
     relations: [
       { to: "byby-2", type: "ecosystem", note: "같은 아파트 커뮤니티 플랫폼의 운영자 쪽과 입주민 쪽. 예약 도메인·파트너스 쿠폰이 양쪽에 걸쳐 있음" },
       { to: "backoffice", type: "transfer", note: "운영 중인 UI를 메뉴 단위로 MUI → Antd 전환한 경험을 Antd 점진 전환에 적용" },
@@ -333,7 +334,7 @@ const projects: Project[] = [
     ],
     keyHighlights: [2, 4, 5],
     featured: true,
-    relatedPostSlugs: ["post-message-browser-communication"],
+    relatedPostSlugs: ["post-message-browser-communication", "tailwind-css-default-theme"],
     relations: [
       { to: "byby-2", type: "ecosystem", note: "같은 바이비 제품군으로 사내 UI 킷과 React Query·Recoil·Tailwind 스택을 공유" },
       { to: "pharmscope", type: "transfer", note: "BroadcastChannel로 창 간 동기화한 경험을 CS 화면의 postMessage 세션 인계로 확장" },
