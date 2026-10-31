@@ -70,11 +70,18 @@ function EdgeSwatch({ type }: { type: RelationType }) {
   );
 }
 
-export function ProjectRelationMap() {
+type Props = {
+  // 주요(featured) 프로젝트 노드에 강조 테두리를 둔다
+  highlightFeatured?: boolean;
+  // 처음부터 골라 둘 노드. 설명 패널이 빈 채로 시작하지 않게 할 때 쓴다
+  defaultSelected?: string;
+};
+
+export function ProjectRelationMap({ highlightFeatured = false, defaultSelected }: Props) {
   const edges = getAllRelations();
   const [hidden, setHidden] = useState<RelationType[]>([]);
   // 고른 노드는 클릭·탭으로 고정되고, 마우스를 올린 노드는 고정된 노드보다 먼저 보인다
-  const [selected, setSelected] = useState<string | null>(null);
+  const [selected, setSelected] = useState<string | null>(defaultSelected ?? null);
   const [hovered, setHovered] = useState<string | null>(null);
   const active = hovered ?? selected;
 
@@ -111,6 +118,14 @@ export function ProjectRelationMap() {
             {RELATION_TYPES[type].label}
           </button>
         ))}
+        {highlightFeatured && (
+          <span className="inline-flex items-center gap-2 px-1 text-sm text-muted-foreground">
+            <svg width="22" height="14" aria-hidden>
+              <rect x="1" y="1" width="20" height="12" rx="3" className="fill-background stroke-accent" strokeWidth="2" />
+            </svg>
+            주요 프로젝트
+          </span>
+        )}
       </div>
 
       {/* 좁은 화면에서는 도면을 줄이지 않고 이 상자 안에서만 가로로 넘긴다 */}
@@ -195,6 +210,7 @@ export function ProjectRelationMap() {
             const node = NODES[p.slug];
             if (!node) return null;
             const isActive = active === p.slug;
+            const isFeatured = highlightFeatured && p.featured;
             const dim = active && !isActive && !linked.has(p.slug);
             return (
               <g
@@ -215,8 +231,14 @@ export function ProjectRelationMap() {
                   width={NODE_W}
                   height={NODE_H}
                   rx="10"
-                  className={isActive ? "fill-accent stroke-accent" : "fill-background stroke-border"}
-                  strokeWidth={isActive ? 2 : 1.5}
+                  className={
+                    isActive
+                      ? "fill-accent stroke-accent"
+                      : isFeatured
+                        ? "fill-background stroke-accent"
+                        : "fill-background stroke-border"
+                  }
+                  strokeWidth={isActive || isFeatured ? 2 : 1.5}
                 />
                 <text
                   x={node.x}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useSyncExternalStore } from "react";
 import { LayoutGrid, ListChecks, Share2 } from "lucide-react";
 import { ProjectRelationMap } from "@/components/projects/project-relation-map";
 import { Section } from "@/components/ui/section";
@@ -68,6 +68,17 @@ function groupByCompany(projects: Project[]): Record<string, Project[]> {
   return byCompany;
 }
 
+type View = "list" | "map";
+
+function subscribeLocation(onChange: () => void) {
+  window.addEventListener("popstate", onChange);
+  return () => window.removeEventListener("popstate", onChange);
+}
+
+function readViewFromUrl(): View {
+  return new URLSearchParams(window.location.search).get("view") === "map" ? "map" : "list";
+}
+
 export default function ProjectsPage() {
   const projects = getAllProjects();
   const tagGroups = useMemo(
@@ -76,7 +87,17 @@ export default function ProjectsPage() {
   );
   // 여러 태그를 고를 수 있고, 고른 태그 중 하나라도 있는 프로젝트를 보여준다. 비어 있으면 전체
   const [selected, setSelected] = useState<string[]>([]);
-  const [view, setView] = useState<"list" | "map">("list");
+  // 홈의 "전체 관계도 보기"처럼 ?view=map 으로 들어오면 관계도부터 보여준다. 버튼으로 고른 값이 URL보다 우선한다
+  const urlView = useSyncExternalStore(subscribeLocation, readViewFromUrl, () => "list" as View);
+  const [chosenView, setChosenView] = useState<View | null>(null);
+  const view = chosenView ?? urlView;
+  const changeView = (next: View) => {
+    setChosenView(next);
+    const url = new URL(window.location.href);
+    if (next === "map") url.searchParams.set("view", "map");
+    else url.searchParams.delete("view");
+    window.history.replaceState(window.history.state, "", url);
+  };
   const has = (tag: string) => selected.includes(tag);
   const toggleTag = (tag: string) =>
     setSelected(has(tag) ? selected.filter((t) => t !== tag) : [...selected, tag]);
@@ -124,7 +145,7 @@ export default function ProjectsPage() {
           <button
             key={value}
             aria-pressed={view === value}
-            onClick={() => setView(value)}
+            onClick={() => changeView(value)}
             className={`inline-flex items-center gap-1.5 ${tagClass(view === value)}`}
           >
             <Icon size={14} />
