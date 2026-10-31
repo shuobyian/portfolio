@@ -14,7 +14,26 @@ export interface Project {
   featured?: boolean;
   company?: string;
   relatedPostSlugs?: string[];
+  /** 이 프로젝트에서 다른 프로젝트로 나가는 관계. 들어오는 관계는 상대 프로젝트 쪽에 적는다 */
+  relations?: ProjectRelation[];
 }
+
+export type RelationType = "lineage" | "foundation" | "data" | "ecosystem" | "transfer";
+
+export interface ProjectRelation {
+  to: string;
+  type: RelationType;
+  note: string;
+}
+
+// 관계도 범례와 상세 페이지가 함께 쓰는 관계 유형 이름. ecosystem만 방향이 없다
+export const RELATION_TYPES: Record<RelationType, { label: string; description: string }> = {
+  lineage: { label: "선행 → 후속", description: "앞선 작업이 다음 작업으로 이어짐" },
+  foundation: { label: "기반 제공", description: "공유 라이브러리·디자인 시스템·배포 환경을 제공" },
+  data: { label: "데이터 흐름", description: "한쪽의 결과물이 다른 쪽의 입력이 됨" },
+  ecosystem: { label: "같은 제품군", description: "같은 서비스를 이루는 다른 쪽 프로덕트" },
+  transfer: { label: "경험 전이", description: "회사가 달라도 기술·결정이 이어짐" },
+};
 
 const projects: Project[] = [
   {
@@ -36,6 +55,12 @@ const projects: Project[] = [
     ],
     keyHighlights: [0, 2, 3],
     relatedPostSlugs: ["als-multirepo-fanin-architecture", "als-frontend-structure"],
+    relations: [
+      { to: "backoffice", type: "foundation", note: "공통 API·ESLint 패키지와 Jenkins 배포 잡 위에서 개발·배포" },
+      { to: "pharmscope", type: "foundation", note: "@als/als-api API 계약과 공통 린트 설정, Jenkins 배포 잡을 그대로 사용" },
+      { to: "preprocess-backoffice", type: "foundation", note: "@als/als-api API 계약과 공통 린트 설정을 공유" },
+      { to: "wbs", type: "foundation", note: "공통 린트 설정과 Jenkins 배포 잡에 합류" },
+    ],
   },
   {
     slug: "design-system",
@@ -56,6 +81,9 @@ const projects: Project[] = [
     ],
     keyHighlights: [0, 2, 5],
     featured: true,
+    relations: [
+      { to: "backoffice", type: "foundation", note: "첫 적용 프로젝트로 토큰·컴포넌트 구조를 운영 환경에서 검증" },
+    ],
   },
   {
     slug: "backoffice",
@@ -78,6 +106,9 @@ const projects: Project[] = [
     ],
     keyHighlights: [2, 6, 7],
     relatedPostSlugs: ["admin-als-frontend-deployment"],
+    relations: [
+      { to: "pharmscope", type: "lineage", note: "Antd 마이그레이션으로 팜스코프의 Antd 도입 리스크를 먼저 검증" },
+    ],
   },
   {
     slug: "pharm-bridge",
@@ -97,6 +128,9 @@ const projects: Project[] = [
     ],
     keyHighlights: [1, 2],
     featured: true,
+    relations: [
+      { to: "pharm-bridge-refactor", type: "lineage", note: "Vanilla JS로 재구축한 화면을 React Island 패턴으로 부분 전환" },
+    ],
   },
   {
     slug: "wbs",
@@ -223,6 +257,9 @@ const projects: Project[] = [
     ],
     keyHighlights: [2, 4, 5],
     featured: true,
+    relations: [
+      { to: "pharmscope", type: "data", note: "전처리를 끝낸 보정 결과가 고객 공개를 거쳐 팜스코프의 분석 데이터가 됨" },
+    ],
   },
   {
     slug: "community-platform",
@@ -260,6 +297,10 @@ const projects: Project[] = [
     ],
     keyHighlights: [1, 3, 5],
     featured: true,
+    relations: [
+      { to: "byby-2", type: "ecosystem", note: "같은 아파트 커뮤니티 플랫폼의 운영자 쪽과 입주민 쪽. 예약 도메인·파트너스 쿠폰이 양쪽에 걸쳐 있음" },
+      { to: "backoffice", type: "transfer", note: "운영 중인 UI를 메뉴 단위로 MUI → Antd 전환한 경험을 Antd 점진 전환에 적용" },
+    ],
   },
   {
     slug: "pos-kiosk",
@@ -293,6 +334,10 @@ const projects: Project[] = [
     keyHighlights: [2, 4, 5],
     featured: true,
     relatedPostSlugs: ["post-message-browser-communication"],
+    relations: [
+      { to: "byby-2", type: "ecosystem", note: "같은 바이비 제품군으로 사내 UI 킷과 React Query·Recoil·Tailwind 스택을 공유" },
+      { to: "pharmscope", type: "transfer", note: "BroadcastChannel로 창 간 동기화한 경험을 CS 화면의 postMessage 세션 인계로 확장" },
+    ],
   },
   {
     slug: "byby-2",
@@ -353,6 +398,10 @@ const projects: Project[] = [
     ],
     keyHighlights: [0, 1, 2],
     relatedPostSlugs: ["edge-deployment-pipeline", "linux-permissions-nginx"],
+    relations: [
+      { to: "pos-kiosk", type: "foundation", note: "POS·KIOSK 화면의 nginx 이관과 한 번의 빌드로 두 산출물을 만드는 배포 통합" },
+      { to: "frontend-standardization", type: "transfer", note: "Jenkins 기반 배포 파이프라인을 개편한 경험을 사내 단일 CI/CD 정착에 적용" },
+    ],
   },
   {
     slug: "game-calculator",
@@ -460,4 +509,21 @@ export function getFeaturedProjects(): Project[] {
 
 export function getProjectBySlug(slug: string): Project | undefined {
   return projects.find((p) => p.slug === slug);
+}
+
+export interface RelationEdge extends ProjectRelation {
+  from: string;
+}
+
+export function getAllRelations(): RelationEdge[] {
+  return projects.flatMap((p) => (p.relations ?? []).map((r) => ({ from: p.slug, ...r })));
+}
+
+/** 한 프로젝트에 닿은 관계를 나가는 쪽·들어오는 쪽 모두 모은다 */
+export function getProjectRelations(slug: string) {
+  return getAllRelations().flatMap((edge) => {
+    const direction = edge.from === slug ? "out" : edge.to === slug ? "in" : null;
+    const other = getProjectBySlug(direction === "out" ? edge.to : edge.from);
+    return direction && other ? [{ ...edge, direction, project: other } as const] : [];
+  });
 }

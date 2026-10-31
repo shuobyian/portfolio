@@ -3,7 +3,12 @@ import { ArrowLeft, BookOpen, ExternalLink, Github } from "lucide-react";
 import Link from "next/link";
 import { Section } from "@/components/ui/section";
 import { Card } from "@/components/ui/card";
-import { getAllProjects, getProjectBySlug } from "@/lib/projects";
+import {
+  RELATION_TYPES,
+  getAllProjects,
+  getProjectBySlug,
+  getProjectRelations,
+} from "@/lib/projects";
 import { getPostBySlug } from "@/lib/blog";
 import { PosKioskDeepDive } from "@/components/projects/pos-kiosk-deep-dive";
 import { PharmBridgeRefactorDeepDive } from "@/components/projects/pharm-bridge-refactor-deep-dive";
@@ -88,6 +93,7 @@ export default async function ProjectDetail({
   const keySet = new Set(project.keyHighlights);
   const keyItems = project.highlights.filter((_, i) => keySet.has(i));
   const restItems = project.highlights.filter((_, i) => !keySet.has(i));
+  const relations = getProjectRelations(project.slug);
 
   return (
     <Section>
@@ -181,6 +187,31 @@ export default async function ProjectDetail({
           ))}
         </ul>
       </div>
+
+      {relations.length > 0 && (
+        <div className="mt-12">
+          <h2 className="text-xl font-semibold">연관 프로젝트</h2>
+          <ul className="mt-4 grid gap-3 sm:grid-cols-2">
+            {relations.map((r) => (
+              <li key={`${r.from}-${r.to}`}>
+                {/* hover는 움직이지 않는 링크가 받고 안쪽 카드만 떠오른다 */}
+                <Link href={`/projects/${r.project.slug}`} className="group block h-full rounded-md">
+                  <Card overText className="h-full border border-border p-4">
+                    <p className="text-xs font-medium text-accent">
+                      {RELATION_TYPES[r.type].label}
+                      {r.type !== "ecosystem" && (r.direction === "out" ? " · 이 프로젝트에서 →" : " · → 이 프로젝트로")}
+                    </p>
+                    <p className="mt-1 font-medium transition-colors group-hover:text-accent">
+                      {r.project.title}
+                    </p>
+                    <p className="mt-1 text-sm text-muted-foreground">{r.note}</p>
+                  </Card>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {project.relatedPostSlugs && project.relatedPostSlugs.length > 0 && (
         <div className="mt-12">
