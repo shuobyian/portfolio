@@ -402,7 +402,7 @@ const projects: Project[] = [
     keyHighlights: [2, 3, 4],
     github: "https://github.com/shuobyian/my-home-frontend",
     demo: "https://myhome-nine-topaz.vercel.app",
-    relatedPostSlugs: ["myhome-recipe-calculator-rewrite"],
+    relatedPostSlugs: ["myhome-recipe-calculator-rewrite", "myhome-basic-material-logic", "myhome-crafting-cost-formula"],
   },
   {
     slug: "byby-quiz",
