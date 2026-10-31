@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { Calendar, Clock, FolderOpen } from "lucide-react";
 import type { BlogPost, PostType } from "@/lib/blog";
@@ -19,6 +19,34 @@ const CATEGORY_ORDER = [
 
 type TypeFilter = "all" | PostType;
 
+// 필터는 URL(?type=…&category=…)에 담아, 글이나 프로젝트로 갔다가 뒤로 돌아와도 그대로 남게 한다
+function subscribeLocation(onChange: () => void) {
+  window.addEventListener("popstate", onChange);
+  return () => window.removeEventListener("popstate", onChange);
+}
+
+function readSearch() {
+  return window.location.search;
+}
+
+function parseFilter(search: string): { type: TypeFilter; category: string | null } {
+  const params = new URLSearchParams(search);
+  const type = params.get("type");
+  return {
+    type: type === "project" || type === "tech" ? type : "all",
+    category: params.get("category"),
+  };
+}
+
+function writeFilter(type: TypeFilter, category: string | null) {
+  const url = new URL(window.location.href);
+  if (type === "all") url.searchParams.delete("type");
+  else url.searchParams.set("type", type);
+  if (category) url.searchParams.set("category", category);
+  else url.searchParams.delete("category");
+  window.history.replaceState(window.history.state, "", url);
+}
+
 // 프로젝트 쪽 relatedPostSlugs를 거꾸로 읽어 글마다 다룬 프로젝트를 찾는다
 const PROJECT_BY_POST = new Map(
   getAllProjects().flatMap((p) => (p.relatedPostSlugs ?? []).map((slug) => [slug, p] as const))
@@ -31,8 +59,14 @@ const TYPE_TABS: { value: TypeFilter; label: string }[] = [
 ];
 
 export function BlogList({ posts }: { posts: BlogPost[] }) {
-  const [typeFilter, setTypeFilter] = useState<TypeFilter>("all");
-  const [selected, setSelected] = useState<string | null>(null);
+  // 처음엔 URL에서 읽고, 고른 뒤로는 고른 값이 우선한다
+  const search = useSyncExternalStore(subscribeLocation, readSearch, () => "");
+  const [chosen, setChosen] = useState<{ type: TypeFilter; category: string | null } | null>(null);
+  const { type: typeFilter, category: selected } = chosen ?? parseFilter(search);
+  const setFilter = (type: TypeFilter, category: string | null) => {
+    setChosen({ type, category });
+    writeFilter(type, category);
+  };
 
   const byType = useMemo(
     () =>
@@ -58,8 +92,7 @@ export function BlogList({ posts }: { posts: BlogPost[] }) {
       : byType;
 
   const selectType = (value: TypeFilter) => {
-    setTypeFilter(value);
-    setSelected(null); // 타입 전환 시 카테고리 필터 초기화
+    setFilter(value, null); // 타입 전환 시 카테고리 필터 초기화
   };
 
   return (
@@ -86,7 +119,7 @@ export function BlogList({ posts }: { posts: BlogPost[] }) {
       {/* Category badges (scoped to selected type) */}
       <FilterChips label="카테고리" current={selected ?? "전체"} className="mt-5">
         <button
-          onClick={() => setSelected(null)}
+          onClick={() => setFilter(typeFilter, null)}
           className={tagClass(selected === null)}
         >
           전체 ({byType.length})
@@ -97,7 +130,7 @@ export function BlogList({ posts }: { posts: BlogPost[] }) {
             <button
               key={category}
               onClick={() =>
-                setSelected(selected === category ? null : category)
+                setFilter(typeFilter, selected === category ? null : category)
               }
               className={tagClass(selected === category)}
             >
