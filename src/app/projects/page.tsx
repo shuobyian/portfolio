@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { ListChecks } from "lucide-react";
+import { LayoutGrid, ListChecks, Share2 } from "lucide-react";
+import { ProjectRelationMap } from "@/components/projects/project-relation-map";
 import { Section } from "@/components/ui/section";
 import { ProjectCard } from "@/components/ui/project-card";
 import { tagClass } from "@/components/ui/pill";
@@ -75,6 +76,7 @@ export default function ProjectsPage() {
   );
   // 여러 태그를 고를 수 있고, 고른 태그 중 하나라도 있는 프로젝트를 보여준다. 비어 있으면 전체
   const [selected, setSelected] = useState<string[]>([]);
+  const [view, setView] = useState<"list" | "map">("list");
   const has = (tag: string) => selected.includes(tag);
   const toggleTag = (tag: string) =>
     setSelected(has(tag) ? selected.filter((t) => t !== tag) : [...selected, tag]);
@@ -112,8 +114,33 @@ export default function ProjectsPage() {
         지금까지 진행한 프로젝트들을 회사별로 정리했습니다.
       </p>
 
+      <div role="group" aria-label="보기 방식" className="mt-8 flex gap-2">
+        {(
+          [
+            ["list", "목록", LayoutGrid],
+            ["map", "관계도", Share2],
+          ] as const
+        ).map(([value, label, Icon]) => (
+          <button
+            key={value}
+            aria-pressed={view === value}
+            onClick={() => setView(value)}
+            className={`inline-flex items-center gap-1.5 ${tagClass(view === value)}`}
+          >
+            <Icon size={14} />
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {view === "map" ? (
+        <div className="mt-8">
+          <ProjectRelationMap />
+        </div>
+      ) : (
+      <>
       {/* Tag Filter */}
-      <FilterChips label="카테고리" current={summary} className="mt-8">
+      <FilterChips label="카테고리" current={summary} className="mt-6">
         {/* 모바일에서는 전체와 분류 버튼만 칩처럼 늘어놓고, 넓은 화면에서는 분류마다 줄을 나눠 왼쪽 열에 분류, 오른쪽에 태그를 둔다 */}
         <div className="flex w-full flex-wrap gap-2 md:block md:space-y-3">
           <button
@@ -204,6 +231,8 @@ export default function ProjectsPage() {
           </p>
         )}
       </div>
+      </>
+      )}
     </Section>
   );
 }
