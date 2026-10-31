@@ -152,11 +152,12 @@ export default function Home() {
         </div>
         <p className="mt-3 max-w-2xl leading-relaxed text-muted-foreground">
           한 프로젝트에서 만든 기반과 경험이 다음 프로젝트로 어떻게 이어졌는지
-          보여줍니다. 프로젝트를 누르면 연결된 관계와 설명이 나옵니다.
+          보여줍니다. 서로 이어진 프로젝트만 추렸고, 관계마다의 설명은 전체
+          관계도에서 볼 수 있습니다.
         </p>
         {/* 좁은 화면에서는 가로로 넘겨야 하는 도면 대신 프로젝트 페이지의 관계도로 안내한다 */}
         <div className="mt-10 hidden sm:block">
-          <ProjectRelationMap highlightFeatured defaultSelected="pharmscope" />
+          <ProjectRelationMap compact highlightFeatured defaultSelected="pharmscope" />
         </div>
         <Link
           href="/projects?view=map"
