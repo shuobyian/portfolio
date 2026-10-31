@@ -157,7 +157,7 @@ export default function Home() {
         </p>
         {/* 좁은 화면에서는 가로로 넘겨야 하는 도면 대신 프로젝트 페이지의 관계도로 안내한다 */}
         <div className="mt-10 hidden sm:block">
-          <ProjectRelationMap compact highlightFeatured defaultSelected="pharmscope" />
+          <ProjectRelationMap compact highlightFeatured />
         </div>
         <Link
           href="/projects?view=map"
