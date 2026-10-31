@@ -400,6 +400,9 @@ const projects: Project[] = [
       "인증·운영: 공용 비밀번호 로그인을 회원가입·Bearer 토큰(해시 저장·7일 만료) 방식으로 바꾸고 쓰기 API를 관리자 전용으로 제한. GitHub Actions CI와 Render·Vercel·Neon 배포 구성",
     ],
     keyHighlights: [2, 3, 4],
+    github: "https://github.com/shuobyian/my-home-frontend",
+    demo: "https://myhome-nine-topaz.vercel.app",
+    relatedPostSlugs: ["myhome-recipe-calculator-rewrite"],
   },
   {
     slug: "byby-quiz",
